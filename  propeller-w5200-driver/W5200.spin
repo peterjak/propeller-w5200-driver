@@ -113,13 +113,11 @@ DAT
   _gateway        byte  192, 168,   1,   1
   _subnetmask     byte  255, 255, 255,   0
   _mac            byte  $00, $08, $DC, $16, $F8, $01
-  _ip             byte  192, 168,   1,   130
+  _ip             byte  192, 168,   1,   107
   endcm           byte  $00', $00
 
-  _rIp            byte  65, 98, 8, 151
 
   workSpace       byte  $0[BUFFER_16]
-
   sockRxMem       byte  $02[SOCKETS]
   sockTxMem       byte  $02[SOCKETS]
   sockRxBase      word  $C000[SOCKETS]

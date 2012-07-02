@@ -22,13 +22,14 @@ DAT
 }                     $F8, $01, $00, $00, { Padding
 }                     $00, $00, $00, $00, { Padding 
 }                     $00, $00, $00, $00, { Padding
-}                     $0[192],            { overflow space for additional options 
+}                     $0[64], $0[128],    { 0x44 Host name |  Boot file name
 }                     $63, $82, $53, $63, { Magic cookie
 }                     $35, $01, $01,      { DHCP Message = Discover
-}                     $32, $04, $C0, $A8, $01, $82, { IP Request
+}                     $32, $04, $C0, $A8, $01, $6B, { IP Request
 }                     $37, $04, $01, $03, $06, $2A, { Paramter Request; mask, router, domain name server, network time 
 }                     $FF 
-  padDiscover    byte $0[$200]                                           
+  padDiscover    byte $0[$200]
+                                            
   DHCPREQUEST    byte $01, $01, $06, $00, { Options: OP, HTYPE, HLEN, HOPS
 }                     $39, $03, $F3, $26, { Trqansaction ID
 }                     $00, $00, $00, $00, { SECS, FLAGS
@@ -43,7 +44,7 @@ DAT
 }                     $0[192],            { overflow space for additional options 
 }                     $63, $82, $53, $63, { Magic cookie
 }                     $35, $01, $03,                    { DHCP Message  = Request
-}                     $32, $04, $C0, $A8, $01, $6B,     { Requested IP
+}                     $32, $04, $C0, $A8, $01, $82,     { Requested IP
 }                     $36, $04, $C0, $A8, $01, $01,     { DHCP Server
 }                     $FF
   padRequest       byte $0[$200] 
@@ -63,8 +64,12 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, ptr, len
   pst.Start(115_200)
   pause(500)
 
+  'bytemove(@DHCPDISCOVER + (4*11), string("PropNet"), strsize(string("PropNet")))
+  'bytemove(@DHCPREQUEST + (4*11), string("PropNet"), strsize(string("PropNet"))) 
+
   'len := @padDiscover - @DHCPDISCOVER
   len := @padRequest - @DHCPREQUEST
+  
   len += len // 16 + 16
   pst.str(string("DHCP Options Len: "))
   pst.dec(len)
@@ -78,7 +83,7 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, ptr, len
 
   'Wiz Mac and Ip
   sock.Mac($00, $08, $DC, $16, $F8, $01)
-  sock.Ip(192, 168, 1, 107)
+  sock.Ip(192, 168, 1, 130)
 
   'Broadcast
   sock.RemoteIp(255, 255, 255, 255)
@@ -89,8 +94,10 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, ptr, len
   sock.Open
   
   pst.str(string("Send Message",CR))
+  
   'sock.Send(@DHCPDISCOVER, len)
   sock.Send(@DHCPREQUEST, len)
+  
 
 
 
