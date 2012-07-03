@@ -2,18 +2,23 @@ CON
   _clkmode = xtal1 + pll16x     
   _xinfreq = 5_000_000
 
+  BUFFER_2K     = $800
+  
+  CR            = $0D
+  LF            = $0A
+  NULL          = $00
+  
   #0, CLOSED, TCP, UDP, IPRAW, MACRAW, PPPOE
-
-  CR    = $0D
-  LF    = $0A
-
        
 VAR
 
 DAT
   udpHead       byte  192, 168, 1, 104, $1F, $90, $00, $0C
-  udpMsg        byte  "Hello World!", $0 
+  udpMsg        byte  "Hello World!", $0
+  
+  buff          byte  $0[BUFFER_2K]
 
+  
 OBJ
   pst           : "Parallax Serial Terminal"
   sock          : "Socket"
@@ -21,7 +26,7 @@ OBJ
 
 
  
-PUB Main | bytesToRead, buffer, bytesSent, receiving, ptr
+PUB Main | bytesToRead, bytesSent, receiving, ptr
 
   receiving := true
   bytesToRead := 0
@@ -31,7 +36,7 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, ptr
 
   pst.str(string("Initialize", CR))
   'Initialize Socket 0 port 8080
-  buffer := sock.Init(0, UDP, 8080)
+  sock.Init(0, UDP, 8080)
 
   'Wiz Mac and Ip
   sock.Mac($00, $08, $DC, $16, $F8, $01)
@@ -64,13 +69,13 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, ptr
 
     if(bytesToRead > 0) 
       'Get the Rx buffer  
-      ptr := sock.Receive
+      ptr := sock.Receive(@buff)
       pst.char(CR)
       pst.str(string("UPD Header:",CR))
-      PrintIp(buffer)
-      pst.dec(DeserializeWord(buffer + 4))
+      PrintIp(@buff)
+      pst.dec(DeserializeWord(@buff + 4))
       pst.char(CR)
-      pst.dec(DeserializeWord(buffer + 6))
+      pst.dec(DeserializeWord(@buff + 6))
       pst.char(CR)
        
       pst.char(CR) 

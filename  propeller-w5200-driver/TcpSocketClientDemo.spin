@@ -2,11 +2,14 @@ CON
   _clkmode = xtal1 + pll16x     
   _xinfreq = 5_000_000
 
+  BUFFER_2K     = $800
+  
+  CR            = $0D
+  LF            = $0A
+  NULL          = $00
+  
   #0, CLOSED, TCP, UDP, IPRAW, MACRAW, PPPOE
-
-  CR    = $0D
-  LF    = $0A
-
+  
        
 VAR
 
@@ -17,9 +20,9 @@ DAT
   request2      byte  "GET /default.aspx HTTP/1.1", CR, LF, {
 }               byte  "Host: agaverobotics.com", CR, LF, {
 }               byte  "User-Agent: Wiz5200", CR, LF, CR, LF, $0
-  buff          byte  $0[$200]
+  ebuff         byte  $0[$200]
 
-
+  buff          byte  $0[BUFFER_2K]
 
 
 
@@ -90,7 +93,7 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving
 
     if(bytesToRead > 0) 
       'Get the Rx buffer  
-      buffer := sock.Receive
+      buffer := sock.Receive(@buff)
       pst.str(buffer)
       
     bytesToRead~

@@ -1,6 +1,5 @@
 CON
   BUFFER_2K                     = $800
-  DEFAULT_RX_TX_BUFFER          = $800
 
   'MACRAW and PPPOE can only be used with socket 0
   #0, CLOSED, TCP, UDP, IPRAW, MACRAW, PPPOE
@@ -11,8 +10,9 @@ CON
   UPD_DATA          = $08
   
   
-  CR = $0D
-  NULL = $0 
+  CR    = $0D
+  LF    = $0A
+  NULL  = $00 
        
 VAR
   byte  _sock
@@ -23,8 +23,6 @@ VAR
   long bytesToWrite
 
 DAT
-  buff          byte  $0[BUFFER_2K]
-  
 
 
 OBJ
@@ -38,10 +36,10 @@ PUB Init(socketId, protocol, portNum)
   _sock := socketId
   _protocol := protocol
   
-  wiz.Init(@buff)
+  wiz.Init
   wiz.InitSocket(socketId, protocol, portNum)
 
-  return @buff
+  'return buffer
 
 {
 PUB GetIp
@@ -94,28 +92,26 @@ PUB Connected
 PUB Available | i
   bytesToRead := i := 0
   repeat until bytesToRead := wiz.GetRxBytesToRead(_sock)
-    if(i++ > 500)
+    if(i++ > 100)
       pause(1)
       return -1
   return bytesToRead
 
-PUB Receive | ptr
+PUB Receive(buffer) | ptr
 
-  ptr := @buff
-  wiz.Rx(_sock, @buff, bytesToRead)
-  byte[@buff][bytesToRead] := NULL
+  ptr := buffer
+  wiz.Rx(_sock, buffer, bytesToRead)
+  byte[buffer][bytesToRead] := NULL
   
   if(_protocol == UDP)
-    ParseHeader(@buff)
+    ParseHeader(buffer)
     ptr += UPD_DATA
 
   return ptr
       
 PUB Send(buffer, len) | before, after
 
-  before := after := 0
-  'len := strsize(buffer)
-  
+  before := after := 0  
   wiz.Tx(_sock, buffer, len)
 
   repeat until ((after - before) == len)
@@ -150,10 +146,10 @@ PRI DeserializeWord(buffer) | value
   value := byte[buffer++] << 8
   value += byte[buffer]
   return value
-
+{
 PRI ClearBuffer
   bytefill(@buff, 0, BUFFER_2K)
-  
+ } 
 PRI pause(Duration)  
   waitcnt(((clkfreq / 1_000 * Duration - 3932) #> 381) + cnt)
   return

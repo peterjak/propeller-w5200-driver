@@ -106,7 +106,8 @@ CON
   SPI_CS                 = 3 ' SPI chip select (active low)
   SPI_SCK                = 0 ' SPI clock from master to all slaves
   SPI_MOSI               = 1 ' SPI master out serial in to slave
-  SPI_MISO               = 2 ' SPI master in serial out from slave                                                              
+  SPI_MISO               = 2 ' SPI master in serial out from slave
+                                                            
 
 DAT
   _mode           byte  %0001_0000                  'enable ping
@@ -116,8 +117,8 @@ DAT
   _ip             byte  192, 168,   1,   107
   endcm           byte  $00', $00
 
-
   workSpace       byte  $0[BUFFER_16]
+  
   sockRxMem       byte  $02[SOCKETS]
   sockTxMem       byte  $02[SOCKETS]
   sockRxBase      word  $C000[SOCKETS]
@@ -125,16 +126,15 @@ DAT
   sockTxBase      word  $8000[SOCKETS]
   sockTxMask      word  $07FF[SOCKETS]
 
-  buff            long  $0
 
 
 OBJ
   spi           : "Spi.spin"
 
   
-PUB Init(buffer)
-  'Init buffers
-  buff := buffer
+PUB Init
+
+  'Init buffer
   bytefill(@workSpace, 0, BUFFER_16) 
 
   'Internal Rx and Tx Base buffer addresses
