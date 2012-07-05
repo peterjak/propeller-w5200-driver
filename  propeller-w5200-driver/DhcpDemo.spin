@@ -34,10 +34,15 @@ CON
   DHCP_DHCP_OPTIONS  = $F0
 
   {{ DHCP Options Enum}}
+  SUBNET_MASK         = 01
+  ROUTER              = 03
   DOMAIN_NAME_SERVER  = 06
+  HOST_NAME           = 12
   REQUEST_IP          = 50
   MESSAGE_TYPE        = 53
+  DHCP_SERVER_IP      = 54
   PARAM_REQUEST       = 55
+  
   
 
   {{ DHCP Message Types}}
@@ -53,12 +58,14 @@ CON
 VAR
 DAT
   magicCookie     byte  $63, $82, $53, $63
-  paramReq        byte  $01, $03, $06, $2A ' Paramter Request; mask, router, domain name server, network time 
+  paramReq        byte  $01, $03, $06, $2A ' Paramter Request; mask, router, domain name server, network time
+  hostName        byte  "PropNet_5200", $0 
   workspace       byte  $0[BUFFER_16]  
   buff            byte  $0[BUFFER_2K]
 
   optionPtr       long  $F0
   buffPtr         long  $00
+  transId         long  $00
 
    
 OBJ
@@ -70,7 +77,7 @@ OBJ
  
 PUB Init
 
-  buffPtr := @buff '+ UPD_HEADER_LEN
+  buffPtr := @buff
   
   
   pst.Start(115_200)
@@ -89,20 +96,27 @@ PUB Init
   sock.RemoteIp(255, 255, 255, 255)
   sock.RemotePort(67)
 
+
   optionPtr := DHCP_OPTIONS + buffPtr
   Discover
 
   optionPtr := DHCP_OPTIONS + buffPtr 
   Offer
 
+  
+  optionPtr := DHCP_OPTIONS + buffPtr
+  Request
+
 PUB Discover | len
   FillOpHtypeHlenHops($01, $01, $06, $00)
+  CreateTransactionId
   FillTransactionID
   FillMac
   FillMagicCookie
   WriteDhcpOption(MESSAGE_TYPE, 1, DHCP_DISCOVER)
   WriteDhcpOption(REQUEST_IP, 4, wiz.GetCommonRegister(wiz#SOURCE_IP0))
-  WriteDhcpOption(PARAM_REQUEST, 4, @paramReq) 
+  WriteDhcpOption(PARAM_REQUEST, 4, @paramReq)
+  WriteDhcpOption(HOST_NAME, strsize(@hostName), @hostName)
   len := EndDhcpOptions
   DisplayMemory(buffPtr, len, true)
   SendReceive(buffPtr, len)
@@ -112,21 +126,61 @@ PUB Offer | len
   buffPtr += UPD_HEADER_LEN
   
   GetIp
-   'DeserializeWord(@buff + 6)
-  'len := ReadDhcpOption(MESSAGE_TYPE, DeserializeWord(@buff + 6))
   len := ReadDhcpOption(DOMAIN_NAME_SERVER)
-  'len := ReadDhcpOption($36)
+  
   pst.dec(len)
   pst.char(13)
-  PrintIP(optionPtr)
+  Wiz.copyDns(optionPtr, len)
   
-  buffPtr -= UPD_HEADER_LEN   
+  'PrintIP(wiz.GetDns)
+  'PrintIP(wiz.GetDns+4)
+  'PrintIP(wiz.GetDns+8)
 
-PUB GetIp
-  'pst.dec(buffPtr)
-  'DisplayMemory(@byte[buffPtr][DHCP_YIADDR], 10, true)
-  PrintIP(@byte[buffPtr][DHCP_YIADDR])
+  GetGateway
 
+  len := ReadDhcpOption(SUBNET_MASK)
+  wiz.CopySubnet(optionPtr, len)
+
+  len := ReadDhcpOption(ROUTER)
+  wiz.CopyRouter(optionPtr, len)
+
+  len := ReadDhcpOption(DHCP_SERVER_IP)
+  wiz.CopyDhcpServer(optionPtr, len) 
+  
+  buffPtr -= UPD_HEADER_LEN
+
+PUB Request | len
+
+  'Broadcast - There must be a bug if I have to decalre teh RemoteIP again?
+  'Or maybe it is because the internal register updated - bet that's it!
+  sock.RemoteIp(255, 255, 255, 255)
+
+  
+  bytefill(@buff, 0, BUFFER_2K)
+  FillOpHtypeHlenHops($01, $01, $06, $00)
+  FillTransactionID
+  FillMac
+  FillServerIp
+  FillMagicCookie
+  WriteDhcpOption(MESSAGE_TYPE, 1, DHCP_REQUEST)
+  WriteDhcpOption(REQUEST_IP, 4, wiz.GetCommonRegister(wiz#SOURCE_IP0))
+  WriteDhcpOption(DHCP_SERVER_IP, 4, wiz.GetDhcpServerIp)
+  WriteDhcpOption(HOST_NAME, strsize(@hostName), @hostName)
+  len := EndDhcpOptions
+  DisplayMemory(buffPtr, len, true)
+  SendReceive(buffPtr, len)
+    
+
+PUB GetIp | ptr
+  ptr := @byte[buffPtr][DHCP_YIADDR]
+  PrintIP(ptr)
+  Wiz.SetIp(byte[ptr][0], byte[ptr][1], byte[ptr][2], byte[ptr][3])
+  
+
+PUB GetGateway | ptr
+  ptr := @byte[buffPtr][DHCP_SIADDR]
+  PrintIP(ptr)
+  Wiz.SetGateway(byte[ptr][0], byte[ptr][1], byte[ptr][2], byte[ptr][3])
 
 
 PUB FillOpHTypeHlenHops(op, htype, hlen, hops)
@@ -134,14 +188,22 @@ PUB FillOpHTypeHlenHops(op, htype, hlen, hops)
   byte[buffPtr][DHCP_HTYPE] := htype
   byte[buffPtr][DHCP_HLEN] := hlen
   byte[buffPtr][DHCP_HOPS] := hops  
-  
-PUB FillTransactionID | transId
+
+
+PUB CreateTransactionId
   transId := CNT
-  long[buffPtr+DHCP_XID] := ?transId
+  ?transId
+  
+PUB FillTransactionID
+  long[buffPtr+DHCP_XID] := transId
 
 PUB FillMac
   bytemove(buffPtr+DHCP_CHADDR, wiz.GetCommonRegister(wiz#MAC0), HARDWARE_ADDR_LEN)    
 
+PUB FillServerIp
+  bytemove(buffPtr+DHCP_SIADDR, wiz.GetDhcpServerIp, 4)
+
+  
 PUB FillMagicCookie
   bytemove(buffPtr+DHCP_MAGIC_COOKIE, @magicCookie, MAGIC_COOKIE_LEN)
 

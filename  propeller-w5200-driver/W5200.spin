@@ -117,6 +117,12 @@ DAT
   _ip             byte  192, 168,   1,   107
   endcm           byte  $00', $00
 
+  _dns1           byte  $00, $00, $00, $00
+  _dns2           byte  $00, $00, $00, $00
+  _dns3           byte  $00, $00, $00, $00
+  _dhcpServer     byte  $00, $00, $00, $00
+  _router         byte  $00, $00, $00, $00
+
   workSpace       byte  $0[BUFFER_16]
   
   sockRxMem       byte  $02[SOCKETS]
@@ -330,7 +336,47 @@ PUB GetRemoteIp(socket)
 PUB SetRemotePort(socket, port)
   WriteSocket16(socket, S_DEST_PORT0, port)
 
-   
+{
+PUB  SetDns1(octet3, octet2, octet1, octet0)
+  _dns1[0] := octet3 
+  _dns1[1] := octet2
+  _dns1[2] := octet1
+  _dns1[3] := octet0
+
+PUB  SetDns2(octet3, octet2, octet1, octet0)
+  _dns2[0] := octet3 
+  _dns2[1] := octet2
+  _dns2[2] := octet1
+  _dns2[3] := octet0
+
+PUB  SetDns3(octet3, octet2, octet1, octet0)
+  _dns3[0] := octet3 
+  _dns3[1] := octet2
+  _dns3[2] := octet1
+  _dns3[3] := octet0
+}
+
+PUB CopyDns(source, len)
+  bytemove(@_dns1, source, len)
+
+PUB CopyDhcpServer(source, len)
+  bytemove(@_dhcpServer, source, len)
+
+PUB CopyRouter(source, len)
+  bytemove(@_router, source, len)
+
+PUB CopyGateway(source, len)
+  bytemove(@_gateway, source, len)
+
+PUB CopySubnet(source, len)
+  bytemove(@_subnetMask, source, len)
+  
+PUB GetDns
+  return @_dns1
+
+PUB GetDhcpServerIp
+  return @_dhcpServer
+     
 PUB SetDefault2kRxTxBuffers | i
 
   repeat i from 0 to 7
