@@ -148,6 +148,9 @@ PUB Init
   SetCommonDefaults
 
 
+PUB GetCommonRegister(register)
+  return @_mode + register
+
 PUB GetWorkSpace
   return @workSpace
 
@@ -298,7 +301,7 @@ PUB SetSubnetMask(octet3, octet2, octet1, octet0)
   _subnetmask[3] := octet0
   Write(SUBNET_MASK0, @_subnetmask, 4) 
 
-PUB Mac(octet5, octet4, octet3, octet2, octet1, octet0)
+PUB SetMac(octet5, octet4, octet3, octet2, octet1, octet0)
   _mac[0] := octet5 
   _mac[1] := octet4
   _mac[2] := octet3
@@ -307,7 +310,7 @@ PUB Mac(octet5, octet4, octet3, octet2, octet1, octet0)
   _mac[5] := octet0
   Write(MAC0, @_mac, 6)
 
-PUB Ip(octet3, octet2, octet1, octet0)
+PUB  SetIp(octet3, octet2, octet1, octet0)
   _ip[0] := octet3 
   _ip[1] := octet2
   _ip[2] := octet1
@@ -324,7 +327,7 @@ PUB RemoteIp(socket, octet3, octet2, octet1, octet0)
 PUB GetRemoteIp(socket)
   Read(GetSocketRegister(socket, S_DEST_IP0), @workspace, 4) 
 
-PUB RemotePort(socket, port)
+PUB SetRemotePort(socket, port)
   WriteSocket16(socket, S_DEST_PORT0, port)
 
    

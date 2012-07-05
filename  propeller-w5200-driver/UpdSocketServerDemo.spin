@@ -95,22 +95,19 @@ PUB Main | bytesToRead, bytesSent, receiving
     bytesToRead~
 
 PUB DisplayMemory(addr, len, isHex) | j
-  pst.char(13)
-  pst.str(string("Start: "))
-  pst.dec(addr)
-  pst.str(string(" Len: "))
-  pst.dec(len)
-  pst.char($0D)
-  
-  pst.str(string("-------- Buffer Dump -----------",13, "    "))
-  repeat j from 0 to 9
-    pst.dec(j)
+  pst.str(string(13,"-----------------------------------------------------",13))
+  pst.str(string(13, "      "))
+  repeat j from 0 to $F
+    pst.hex(j, 2)
     pst.char($20)
-    pst.char($20)
-  pst.char(13)
+  pst.str(string(13, "      ")) 
+  repeat j from 0 to $F
+    pst.str(string("-- "))
+
+  pst.char(13) 
   repeat j from 0 to len
     if(j == 0)
-      pst.dec(0)
+      pst.hex(0, 4)
       pst.char($20)
       pst.char($20)
       
@@ -123,13 +120,27 @@ PUB DisplayMemory(addr, len, isHex) | j
       pst.char(byte[addr+j])
 
     pst.char($20) 
-    if((j+1) // 10 == 0) 
+    if((j+1) // $10 == 0) 
       pst.char($0D)
-      pst.dec((j+10)/10)
+      pst.hex(j+1, 4)
       pst.char($20)
-      if((j+10)/10 < 10)
-        pst.char($20)  
+      pst.char($20)  
   pst.char(13)
+  
+  pst.char(13)
+  pst.str(string("Start: "))
+  pst.dec(addr)
+  pst.str(string(" Len: "))
+  pst.dec(len)
+  pst.str(string(13,"-----------------------------------------------------",13,13))
+      
+PUB PrintIp(addr) | i
+  repeat i from 0 to 3
+    pst.dec(byte[addr][i])
+    if(i < 3)
+      pst.char($2E)
+    else
+      pst.char($0D)
       
 PUB PrintIp(addr) | i
   repeat i from 0 to 3

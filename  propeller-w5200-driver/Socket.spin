@@ -17,8 +17,8 @@ CON
 VAR
   byte  _sock
   byte  _protocol
-  byte  _ip[4]
-  word  _port
+  byte  _remoteIp[4]
+  word  _remotePort
   long bytesToRead
   long bytesToWrite
 
@@ -41,33 +41,33 @@ PUB Init(socketId, protocol, portNum)
 
   'return buffer
 
-{
+{ 
 PUB GetIp
-  return @_ip
+  return wiz.GetCommonRegister(wiz#SOURCE_IP0)
 PUB GetPort
-  return _port
+  return _remotePort
 PUB GetbytesToRead
   return bytesToRead
 PUB GetBytesToWrite
   return bytesToWrite
-}
+  }
   
 PUB Mac(octet5, octet4, octet3, octet2, octet1, octet0)
-  wiz.Mac(octet5, octet4, octet3, octet2, octet1, octet0)
+  wiz.SetMac(octet5, octet4, octet3, octet2, octet1, octet0)
 
 PUB Ip(octet3, octet2, octet1, octet0)
-  wiz.Ip(octet3, octet2, octet1, octet0)
+  wiz.SetIp(octet3, octet2, octet1, octet0)
 
 PUB RemoteIp(octet3, octet2, octet1, octet0)
-  _ip[0] := octet3
-  _ip[1] := octet2
-  _ip[2] := octet1
-  _ip[3] := octet0
+  _remoteIp[0] := octet3
+  _remoteIp[1] := octet2
+  _remoteIp[2] := octet1
+  _remoteIp[3] := octet0
   wiz.RemoteIp(_sock, octet3, octet2, octet1, octet0)
   
 PUB RemotePort(port)
-  _port := port
-  wiz.RemotePort(_sock, port)
+  _remotePort := port
+  wiz.SetRemotePort(_sock, port)
 
 {
 PUB DebugRead(register, buffer, length)
@@ -92,7 +92,7 @@ PUB Connected
 PUB Available | i
   bytesToRead := i := 0
   repeat until bytesToRead := wiz.GetRxBytesToRead(_sock)
-    if(i++ > 100)
+    if(i++ > 500)
       pause(1)
       return -1
   return bytesToRead
