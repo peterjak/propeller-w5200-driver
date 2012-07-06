@@ -53,6 +53,7 @@ PUB Main | bytesToRead, bytesSent, receiving, ptr
 
 
 
+  receiving := true
   repeat while receiving 
     'Data in the buffer?
     bytesToRead := sock.Available
@@ -62,10 +63,15 @@ PUB Main | bytesToRead, bytesSent, receiving, ptr
     pst.char(13)
      
     'Check for a timeout
-    if(bytesToRead < 0)
+    if(bytesToRead == -1)
       receiving := false
-      pst.str(string("Done Receiving Data", CR))
-      return
+      pst.str(string("Fail safe", CR))
+      next
+
+    if(bytesToRead == 0)
+      receiving := false
+      pst.str(string("Done", CR))
+      next 
 
     if(bytesToRead > 0) 
       'Get the Rx buffer  
@@ -79,7 +85,7 @@ PUB Main | bytesToRead, bytesSent, receiving, ptr
       pst.char(CR)
        
       pst.char(CR) 
-      pst.str(ptr)
+      DisplayMemory(ptr, DeserializeWord(@buff + 6), true) 
       pst.char(CR)
       
     bytesToRead~
@@ -141,13 +147,6 @@ PUB PrintIp(addr) | i
     else
       pst.char($0D)
       
-PUB PrintIp(addr) | i
-  repeat i from 0 to 3
-    pst.dec(byte[addr][i])
-    if(i < 3)
-      pst.char($2E)
-    else
-      pst.char($0D)
       
 PRI SerializeWord(value, buffer)
   byte[buffer++] := (value & $FF00) >> 8

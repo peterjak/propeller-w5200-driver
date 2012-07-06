@@ -106,6 +106,12 @@ PUB Init
   
   optionPtr := DHCP_OPTIONS + buffPtr
   Request
+  
+  optionPtr := DHCP_OPTIONS + buffPtr
+  if(Ack)
+    pst.str(string("IP Assigned"))
+  else
+    pst.str(string("DHCP Failed"))
 
 PUB Discover | len
   FillOpHtypeHlenHops($01, $01, $06, $00)
@@ -169,7 +175,12 @@ PUB Request | len
   len := EndDhcpOptions
   DisplayMemory(buffPtr, len, true)
   SendReceive(buffPtr, len)
-    
+
+PUB Ack | len
+  buffPtr += UPD_HEADER_LEN
+  len := ReadDhcpOption(MESSAGE_TYPE)
+  buffPtr -= UPD_HEADER_LEN
+  return byte[optionPtr] == DHCP_ACK   
 
 PUB GetIp | ptr
   ptr := @byte[buffPtr][DHCP_YIADDR]
@@ -269,10 +280,15 @@ PUB SendReceive(buffer, len) | receiving, bytesToRead, ptr
     pst.char(13)
      
     'Check for a timeout
-    if(bytesToRead < 0)
+    if(bytesToRead == -1)
       receiving := false
-      pst.str(string("Done Receiving Data", CR))
+      pst.str(string("Fail safe", CR))
       next
+
+    if(bytesToRead == 0)
+      receiving := false
+      pst.str(string("Done", CR))
+      next 
 
     if(bytesToRead > 0) 
       'Get the Rx buffer  
@@ -286,7 +302,7 @@ PUB SendReceive(buffer, len) | receiving, bytesToRead, ptr
       pst.char(CR)
        
       pst.char(CR) 
-      DisplayMemory(ptr, DeserializeWord(@buff + 6), true) 
+      DisplayMemory(ptr, DeserializeWord(buffer + 6), true) 
       pst.char(CR)
       
     bytesToRead~

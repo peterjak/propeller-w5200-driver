@@ -18,6 +18,7 @@ VAR
   byte  _sock
   byte  _protocol
   byte  _remoteIp[4]
+  byte  readCount
   word  _remotePort
   long bytesToRead
   long bytesToWrite
@@ -39,7 +40,8 @@ PUB Init(socketId, protocol, portNum)
   wiz.Init
   wiz.InitSocket(socketId, protocol, portNum)
 
-  'return buffer
+  readCount := 0
+
 
 { 
 PUB GetIp
@@ -89,14 +91,27 @@ PUB Connect
 PUB Connected
   return wiz.IsEstablished(_sock)
 
-PUB Available | i
-  bytesToRead := i := 0
-  repeat until bytesToRead := wiz.GetRxBytesToRead(_sock)
-    if(i++ > 500)
-      pause(1)
-      return -1
-  return bytesToRead
+PUB IsClosed
 
+
+PUB Available | i, timeout
+  bytesToRead := i := 0
+
+  if(readCount++ == 0)
+    repeat until NULL < bytesToRead := wiz.GetRxBytesToRead(_sock) 
+      if(i++ > 500)
+        pause(1)
+        return -1
+  else
+    bytesToRead := wiz.GetRxBytesToRead(_sock)
+   
+  return bytesToRead
+  
+{
+PUB Available2
+  bytesToRead := wiz.GetRxBytesToRead(_sock) 
+  return bytesToRead
+}
 PUB Receive(buffer) | ptr
 
   ptr := buffer
@@ -123,8 +138,7 @@ PUB Send(buffer, len) | before, after
 
 
 PUB Disconnect | i
-  i := 0
-  
+  i := readCount := 0
   wiz.DisconnectSocket(_sock)
   repeat until wiz.IsClosed(_sock)
     if(i++ > 500)
