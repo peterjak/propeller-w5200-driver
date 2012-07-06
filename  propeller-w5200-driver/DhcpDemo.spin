@@ -13,6 +13,7 @@ CON
   HARDWARE_ADDR_LEN = $06
   MAGIC_COOKIE_LEN  = $04
   UPD_HEADER_LEN    = $08
+  MAX_DHCP_OPTIONS  = $10
   
   #0, CLOSED, TCP, UDP, IPRAW, MACRAW, PPPOE
 
@@ -78,44 +79,40 @@ OBJ
 PUB Init
 
   buffPtr := @buff
-  
-  
+
   pst.Start(115_200)
   pause(500)
 
   pst.str(string("Initialize", CR))
-
-  'DHCP Port
+  CreateTransactionId
+  
+  'DHCP Port, Mac and Ip 
   sock.Init(0, UDP, 68)
-
-  'Wiz Mac and Ip
   sock.Mac($00, $08, $DC, $16, $F8, $01)
   sock.Ip(192, 168, 1, 107)
 
-  'Broadcast
+  'Broadcast to port 67
   sock.RemoteIp(255, 255, 255, 255)
   sock.RemotePort(67)
 
-
-  optionPtr := DHCP_OPTIONS + buffPtr
+  'DHCP Process
   Discover
-
-  optionPtr := DHCP_OPTIONS + buffPtr 
   Offer
-
-  
-  optionPtr := DHCP_OPTIONS + buffPtr
   Request
-  
-  optionPtr := DHCP_OPTIONS + buffPtr
   if(Ack)
     pst.str(string("IP Assigned"))
   else
     pst.str(string("DHCP Failed"))
 
+  sock.Close
+
 PUB Discover | len
+  'optionPtr is a global pointer used in the
+  'WriteDhcpOption and ReadDhcpOption methods
+  optionPtr := DHCP_OPTIONS + buffPtr
+  
   FillOpHtypeHlenHops($01, $01, $06, $00)
-  CreateTransactionId
+  
   FillTransactionID
   FillMac
   FillMagicCookie
@@ -129,6 +126,8 @@ PUB Discover | len
 
   
 PUB Offer | len
+  optionPtr := DHCP_OPTIONS + buffPtr
+  
   buffPtr += UPD_HEADER_LEN
   
   GetIp
@@ -138,10 +137,6 @@ PUB Offer | len
   pst.char(13)
   Wiz.copyDns(optionPtr, len)
   
-  'PrintIP(wiz.GetDns)
-  'PrintIP(wiz.GetDns+4)
-  'PrintIP(wiz.GetDns+8)
-
   GetGateway
 
   len := ReadDhcpOption(SUBNET_MASK)
@@ -156,7 +151,8 @@ PUB Offer | len
   buffPtr -= UPD_HEADER_LEN
 
 PUB Request | len
-
+  optionPtr := DHCP_OPTIONS + buffPtr
+  
   'Broadcast - There must be a bug if I have to decalre teh RemoteIP again?
   'Or maybe it is because the internal register updated - bet that's it!
   sock.RemoteIp(255, 255, 255, 255)
@@ -177,6 +173,8 @@ PUB Request | len
   SendReceive(buffPtr, len)
 
 PUB Ack | len
+  optionPtr := DHCP_OPTIONS + buffPtr
+  
   buffPtr += UPD_HEADER_LEN
   len := ReadDhcpOption(MESSAGE_TYPE)
   buffPtr -= UPD_HEADER_LEN
@@ -235,9 +233,9 @@ PUB ReadDhcpOption(option) | len
   optionPtr := DHCP_OPTIONS + buffPtr
 
   'Repeat until we reach the end of the UPD packet
-  repeat 20 '(optionPtr - buffPtr) > len
+  repeat MAX_DHCP_OPTIONS
 
-    if(byte[optionPtr] == $FF)
+    if(byte[optionPtr] == DHCP_END)
       return -2
   
     if(byte[optionPtr++] == option)

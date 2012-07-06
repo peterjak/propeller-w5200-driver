@@ -75,7 +75,7 @@ CON
   
   {{ Status Register }}
   SOCK_CLOSED       = $00
-  SOCK_INT          = $13
+  SOCK_INIT         = $13
   SOCK_LISTEN       = $14
   SOCK_ESTABLISHED  = $17
   SOCK_CLOSE_WAIT   = $1C
@@ -166,6 +166,12 @@ PUB InitSocket(socket, protocol, port)
   SetSocketMode(socket, protocol)
   SetSocketPort(socket, port)
 
+PUB SocketRxSize(socket)
+  return sockRxMem[socket] * 1024
+
+PUB SocketTxSize(socket)
+  return sockTxMem[socket] * 1024 
+
 '----------------------------------------------------
 ' Receive data
 '----------------------------------------------------  
@@ -253,6 +259,7 @@ PUB OpenSocket(socket)
 PUB StartListener(socket)
   SetSocketCommandRegister(socket, LISTEN)
 
+
 PUB FlushSocket(socket)
   SetSocketCommandRegister(socket, SEND)
 
@@ -267,7 +274,10 @@ PUB CloseSocket(socket)
   
 '----------------------------------------------------
 ' Socket Status
-'---------------------------------------------------- 
+'----------------------------------------------------
+PUB IsInit(socket)
+  return GetSocketStatus(socket) ==  SOCK_INIT
+
 PUB IsEstablished(socket)
   return GetSocketStatus(socket) ==  SOCK_ESTABLISHED
 
@@ -276,6 +286,7 @@ PUB IsCloseWait(socket)
 
 PUB IsClosed(socket)
   return GetSocketStatus(socket) ==  SOCK_CLOSED
+  
 
 PUB SocketStatus(socket)
   return GetSocketStatus(socket)  

@@ -88,8 +88,13 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving
     'Check for a timeout
     if(bytesToRead < 0)
       receiving := false
-      pst.str(string("Done Receiving Data", CR))
+      pst.str(string("Timeout", CR))
       return
+
+    if(bytesToRead == 0)
+      receiving := false
+      pst.str(string("Done", CR))
+      next 
 
     if(bytesToRead > 0) 
       'Get the Rx buffer  

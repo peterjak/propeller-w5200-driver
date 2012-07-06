@@ -8,11 +8,14 @@ CON
   UDP_HEADER_PORT   = $04
   UDP_HEADER_LENGTH = $06
   UPD_DATA          = $08
+  TIMEOUT           = 500
   
   
   CR    = $0D
   LF    = $0A
-  NULL  = $00 
+  NULL  = $00
+
+  
        
 VAR
   byte  _sock
@@ -21,10 +24,9 @@ VAR
   byte  readCount
   word  _remotePort
   long bytesToRead
-  long bytesToWrite
 
 DAT
-
+  _port       byte  $2710
 
 OBJ
   wiz           : "W5200"
@@ -36,8 +38,13 @@ PUB Init(socketId, protocol, portNum)
 
   _sock := socketId
   _protocol := protocol
-  
+
   wiz.Init
+
+  'Increment port numbers stating at 10,000
+  if(portNum == 0)
+    portNum := _port++
+  
   wiz.InitSocket(socketId, protocol, portNum)
 
   readCount := 0
@@ -83,7 +90,10 @@ PUB Open
   wiz.OpenSocket(_sock)
 
 PUB Listen
-  wiz.StartListener(_sock)
+  if(wiz.IsInit(_sock))
+    wiz.StartListener(_sock)
+    return true
+  return false
 
 PUB Connect
   wiz.OpenRemoteSocket(_sock)
@@ -91,15 +101,18 @@ PUB Connect
 PUB Connected
   return wiz.IsEstablished(_sock)
 
+PUB Close
+  return wiz.CloseSocket(_sock)
+
 PUB IsClosed
+  return wiz.IsClosed(_sock)
 
-
-PUB Available | i, timeout
+PUB Available | i
   bytesToRead := i := 0
 
   if(readCount++ == 0)
     repeat until NULL < bytesToRead := wiz.GetRxBytesToRead(_sock) 
-      if(i++ > 500)
+      if(i++ > TIMEOUT)
         pause(1)
         return -1
   else
@@ -107,11 +120,6 @@ PUB Available | i, timeout
    
   return bytesToRead
   
-{
-PUB Available2
-  bytesToRead := wiz.GetRxBytesToRead(_sock) 
-  return bytesToRead
-}
 PUB Receive(buffer) | ptr
 
   ptr := buffer
@@ -124,17 +132,22 @@ PUB Receive(buffer) | ptr
 
   return ptr
       
-PUB Send(buffer, len) | before, after
+PUB Send(buffer, len) | before, after, bytesToWrite
+
+  'Validate max Rx length in bytes
+  bytesToWrite := len
+  if(bytesToWrite > wiz.SocketTxSize(_sock))
+    bytesToWrite := wiz.SocketTxSize(_sock)
 
   before := after := 0  
-  wiz.Tx(_sock, buffer, len)
+  wiz.Tx(_sock, buffer, bytesToWrite)
 
-  repeat until ((after - before) == len)
+  repeat until ((after - before) == bytesToWrite)
     before :=  wiz.GetTxReadPointer(_sock)
     wiz.FlushSocket(_sock)
     after :=  wiz.GetTxReadPointer(_sock)
-
-  return  len
+    
+  return  bytesToWrite
 
 
 PUB Disconnect | i
@@ -160,10 +173,7 @@ PRI DeserializeWord(buffer) | value
   value := byte[buffer++] << 8
   value += byte[buffer]
   return value
-{
-PRI ClearBuffer
-  bytefill(@buff, 0, BUFFER_2K)
- } 
+
 PRI pause(Duration)  
   waitcnt(((clkfreq / 1_000 * Duration - 3932) #> 381) + cnt)
   return
