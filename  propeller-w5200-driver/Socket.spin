@@ -42,7 +42,7 @@ PUB Init(socketId, protocol, portNum)
   wiz.Init
 
   'Increment port numbers stating at 10,000
-  if(portNum == 0)
+  if(portNum == -1)
     portNum := _port++
   
   wiz.InitSocket(socketId, protocol, portNum)

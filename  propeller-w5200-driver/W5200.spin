@@ -112,7 +112,7 @@ CON
 DAT
   _mode           byte  %0000_0000                  'enable ping
   _gateway        byte  192, 168,   1,   1
-  _subnetmask     byte  255, 255, 255,   0
+  _subnetmask     byte  255, 255, 255,   0 
   _mac            byte  $00, $08, $DC, $16, $F8, $01
   _ip             byte  192, 168,   1,   107
   endcm           byte  $00', $00
