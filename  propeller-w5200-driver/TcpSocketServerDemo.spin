@@ -26,6 +26,7 @@ OBJ
   pst           : "Parallax Serial Terminal"
   sock          : "Socket"
   wiz           : "W5200"
+  dhcp          : "Dhcp.spin"
 
 
  
@@ -34,6 +35,9 @@ PUB Main | bytesToRead
   bytesToRead := 0
   pst.Start(115_200)
   pause(500)
+
+  dhcp.Init(@buff, 7)
+  dhcp.DoDhcp
 
   pst.str(string("Initialize Socket",CR))
 

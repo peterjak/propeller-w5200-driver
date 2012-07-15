@@ -41,6 +41,20 @@ DAT
 }                       $00, $01,               { Host address: Type A
 }                       $00, $01                { Class: 01 }
   qend            byte  NULL
+
+  dnsEmailQuery   byte  $68, $C8,               { Transaction Id
+}                       $01, $00,               { Flags
+}                       $00, $01,               { Questions
+}                       $00, $00,               { Answer RRS
+}                       $00, $00,               { Authority RRS
+}                       $00, $00,               { Additional RRS
+}                       $04, "smtp",            { Query: Length -> smtp
+}                       $04, "west",            {
+}                       $03, "cox",             {
+}                       $03, "net", $00,        { Zero term
+}                       $00, $01,               { Host address: Type A
+}                       $00, $01                { Class: 01 }
+  qeend           byte  NULL
                                                               
   dnsResponse     byte  $F0, $90,                         { Transaction Id            
 }                       $81, $80,                         { Flags                     
@@ -120,8 +134,11 @@ PUB Init | ptr
   pause(500)
 
 
-  DisplayMemory(@dnsQuery, 32, true) 
-  ptr := SendReceive(@dnsQuery, @qend - @dnsQuery   )
+  'DisplayMemory(@dnsQuery, 32, true) 
+  'ptr := SendReceive(@dnsQuery, @qend - @dnsQuery   )
+  
+  DisplayMemory(@dnsEmailQuery, 32, true) 
+  ptr := SendReceive(@dnsEmailQuery, @qeend - @dnsEmailQuery   )                                
 
   GetIP(ptr) 
 
@@ -144,21 +161,26 @@ PUB GetIP(buffer) | ptr, i, len, ansRRS
   else
     repeat until byte[buffer++] == $00
 
-  ansRRS--
+  
 
   len := DeserializeWord(buffer)
-  buffer += (2 + len)
 
-    'Answer
-  if(byte[buffer] & $C0 == $C0)
-    buffer +=10
-  else
-    repeat until byte[buffer++] == $00
+  
+  if(len > 4)
+    ansRRS--
+    buffer += (2 + len)
 
-  i := 0
-  len := DeserializeWord(buffer)
+      'Answer
+    if(byte[buffer] & $C0 == $C0)
+      buffer +=10
+    else
+      repeat until byte[buffer++] == $00
+
+    i := 0
+    len := DeserializeWord(buffer)
+
   buffer += 2
-  'PrintIp(buffer)
+
   bytemove(@@dnsIps[i++], buffer, len)
   PrintIp(@@dnsIps[i-1])
   'pst.char(13) 

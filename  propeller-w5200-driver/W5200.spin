@@ -136,7 +136,6 @@ DAT
 
 OBJ
   spi           : "Spi.spin"
-
   
 PUB Init
 

@@ -14,6 +14,7 @@ CON
   MAGIC_COOKIE_LEN  = $04
   UPD_HEADER_LEN    = $08
   MAX_DHCP_OPTIONS  = $10
+  DHCP_PACKET_LEN        = $156 '342
   
   #0, CLOSED, TCP, UDP, IPRAW, MACRAW, PPPOE
 
@@ -250,7 +251,8 @@ PUB ReadDhcpOption(option) | len
   
 PUB EndDhcpOptions | len
   byte[optionPtr] := DHCP_END
-  return ((optionPtr-buffPtr) // 16) + (optionPtr-buffPtr) + 1
+  return DHCP_PACKET_LEN
+  'return ((optionPtr-buffPtr) // 16) + (optionPtr-buffPtr) + 1
  
 
 PUB SendReceive(buffer, len) | receiving, bytesToRead, ptr 
