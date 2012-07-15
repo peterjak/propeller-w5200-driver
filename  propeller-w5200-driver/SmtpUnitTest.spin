@@ -74,7 +74,7 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving
   bytesSent := sock.Send(@ehlo, strsize(@ehlo))
 
   pst.str(string("Sent EHLO",13))
-  pause(100)
+  'pause(100)
   
   bytesToRead := sock.Available
   buffer := sock.Receive(@buff)
@@ -83,7 +83,7 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving
 
   
   bytesSent := sock.Send(@mfrom, strsize(@mfrom))
-  pause(100)
+  'pause(100)
 
   bytesToRead := sock.Available
   buffer := sock.Receive(@buff)
@@ -91,7 +91,7 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving
 
 
   bytesSent := sock.Send(@mto, strsize(@mto))
-  pause(100)
+  'pause(100)
 
   bytesToRead := sock.Available
   buffer := sock.Receive(@buff)
@@ -99,13 +99,13 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving
 
 
   bytesSent := sock.Send(@mdata, strsize(@mdata))
-  pause(100)
+  'pause(100)
   bytesSent := sock.Send(@subject, strsize(@subject))
-  pause(100)
+  'pause(100)
   bytesSent := sock.Send(@msg, strsize(@msg))
-  pause(100)
+  'pause(100)
   bytesSent := sock.Send(@done, strsize(@done))
-  pause(100)
+  'pause(100)
 
   bytesToRead := sock.Available
   buffer := sock.Receive(@buff)
@@ -113,7 +113,7 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving
 
 
   bytesSent := sock.Send(@equit, strsize(@equit))
-  pause(100)
+  'pause(100)
   
   bytesToRead := sock.Available
   buffer := sock.Receive(@buff)
