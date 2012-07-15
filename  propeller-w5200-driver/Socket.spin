@@ -109,6 +109,7 @@ PUB IsClosed
 
 PUB Available | i
   bytesToRead := i := 0
+  'readCount := 0
 
   if(readCount++ == 0)
     repeat until NULL < bytesToRead := wiz.GetRxBytesToRead(_sock) 

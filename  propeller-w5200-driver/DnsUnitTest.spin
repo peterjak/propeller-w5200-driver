@@ -55,7 +55,20 @@ DAT
 }                       $00, $01,               { Host address: Type A
 }                       $00, $01                { Class: 01 }
   qeend           byte  NULL
-                                                              
+
+  dnsEmailQuery2   byte  $68, $C8,               { Transaction Id
+}                       $01, $00,               { Flags
+}                       $00, $01,               { Questions
+}                       $00, $00,               { Answer RRS
+}                       $00, $00,               { Authority RRS
+}                       $00, $00,               { Additional RRS
+}                       $04, "mail",            { Query: Length -> smtp
+}                       $0D, "agaverobotics",   {
+}                       $03, "com", $00,        { Zero term
+}                       $00, $01,               { Host address: Type A
+}                       $00, $01                { Class: 01 }
+  qeend2           byte  NULL
+                                                             
   dnsResponse     byte  $F0, $90,                         { Transaction Id            
 }                       $81, $80,                         { Flags                     
 }                       $00, $01,                         { Questions                 
@@ -138,7 +151,10 @@ PUB Init | ptr
   'ptr := SendReceive(@dnsQuery, @qend - @dnsQuery   )
   
   DisplayMemory(@dnsEmailQuery, 32, true) 
-  ptr := SendReceive(@dnsEmailQuery, @qeend - @dnsEmailQuery   )                                
+  ptr := SendReceive(@dnsEmailQuery, @qeend - @dnsEmailQuery   )
+
+  'DisplayMemory(@dnsEmailQuery2, 32, true) 
+  'ptr := SendReceive(@dnsEmailQuery2, @qeend2 - @dnsEmailQuery2   )                                
 
   GetIP(ptr) 
 
