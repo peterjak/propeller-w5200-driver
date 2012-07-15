@@ -15,12 +15,12 @@ VAR
 
 DAT
   buff          byte  $0[BUFFER_2K]
-  ehlo          byte  "EHLO ", $0D, $0A, 0
-  mfrom         byte  "MAIL FROM: <>", $0D, $0A, 0
-  mto           byte  "RCPT TO: <>", $0D, $0A, 0
+  ehlo          byte  "EHLO me@email.com", $0D, $0A, 0
+  mfrom         byte  "MAIL FROM: me@email.com", $0D, $0A, 0
+  mto           byte  "RCPT TO: me@email.com", $0D, $0A, 0
   mdata         byte  "DATA", $0D, $0A, 0
   subject       byte  "SUBJECT: test", $0D, $0A,  0
-  msg           byte  "This is a test from script!", $0D, $0A, 0
+  msg           byte  "This is a test from script - yehhhhh!", $0D, $0A, 0
   done          byte  ".", $0D, $0A, 0
   equit         byte  "quit", $0D, $0A, 0
 
@@ -48,8 +48,7 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving
   sock.Mac($00, $08, $DC, $16, $F8, $01)
   sock.Ip(192, 168, 1, 107)
 
-  'www.agaverobotics.com
-  sock.RemoteIp(68, 6, 19, 4)
+  sock.RemoteIp(1, 2, 3, 4)
   sock.RemotePort(25)
 
   pst.str(string(CR, "Begin SMTP Conversation", CR))
@@ -70,10 +69,8 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving
   pst.str(buffer)
 
 
-  
   bytesSent := sock.Send(@ehlo, strsize(@ehlo))
-
-  pst.str(string("Sent EHLO",13))
+  pst.str(@ehlo)
   pause(100)
   
   bytesToRead := sock.Available
@@ -83,6 +80,7 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving
 
   
   bytesSent := sock.Send(@mfrom, strsize(@mfrom))
+  pst.str(@mfrom)
   pause(100)
 
   bytesToRead := sock.Available
@@ -91,6 +89,7 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving
 
 
   bytesSent := sock.Send(@mto, strsize(@mto))
+  pst.str(@mto)
   pause(100)
 
   bytesToRead := sock.Available
@@ -99,12 +98,16 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving
 
 
   bytesSent := sock.Send(@mdata, strsize(@mdata))
+  pst.str(@mdata)
   pause(100)
   bytesSent := sock.Send(@subject, strsize(@subject))
+  pst.str(@subject)
   pause(100)
   bytesSent := sock.Send(@msg, strsize(@msg))
+  pst.str(@msg)
   pause(100)
   bytesSent := sock.Send(@done, strsize(@done))
+  pst.str(@done)
   pause(100)
 
   bytesToRead := sock.Available
@@ -113,6 +116,7 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving
 
 
   bytesSent := sock.Send(@equit, strsize(@equit))
+  pst.str(@equit)
   pause(100)
   
   bytesToRead := sock.Available
@@ -122,6 +126,7 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving
 
   pst.str(string(CR, "Disconnect", CR)) 
   sock.Disconnect
+  sock.Close
    
   
   
