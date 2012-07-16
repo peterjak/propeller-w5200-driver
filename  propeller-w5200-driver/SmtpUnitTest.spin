@@ -15,9 +15,9 @@ VAR
 
 DAT
   buff          byte  $0[BUFFER_2K]
-  ehlo          byte  "EHLO me@email.com", $0D, $0A, 0
-  mfrom         byte  "MAIL FROM: me@email.com", $0D, $0A, 0
-  mto           byte  "RCPT TO: me@email.com", $0D, $0A, 0
+  ehlo          byte  "EHLO me@mail.com", $0D, $0A, 0
+  mfrom         byte  "MAIL FROM: me@mail.com", $0D, $0A, 0
+  mto           byte  "RCPT TO: me@mail.com", $0D, $0A, 0
   mdata         byte  "DATA", $0D, $0A, 0
   subject       byte  "SUBJECT: test", $0D, $0A,  0
   msg           byte  "This is a test from script - yehhhhh!", $0D, $0A, 0
@@ -68,68 +68,29 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving
   buffer := sock.Receive(@buff)
   pst.str(buffer)
 
-
-  bytesSent := sock.Send(@ehlo, strsize(@ehlo))
-  pst.str(@ehlo)
-  pause(100)
-  
-  bytesToRead := sock.Available
-  buffer := sock.Receive(@buff)
-  pst.str(buffer)
-
-
-  
-  bytesSent := sock.Send(@mfrom, strsize(@mfrom))
-  pst.str(@mfrom)
-  pause(100)
-
-  bytesToRead := sock.Available
-  buffer := sock.Receive(@buff)
-  pst.str(buffer)
-
-
-  bytesSent := sock.Send(@mto, strsize(@mto))
-  pst.str(@mto)
-  pause(100)
-
-  bytesToRead := sock.Available
-  buffer := sock.Receive(@buff)
-  pst.str(buffer)
-
-
-  bytesSent := sock.Send(@mdata, strsize(@mdata))
-  pst.str(@mdata)
-  pause(100)
-  bytesSent := sock.Send(@subject, strsize(@subject))
-  pst.str(@subject)
-  pause(100)
-  bytesSent := sock.Send(@msg, strsize(@msg))
-  pst.str(@msg)
-  pause(100)
-  bytesSent := sock.Send(@done, strsize(@done))
-  pst.str(@done)
-  pause(100)
-
-  bytesToRead := sock.Available
-  buffer := sock.Receive(@buff)
-  pst.str(buffer)
-
-
-  bytesSent := sock.Send(@equit, strsize(@equit))
-  pst.str(@equit)
-  pause(100)
-  
-  bytesToRead := sock.Available
-  buffer := sock.Receive(@buff)
-  pst.str(buffer) 
-
+  Send(@ehlo, true)
+  Send(@mfrom, true)
+  Send(@mto, true)
+  Send(@mdata, true)
+  Send(@subject, false)
+  Send(@msg, false)
+  Send(@done, false)
+  Send(@equit, true)
 
   pst.str(string(CR, "Disconnect", CR)) 
   sock.Disconnect
   sock.Close
    
   
-  
+PUB Send(cmd, response) | buffer
+  sock.Send(cmd, strsize(cmd))
+  pst.str(cmd)
+  pause(100)
+
+  if(response)
+    sock.Available
+    buffer := sock.Receive(@buff)
+    pst.str(buffer)   
 
 PUB PrintNameValue(name, value, digits) | len
   len := strsize(name)
