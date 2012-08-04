@@ -64,7 +64,6 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, ptr, len
   {{
     TODO: Make the Demo
   }}
-  receiving := true
   bytesToRead := 0
   pst.Start(115_200)
   pause(500)
@@ -83,12 +82,13 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, ptr, len
 
   pst.str(string("Initialize", CR))
 
+  'Wiz Mac and Ip
+  wiz.Init
+  wiz.SetIp(192, 168, 1, 107)
+  wiz.SetMac($00, $08, $DC, $16, $F8, $01)
+  
   'DHCP Port
   buffer := sock.Init(0, UDP, 68)
-
-  'Wiz Mac and Ip
-  sock.Mac($00, $08, $DC, $16, $F8, $01)
-  sock.Ip(192, 168, 1, 107)
 
   'Broadcast
   sock.RemoteIp(255, 255, 255, 255)
@@ -102,10 +102,8 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, ptr, len
   
   sock.Send(@DHCPDISCOVER, len)
   'sock.Send(@DHCPREQUEST, len)
-  
 
-
-
+  receiving := true
   repeat while receiving 
     'Data in the buffer?
     bytesToRead := sock.Available
@@ -115,24 +113,28 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, ptr, len
     pst.char(13)
      
     'Check for a timeout
-    if(bytesToRead < 0)
+    if(bytesToRead == -1)
       receiving := false
-      pst.str(string("Done Receiving Data", CR))
-      return
+      pst.str(string("Fail safe", CR))
+      next
+
+    if(bytesToRead == 0)
+      receiving := false
+      pst.str(string("Done", CR))
+      next 
 
     if(bytesToRead > 0) 
       'Get the Rx buffer  
       ptr := sock.Receive(@buff)
       pst.char(CR)
       pst.str(string("UPD Header:",CR))
-      PrintIp(buffer)
-      pst.dec(DeserializeWord(@buff+ 4))
+      PrintIp(@buff)
+      pst.dec(DeserializeWord(@buff + 4))
       pst.char(CR)
       pst.dec(DeserializeWord(@buff + 6))
       pst.char(CR)
        
       pst.char(CR) 
-      'pst.str(ptr)
       DisplayMemory(ptr, DeserializeWord(@buff + 6), true) 
       pst.char(CR)
       
@@ -195,13 +197,6 @@ PUB PrintIp(addr) | i
     else
       pst.char($0D)
       
-PUB PrintIp(addr) | i
-  repeat i from 0 to 3
-    pst.dec(byte[addr][i])
-    if(i < 3)
-      pst.char($2E)
-    else
-      pst.char($0D)
       
 PRI SerializeWord(value, buffer)
   byte[buffer++] := (value & $FF00) >> 8

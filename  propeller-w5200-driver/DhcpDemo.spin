@@ -86,11 +86,14 @@ PUB Init
 
   pst.str(string("Initialize", CR))
   CreateTransactionId
+
+  'Wiz Mac and Ip
+  wiz.Init
+  wiz.SetIp(192, 168, 1, 107)
+  wiz.SetMac($00, $08, $DC, $16, $F8, $01)
   
   'DHCP Port, Mac and Ip 
   sock.Init(0, UDP, 68)
-  sock.Mac($00, $08, $DC, $16, $F8, $01)
-  sock.Ip(192, 168, 1, 107)
 
   'Broadcast to port 67
   sock.RemoteIp(255, 255, 255, 255)
@@ -106,6 +109,7 @@ PUB Init
     pst.str(string("DHCP Failed"))
 
   sock.Close
+
 
 PUB Discover | len
   'optionPtr is a global pointer used in the

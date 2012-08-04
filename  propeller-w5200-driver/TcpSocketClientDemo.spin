@@ -20,7 +20,11 @@ DAT
   request2      byte  "GET /default.aspx HTTP/1.1", CR, LF, {
 }               byte  "Host: agaverobotics.com", CR, LF, {
 }               byte  "User-Agent: Wiz5200", CR, LF, CR, LF, $0
-  ebuff         byte  $0[$200]
+
+
+  google        byte  "GET /finance/historical?q=FB&output=csv HTTP/1.1", CR, LF, {
+}               byte  "Host: finance.google.com", CR, LF, {
+}               byte  "User-Agent: Wiz5200", CR, LF, CR, LF, $0
 
   buff          byte  $0[BUFFER_2K]
 
@@ -30,7 +34,9 @@ DAT
 OBJ
   pst           : "Parallax Serial Terminal"
   sock          : "Socket"
-  wiz           : "W5200"
+  dhcp          : "Dhcp.spin"
+  wiz           : "W5200" 
+
 
 
  
@@ -42,13 +48,19 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving
   pause(500)
 
 
+  'Wiz Mac and Ip
+  wiz.Init
+  wiz.SetIp(192, 168, 1, 107)
+  wiz.SetMac($00, $08, $DC, $16, $F8, $01)
+  
+
+  'DoDhcp(7)
+
   pst.str(string("Initialize", CR))
   'Initialize Socket 0 port 8080
   buffer := sock.Init(0, TCP, 8080)
 
-  'Wiz Mac and Ip
-  sock.Mac($00, $08, $DC, $16, $F8, $01)
-  sock.Ip(192, 168, 1, 107)
+
 
   'Remote Ip 1 and port
   'sock.RemoteIp(192, 168, 1, 120)
@@ -56,6 +68,7 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving
 
   'www.agaverobotics.com
   sock.RemoteIp(65, 98, 8, 151)
+  'sock.RemoteIp(74,125,224,194) 
   sock.RemotePort(80)
 
   pst.str(string(CR, "Begin Client Web request", CR))
@@ -107,7 +120,23 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving
   sock.Disconnect
    
   
-  
+
+PUB DoDhcp(socket)
+  dhcp.Init(@buff, socket)
+  pst.str(string("Setting Up DHCP", 13))
+  pst.str(string("Requesting IP....."))
+  PrintIp(dhcp.DoDhcp)
+
+  pst.str(string("DNS..............."))
+  PrintIp(wiz.GetDns)
+
+  pst.str(string("DHCP Server......."))
+  printIp(wiz.GetDhcpServerIp)
+
+  pst.str(string("Router IP........."))
+  printIp(wiz.GetRouter)
+  pst.char(CR)
+
 
 PUB PrintNameValue(name, value, digits) | len
   len := strsize(name)

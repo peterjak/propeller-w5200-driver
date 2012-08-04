@@ -114,7 +114,7 @@ DAT
   _gateway        byte  192, 168,   1,   1
   _subnetmask     byte  255, 255, 255,   0 
   _mac            byte  $00, $08, $DC, $16, $F8, $01
-  _ip             byte  192, 168,   1,   107
+  _ip             byte  192, 168,   1,   199
   endcm           byte  $00', $00
 
   _dns1           byte  $00, $00, $00, $00
@@ -380,12 +380,16 @@ PUB CopyGateway(source, len)
 
 PUB CopySubnet(source, len)
   bytemove(@_subnetMask, source, len)
-  
+  Write(SUBNET_MASK0, @_subnetmask, 4)
+    
 PUB GetDns
   return @_dns1
 
 PUB GetDhcpServerIp
   return @_dhcpServer
+
+PUB GetRouter
+  return @_router
      
 PUB SetDefault2kRxTxBuffers | i
 
@@ -491,17 +495,24 @@ PUB DebugGet
 
 PUB DebugWorkBuff
   return @workSpace
-{  
+ 
 PUB DebugRead(register, buffer, length)
-  Read(register, buffer, length)  
-}
-{  }   
-PUB DebugRead(sock, register, buffer, length)
-  Read(GetSocketRegister(sock, register), buffer, length)
+  Read(register, buffer, length)
 
 PUB DebugReadWord(socket, register)
-  Read(GetSocketRegister(socket, register), @workSpace, 2)
+  Read(register, @workSpace, 2)
   return DeserializeWord(@workSpace)
 
 PUB DebugReadByte(socket, register)
+  return ReadByte(register)
+   
+ 
+PUB DebugSockRead(sock, register, buffer, length)
+  Read(GetSocketRegister(sock, register), buffer, length)
+
+PUB DebugSockReadWord(socket, register)
+  Read(GetSocketRegister(socket, register), @workSpace, 2)
+  return DeserializeWord(@workSpace)
+
+PUB DebugSockReadByte(socket, register)
   return ReadByte(GetSocketRegister(socket, register))

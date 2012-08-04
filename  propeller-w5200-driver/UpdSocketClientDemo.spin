@@ -33,15 +33,18 @@ PUB Main | bytesToRead, bytesSent, receiving, ptr
   pst.Start(115_200)
   pause(500)
 
-
+  'Wiz Mac and Ip
+  wiz.Init 
+  wiz.SetIp(192, 168, 1, 107)
+  wiz.SetMac($00, $08, $DC, $16, $F8, $01)
+  
+  
   pst.str(string("Initialize", CR))
   'Initialize Socket 0 port 8080
   sock.Init(0, UDP, 8080)
 
-  'Wiz Mac and Ip
-  sock.Mac($00, $08, $DC, $16, $F8, $01)
-  sock.Ip(192, 168, 1, 107)
-  sock.RemoteIp(192, 168, 1, 104)
+
+  sock.RemoteIp(192, 168, 1, 103)
   sock.RemotePort(8080)
   
   pst.str(string("Start UPD Client",CR))

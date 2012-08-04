@@ -28,19 +28,19 @@ PUB Main | sock, port, bytesToRead
   pst.Start(115_200)
   pause(500)
   
-  wiz.Init(@buff)
+  wiz.Init
 
   'Initialize Socket 0 port 8080
-  wiz.Mac($00, $08, $DC, $16, $F8, $01)
-  wiz.Ip(192, 168, 1, 130)
+  wiz.SetMac($00, $08, $DC, $16, $F8, $01)
+  wiz.SetIp(192, 168, 1, 130)
 
   sock := 0
   port := 8080
   wiz.InitSocket(sock, TCP, port)
 
 
-  wiz.DebugRead(sock, wiz#GATEWAY0, @buff, 4)
-  PrintIp(@buff)
+  'wiz.DebugRead(sock, wiz#GATEWAY0, @buff, 4)
+  'PrintIp(@buff)
 
   repeat
     '----------------------------------------------------

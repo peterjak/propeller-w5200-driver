@@ -1,5 +1,5 @@
 CON
-  BUFFER_2K                     = $800
+  'BUFFER_2K                     = $800
 
   'MACRAW and PPPOE can only be used with socket 0
   #0, CLOSED, TCP, UDP, IPRAW, MACRAW, PPPOE
@@ -39,12 +39,11 @@ PUB Init(socketId, protocol, portNum)
   _sock := socketId
   _protocol := protocol
 
-  wiz.Init
-
   'Increment port numbers stating at 10,000
   if(portNum == -1)
     portNum := _port++
-  
+    
+  'wiz.Init
   wiz.InitSocket(socketId, protocol, portNum)
 
   readCount := 0

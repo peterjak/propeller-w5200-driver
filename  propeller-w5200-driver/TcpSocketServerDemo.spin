@@ -24,8 +24,8 @@ DAT
 
 OBJ
   pst           : "Parallax Serial Terminal"
+  wiz           : "W5200" 
   sock          : "Socket"
-  wiz           : "W5200"
   dhcp          : "Dhcp.spin"
 
 
@@ -36,27 +36,60 @@ PUB Main | bytesToRead
   pst.Start(115_200)
   pause(500)
 
+  wiz.Init 
+  wiz.SetIp(192, 168, 1, 107)
+  wiz.SetMac($00, $08, $DC, $16, $F8, $01)
+  
+  {
   dhcp.Init(@buff, 7)
-  dhcp.DoDhcp
+  pst.str(string("Requesting IP....."))
+  PrintIp(dhcp.DoDhcp)
+
+  pst.str(string("DNS..............."))
+  PrintIp(wiz.GetDns)
+  'PrintIp(wiz.GetDns+4)
+  'PrintIp(wiz.GetDns+8)
+
+  pst.str(string("DHCP Server......."))
+  printIp(wiz.GetDhcpServerIp)
+
+  pst.str(string("Router IP........."))
+  printIp(wiz.GetRouter)
+  pst.char(CR)
+  }
+  
 
   pst.str(string("Initialize Socket",CR))
 
   'Initialize Socket 0 port 8080
+  
   sock.Init(0, TCP, 8080)
 
-  pst.str(string("Set Mac and IP",CR))
-  sock.Mac($00, $08, $DC, $16, $F8, $01)
-  sock.Ip(192, 168, 1, 107)
+  'pst.str(string("Set Mac and IP",CR))
+  'sock.Mac($00, $08, $DC, $16, $F8, $01)
+  'sock.Ip(192, 168, 1, 107)
 
 
   pst.str(string("Start Socket server",CR))
   repeat
+  
+    pst.str(string("Status "))  
+    pst.dec(wiz.SocketStatus(0))
+    pst.char(CR)
+    
     pst.str(string(CR, "---------------------------",CR))
     pst.str(string("Open",CR))
     sock.Open
 
-    pst.str(string("Listen",CR))
-    sock.Listen
+    pst.str(string("Status "))  
+    pst.dec(wiz.SocketStatus(0))
+    pst.char(CR)
+
+    
+    if(sock.Listen)
+      pst.str(string("Listen",CR))
+    else
+      pst.str(string("Listener failed!",CR))  
 
     'Connection?
     repeat until sock.Connected

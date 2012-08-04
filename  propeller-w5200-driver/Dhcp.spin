@@ -78,8 +78,6 @@ PUB Init(buffer, socket)
 
   'DHCP Port, Mac and Ip 
   sock.Init(socket, UDP, 68)
-  sock.Mac($00, $08, $DC, $16, $F8, $01)
-  sock.Ip(192, 168, 1, 107)
 
   'Broadcast to port 67
   sock.RemoteIp(255, 255, 255, 255)
@@ -98,6 +96,8 @@ PUB DoDhcp
     result := false 
 
   sock.Close
+
+  return wiz.GetCommonRegister(Wiz#SOURCE_IP0)
 
 PUB Discover | len
   'optionPtr is a global pointer used in the

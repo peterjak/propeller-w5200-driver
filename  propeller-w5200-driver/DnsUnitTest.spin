@@ -48,7 +48,7 @@ DAT
 }                       $00, $00,               { Answer RRS
 }                       $00, $00,               { Authority RRS
 }                       $00, $00,               { Additional RRS
-}                       $04, "smtp",            { Query: Length -> smtp
+}                       $03, "pop",            { Query: Length -> smtp
 }                       $04, "west",            {
 }                       $03, "cox",             {
 }                       $03, "net", $00,        { Zero term
@@ -68,6 +68,20 @@ DAT
 }                       $00, $01,               { Host address: Type A
 }                       $00, $01                { Class: 01 }
   qeend2           byte  NULL
+
+  csvRequest   byte  $68, $C8,               { Transaction Id
+}                       $01, $00,               { Flags
+}                       $00, $01,               { Questions
+}                       $00, $00,               { Answer RRS
+}                       $00, $00,               { Authority RRS
+}                       $00, $00,               { Additional RRS
+}                       $07, "finance",            { Query: Length -> smtp
+}                       $06, "google",   {
+}                       $03, "com", $00,        { Zero term
+}                       $00, $01,               { Host address: Type A
+}                       $00, $01                { Class: 01 }
+  csvend           byte  NULL
+                              
                                                              
   dnsResponse     byte  $F0, $90,                         { Transaction Id            
 }                       $81, $80,                         { Flags                     
@@ -136,10 +150,11 @@ PUB Init | ptr
   CreateTransactionId($FFFF)
   FillTransactionID
   
-  'DHCP Port, Mac and Ip 
+  'DNS Port, Mac and Ip 
+  wiz.Init
+  wiz.SetIp(192, 168, 1, 107)
+  wiz.SetMac($00, $08, $DC, $16, $F8, $01)
   sock.Init(0, UDP, 8080)
-  sock.Mac($00, $08, $DC, $16, $F8, $01)
-  sock.Ip(192, 168, 1, 107)
 
   'Broadcast to port 67
   sock.RemoteIp(68, 105, 28, 12)
@@ -150,8 +165,8 @@ PUB Init | ptr
   'DisplayMemory(@dnsQuery, 32, true) 
   'ptr := SendReceive(@dnsQuery, @qend - @dnsQuery   )
   
-  DisplayMemory(@dnsEmailQuery, 32, true) 
-  ptr := SendReceive(@dnsEmailQuery, @qeend - @dnsEmailQuery   )
+  DisplayMemory(@csvRequest, 32, true) 
+  ptr := SendReceive(@csvRequest, @csvend - @csvRequest   )
 
   'DisplayMemory(@dnsEmailQuery2, 32, true) 
   'ptr := SendReceive(@dnsEmailQuery2, @qeend2 - @dnsEmailQuery2   )                                
