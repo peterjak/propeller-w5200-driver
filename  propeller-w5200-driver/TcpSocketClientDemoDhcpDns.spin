@@ -28,9 +28,6 @@ DAT
 
   buff          byte  $0[BUFFER_2K]
 
-
-
-
 OBJ
   pst           : "Parallax Serial Terminal"
   wiz           : "W5200"
@@ -39,9 +36,6 @@ OBJ
   dns           : "Dns"
    
 
-
-
- 
 PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer
 
   receiving := true
@@ -131,79 +125,7 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer
 
   pst.str(string(CR, "Disconnect", CR)) 
   sock.Disconnect
-   
-  
-
-PUB DoDhcp(socket)
-  dhcp.Init(@buff, socket)
-  pst.str(string("Setting Up DHCP", 13))
-  pst.str(string("Requesting IP....."))
-  PrintIp(dhcp.DoDhcp)
-
-  pst.str(string("DNS..............."))
-  PrintIp(wiz.GetDns)
-
-  pst.str(string("DHCP Server......."))
-  printIp(wiz.GetDhcpServerIp)
-
-  pst.str(string("Router IP........."))
-  printIp(wiz.GetRouter)
-  pst.char(CR)
-
-
-PUB PrintNameValue(name, value, digits) | len
-  len := strsize(name)
-  
-  pst.str(name)
-  repeat 30 - len
-    pst.char($2E)
-  if(digits > 0)
-    pst.hex(value, digits)
-  else
-    pst.dec(value)
-  pst.char(CR)
-
-
-PUB DisplayMemory(addr, len, isHex) | j
-  pst.str(string(13,"-----------------------------------------------------",13))
-  pst.str(string(13, "      "))
-  repeat j from 0 to $F
-    pst.hex(j, 2)
-    pst.char($20)
-  pst.str(string(13, "      ")) 
-  repeat j from 0 to $F
-    pst.str(string("-- "))
-
-  pst.char(13) 
-  repeat j from 0 to len
-    if(j == 0)
-      pst.hex(0, 4)
-      pst.char($20)
-      pst.char($20)
-      
-    if(isHex)
-      pst.hex(byte[addr + j], 2)
-    else
-      pst.char($20)
-      if(byte[addr+j] == 0)
-        pst.char($20)
-      pst.char(byte[addr+j])
-
-    pst.char($20) 
-    if((j+1) // $10 == 0) 
-      pst.char($0D)
-      pst.hex(j+1, 4)
-      pst.char($20)
-      pst.char($20)  
-  pst.char(13)
-  
-  pst.char(13)
-  pst.str(string("Start: "))
-  pst.dec(addr)
-  pst.str(string(" Len: "))
-  pst.dec(len)
-  pst.str(string(13,"-----------------------------------------------------",13,13))
-      
+    
 PUB PrintIp(addr) | i
   repeat i from 0 to 3
     pst.dec(byte[addr][i])
@@ -211,7 +133,7 @@ PUB PrintIp(addr) | i
       pst.char($2E)
     else
       pst.char($0D)
-  
+
 PRI pause(Duration)  
   waitcnt(((clkfreq / 1_000 * Duration - 3932) #> 381) + cnt)
   return
