@@ -54,8 +54,7 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer
   wiz.Init
   wiz.SetIp(192, 168, 1, 107)
   wiz.SetMac($00, $08, $DC, $16, $F8, $01)
-  
-  { }
+
   pst.str(string("Getting network paramters", CR))
   dhcp.Init(@buff, 7)
   pst.str(string("Requesting IP....."))
@@ -74,10 +73,10 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer
 
   pst.str(string("Resolve domain IP", CR)) 
   dns.Init(@buff, 6)
-  'dns.SetDnsServerIp(byte[dnsServer][0], byte[dnsServer][1], byte[dnsServer][2], byte[dnsServer][3])
-  remoteIP := dns.ResolveDomain(string("www.agaverobotics.com"))
+  'remoteIP := dns.ResolveDomain(string("www.agaverobotics.com"))
+  remoteIP := dns.ResolveDomain(string("finance.google.com"))
   
-
+   
   pst.str(string("Initialize", CR))
   buffer := sock.Init(0, TCP, 8080)
   sock.RemoteIp(byte[remoteIP][0], byte[remoteIP][1], byte[remoteIP][2], byte[remoteIP][3])  
@@ -97,7 +96,8 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer
     pause(100)
 
   pst.str(string("Send HTTP Header", CR)) 
-  bytesSent := sock.Send(@request2, strsize(@request2))
+  'bytesSent := sock.Send(@request2, strsize(@request2))
+  bytesSent := sock.Send(@google, strsize(@google))
   pst.str(string("Bytes Sent: "))
   pst.dec(bytesSent)
   pst.char(13)
