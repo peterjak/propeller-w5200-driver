@@ -69,14 +69,7 @@ DAT
 OBJ
   sock          : "Socket"
   wiz           : "W5200"
-
-
-{{
- =======  Hello =======
- Working on DNS
- Mike
-
-}} 
+ 
 PUB Init(buffer, socket) | dnsPtr
 
   buffPtr := buffer
@@ -92,6 +85,7 @@ PUB Init(buffer, socket) | dnsPtr
     sock.RemoteIp(byte[dnsPtr][0], byte[dnsPtr][1], byte[dnsPtr][2], byte[dnsPtr][3])
     sock.RemotePort(53)
 
+    
 'Use this if you need to manually set DNS
 PUB SetDnsServerIp(octet3, octet2, octet1, octet0)
   dnsServerIp[0] := octet3
@@ -102,19 +96,7 @@ PUB SetDnsServerIp(octet3, octet2, octet1, octet0)
   sock.RemoteIp(octet3 , octet2, octet1, octet0)
   sock.RemotePort(53)
 
-
-PUB Init2(buffer, socket) | dnsPtr
-
-  buffPtr := buffer
-
-  'DHCP Port, Mac and Ip 
-  sock.Init(socket, UDP, 8080)
-
-  'wiz.CopyDns(@dnsServerIp, 4)
-  
-  sock.RemoteIp(68, 105, 28, 12)
-  sock.RemotePort(53)  
-
+ 
 PUB GetResolvedIp(idx)
   if(IsNullIp( @dnsIps[idx] ) )
     return NULL
@@ -141,8 +123,6 @@ PUB ResolveDomain(url) | ptr
   return  GetResolvedIp(0)
   
   return  ptr
-
-     
 
 
 PRI ParseUrl(src, dest) | ptr
@@ -193,11 +173,8 @@ PUB ParseDnsResponse(buffer) | ptr, i, len, ansRRS
   else
     repeat until byte[buffer++] == $00
 
-  
-
   len := DeserializeWord(buffer)
 
-  
   if(len > 4)
     ansRRS--
     buffer += (2 + len)
@@ -228,7 +205,6 @@ PUB ParseDnsResponse(buffer) | ptr, i, len, ansRRS
      
     len := DeserializeWord(buffer)
     buffer += 2
-    'PrintIp(buffer)
     bytemove(@@dnsIps[i++], buffer, len)
 
 
@@ -240,20 +216,12 @@ PUB CreateTransactionId(mask)
 PUB FillTransactionID
   word[@msgId] := transId
 
-{
-PRI SerializeWord(value, buffer)
-  byte[buffer++] := (value & $FF00) >> 8
-  byte[buffer] := value & $FF
-}
+
 PRI DeserializeWord(buffer) | value
   value := byte[buffer++] << 8
   value += byte[buffer]
   return value
-{        
-PRI pause(Duration)  
-  waitcnt(((clkfreq / 1_000 * Duration - 3932) #> 381) + cnt)
-  return
- }
+
 PUB SendReceive(buffer, len) | receiving, bytesToRead, ptr 
   
   bytesToRead := 0
