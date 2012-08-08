@@ -15,8 +15,8 @@ VAR
 
 DAT
   buff          byte  $0[BUFFER_2K]
-  user          byte  "USER agavejoe", $0D, $0A, 0
-  pass          byte  "PASS chive450", $0D, $0A, 0
+  user          byte  "USER ", $0D, $0A, 0
+  pass          byte  "PASS ", $0D, $0A, 0
   list          byte  "LIST", $0D, $0A, 0
   retr          byte  "RETR 1", $0D, $0A, 0
   equit         byte  "quit", $0D, $0A, 0
