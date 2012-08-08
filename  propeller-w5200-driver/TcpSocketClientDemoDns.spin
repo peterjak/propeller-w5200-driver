@@ -56,7 +56,8 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, ipaddr, ptr
   pst.str(string("Resolve domain IP", CR)) 
   dns.Init(@buff, 6)
   dns.SetDnsServerIp(68, 105, 28, 12)
-  ptr := dns.ResolveDomain(string("www.agaverobotics.com"))
+  'ptr := dns.ResolveDomain(string("www.agaverobotics.com"))
+  ptr := dns.ResolveDomain(string("finance.google.com"))
    
   pst.str(string("Initialize", CR)) 
   buffer := sock.Init(0, TCP, 8080)
@@ -76,7 +77,8 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, ipaddr, ptr
     pause(100)
 
   pst.str(string("Send HTTP Header", CR)) 
-  bytesSent := sock.Send(@request2, strsize(@request2))
+  'bytesSent := sock.Send(@request2, strsize(@request2))
+  bytesSent := sock.Send(@google, strsize(@google))
   pst.str(string("Bytes Sent: "))
   pst.dec(bytesSent)
   pst.char(13)
