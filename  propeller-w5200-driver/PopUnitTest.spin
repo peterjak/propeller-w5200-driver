@@ -45,7 +45,7 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving
   sock.Mac($00, $08, $DC, $16, $F8, $01)
   sock.Ip(192, 168, 1, 107)
 
-  sock.RemoteIp(68, 6, 19, 2)
+  sock.RemoteIp(0,0,0,0)
   sock.RemotePort(110)
 
   pst.str(string(CR, "Begin POP Conversation", CR))
