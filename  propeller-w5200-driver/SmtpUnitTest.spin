@@ -15,9 +15,9 @@ VAR
 
 DAT
   buff          byte  $0[BUFFER_2K]
-  ehlo          byte  "EHLO me@mail.com", $0D, $0A, 0
-  mfrom         byte  "MAIL FROM: me@mail.com", $0D, $0A, 0
-  mto           byte  "RCPT TO: me@mail.com", $0D, $0A, 0
+  ehlo          byte  "EHLO agavejoe@cox.net", $0D, $0A, 0
+  mfrom         byte  "MAIL FROM: agavejoe@cox.net", $0D, $0A, 0
+  mto           byte  "RCPT TO: agavejoe@cox.net", $0D, $0A, 0
   mdata         byte  "DATA", $0D, $0A, 0
   subject       byte  "SUBJECT: test", $0D, $0A,  0
   msg           byte  "This is a test from script - yehhhhh!", $0D, $0A, 0
@@ -48,7 +48,7 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving
   sock.Mac($00, $08, $DC, $16, $F8, $01)
   sock.Ip(192, 168, 1, 107)
 
-  sock.RemoteIp(1, 2, 3, 4)
+  sock.RemoteIp(68, 6, 19, 4)
   sock.RemotePort(25)
 
   pst.str(string(CR, "Begin SMTP Conversation", CR))

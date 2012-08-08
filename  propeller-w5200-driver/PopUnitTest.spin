@@ -15,8 +15,8 @@ VAR
 
 DAT
   buff          byte  $0[BUFFER_2K]
-  user          byte  "USER username", $0D, $0A, 0
-  pass          byte  "PASS password", $0D, $0A, 0
+  user          byte  "USER agavejoe", $0D, $0A, 0
+  pass          byte  "PASS chive450", $0D, $0A, 0
   list          byte  "LIST", $0D, $0A, 0
   retr          byte  "RETR 1", $0D, $0A, 0
   equit         byte  "quit", $0D, $0A, 0
@@ -45,7 +45,7 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving
   sock.Mac($00, $08, $DC, $16, $F8, $01)
   sock.Ip(192, 168, 1, 107)
 
-  sock.RemoteIp(1, 2, 3, 4)
+  sock.RemoteIp(68, 6, 19, 2)
   sock.RemotePort(110)
 
   pst.str(string(CR, "Begin POP Conversation", CR))
@@ -60,6 +60,8 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving
   repeat until sock.Connected
     pause(100)
 
+  pst.str(string("Connected", CR))
+  
   bytesToRead := sock.Available
   buffer := sock.Receive(@buff)
   pst.str(buffer)

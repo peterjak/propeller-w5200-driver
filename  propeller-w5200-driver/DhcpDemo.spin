@@ -104,9 +104,21 @@ PUB Init
   Offer
   Request
   if(Ack)
-    pst.str(string("IP Assigned"))
+    pst.str(string("IP Assigned......."))
   else
-    pst.str(string("DHCP Failed"))
+    pst.str(string("DHCP Failed", CR))
+
+  PrintIp(wiz.GetIp)
+
+  pst.str(string("DNS..............."))
+  PrintIp(wiz.GetDns)
+
+  pst.str(string("DHCP Server......."))
+  printIp(wiz.GetDhcpServerIp)
+
+  pst.str(string("Router IP........."))
+  printIp(wiz.GetRouter)
+  pst.char(CR)
 
   sock.Close
 

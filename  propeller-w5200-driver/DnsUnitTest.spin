@@ -24,6 +24,7 @@ CON
 VAR
 
 DAT
+  
   workspace       byte  $0[BUFFER_16]  
   buff            byte  $0[BUFFER_2K]
   
@@ -48,7 +49,7 @@ DAT
 }                       $00, $00,               { Answer RRS
 }                       $00, $00,               { Authority RRS
 }                       $00, $00,               { Additional RRS
-}                       $03, "pop",            { Query: Length -> smtp
+}                       $03, "pop",             { Query: Length -> smtp
 }                       $04, "west",            {
 }                       $03, "cox",             {
 }                       $03, "net", $00,        { Zero term
@@ -56,7 +57,7 @@ DAT
 }                       $00, $01                { Class: 01 }
   qeend           byte  NULL
 
-  dnsEmailQuery2   byte  $68, $C8,               { Transaction Id
+  dnsEmailQuery2   byte $68, $C8,               { Transaction Id
 }                       $01, $00,               { Flags
 }                       $00, $01,               { Questions
 }                       $00, $00,               { Answer RRS
@@ -69,18 +70,30 @@ DAT
 }                       $00, $01                { Class: 01 }
   qeend2           byte  NULL
 
-  csvRequest   byte  $68, $C8,               { Transaction Id
+  csvRequest   byte  $68, $C8,                  { Transaction Id
 }                       $01, $00,               { Flags
 }                       $00, $01,               { Questions
 }                       $00, $00,               { Answer RRS
 }                       $00, $00,               { Authority RRS
 }                       $00, $00,               { Additional RRS
-}                       $07, "finance",            { Query: Length -> smtp
-}                       $06, "google",   {
+}                       $07, "finance",         { Query: Length -> smtp
+}                       $06, "google",          {
 }                       $03, "com", $00,        { Zero term
 }                       $00, $01,               { Host address: Type A
 }                       $00, $01                { Class: 01 }
   csvend           byte  NULL
+
+  mx               byte  $68, $C8,              { Transaction Id
+}                       $01, $00,               { Flags
+}                       $00, $01,               { Questions
+}                       $00, $00,               { Answer RRS
+}                       $00, $00,               { Authority RRS
+}                       $00, $00,               { Additional RRS
+}                       $03, "cox",             { Query: Length -> smtp
+}                       $03, "net", $00,        { Zero term
+}                       $00, $01,               { Host address: Type A
+}                       $00, $01                { Class: 01 }
+  mxend            byte  NULL
                               
                                                              
   dnsResponse     byte  $F0, $90,                         { Transaction Id            
@@ -165,18 +178,21 @@ PUB Init | ptr
   'DisplayMemory(@dnsQuery, 32, true) 
   'ptr := SendReceive(@dnsQuery, @qend - @dnsQuery   )
   
-  DisplayMemory(@csvRequest, 32, true) 
-  ptr := SendReceive(@csvRequest, @csvend - @csvRequest   )
+  'DisplayMemory(@csvRequest, 32, true) 
+  'ptr := SendReceive(@csvRequest, @csvend - @csvRequest   )
 
   'DisplayMemory(@dnsEmailQuery2, 32, true) 
-  'ptr := SendReceive(@dnsEmailQuery2, @qeend2 - @dnsEmailQuery2   )                                
+  'ptr := SendReceive(@dnsEmailQuery2, @qeend2 - @dnsEmailQuery2   )
 
-  GetIP(ptr) 
+  DisplayMemory(@mx, 32, true) 
+  ptr := SendReceive(@mx, @mxend - @mx   )                                
+
+  ParseDnsResponse(ptr) 
 
   sock.Close
 
 
-PUB GetIP(buffer) | ptr, i, len, ansRRS
+PUB ParseDnsResponse(buffer) | ptr, i, len, ansRRS
 
   ansRRS := DeserializeWord(buffer+6)
   pst.dec(ansRRS)

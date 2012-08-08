@@ -103,10 +103,12 @@ CON
   #0, READ_OPCODE, WRITE_OPCODE
 
   ' SPI pins
-  SPI_CS                 = 3 ' SPI chip select (active low)
-  SPI_SCK                = 0 ' SPI clock from master to all slaves
-  SPI_MOSI               = 1 ' SPI master out serial in to slave
-  SPI_MISO               = 2 ' SPI master in serial out from slave
+  SPI_CS            = 3 ' SPI chip select (active low)
+  SPI_SCK           = 0 ' SPI clock from master to all slaves
+  SPI_MOSI          = 1 ' SPI master out serial in to slave
+  SPI_MISO          = 2 ' SPI master in serial out from slave
+
+  NULL              = 0
                                                             
 
 DAT
@@ -333,6 +335,9 @@ PUB  SetIp(octet3, octet2, octet1, octet0)
   _ip[3] := octet0
   Write(SOURCE_IP0, @_ip, 4 )
 
+PUB GetIp
+  return @_ip
+
 PUB RemoteIp(socket, octet3, octet2, octet1, octet0)
   workSpace[0] := octet3 
   workSpace[1] := octet2
@@ -383,13 +388,21 @@ PUB CopySubnet(source, len)
   Write(SUBNET_MASK0, @_subnetmask, 4)
     
 PUB GetDns
-  return @_dns1
+  return GetDnsByIndex(0)
+
+PUB GetDnsByIndex(idx)
+  if(IsNullIp( @_dns1 + idx*4 ) )
+    return NULL
+  return @_dns1 + idx*4
 
 PUB GetDhcpServerIp
   return @_dhcpServer
 
 PUB GetRouter
   return @_router
+
+PRI IsNullIp(ipaddr)
+  return (byte[ipaddr][0] + byte[ipaddr][1] + byte[ipaddr][2] + byte[ipaddr][3]) == 0    
      
 PUB SetDefault2kRxTxBuffers | i
 
