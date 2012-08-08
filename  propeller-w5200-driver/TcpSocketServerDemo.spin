@@ -9,10 +9,7 @@ CON
   NULL          = $00
   
   #0, CLOSED, TCP, UDP, IPRAW, MACRAW, PPPOE
-
-
-
-       
+    
 VAR
 
 DAT
@@ -26,9 +23,6 @@ OBJ
   pst           : "Parallax Serial Terminal"
   wiz           : "W5200" 
   sock          : "Socket"
-  dhcp          : "Dhcp.spin"
-
-
  
 PUB Main | bytesToRead
 
@@ -40,35 +34,8 @@ PUB Main | bytesToRead
   wiz.SetIp(192, 168, 1, 107)
   wiz.SetMac($00, $08, $DC, $16, $F8, $01)
   
-  {
-  dhcp.Init(@buff, 7)
-  pst.str(string("Requesting IP....."))
-  PrintIp(dhcp.DoDhcp)
-
-  pst.str(string("DNS..............."))
-  PrintIp(wiz.GetDns)
-  'PrintIp(wiz.GetDns+4)
-  'PrintIp(wiz.GetDns+8)
-
-  pst.str(string("DHCP Server......."))
-  printIp(wiz.GetDhcpServerIp)
-
-  pst.str(string("Router IP........."))
-  printIp(wiz.GetRouter)
-  pst.char(CR)
-  }
-  
-
   pst.str(string("Initialize Socket",CR))
-
-  'Initialize Socket 0 port 8080
-  
   sock.Init(0, TCP, 8080)
-
-  'pst.str(string("Set Mac and IP",CR))
-  'sock.Mac($00, $08, $DC, $16, $F8, $01)
-  'sock.Ip(192, 168, 1, 107)
-
 
   pst.str(string("Start Socket server",CR))
   repeat
@@ -122,62 +89,7 @@ PUB Main | bytesToRead
     sock.Disconnect
     
     bytesToRead~
-
-
-PUB PrintNameValue(name, value, digits) | len
-  len := strsize(name)
-  
-  pst.str(name)
-  repeat 30 - len
-    pst.char($2E)
-  if(digits > 0)
-    pst.hex(value, digits)
-  else
-    pst.dec(value)
-  pst.char(CR)
-
-
-        
-PUB DisplayMemory(addr, len, isHex) | j
-  pst.str(string(13,"-----------------------------------------------------",13))
-  pst.str(string(13, "      "))
-  repeat j from 0 to $F
-    pst.hex(j, 2)
-    pst.char($20)
-  pst.str(string(13, "      ")) 
-  repeat j from 0 to $F
-    pst.str(string("-- "))
-
-  pst.char(13) 
-  repeat j from 0 to len
-    if(j == 0)
-      pst.hex(0, 4)
-      pst.char($20)
-      pst.char($20)
-      
-    if(isHex)
-      pst.hex(byte[addr + j], 2)
-    else
-      pst.char($20)
-      if(byte[addr+j] == 0)
-        pst.char($20)
-      pst.char(byte[addr+j])
-
-    pst.char($20) 
-    if((j+1) // $10 == 0) 
-      pst.char($0D)
-      pst.hex(j+1, 4)
-      pst.char($20)
-      pst.char($20)  
-  pst.char(13)
-  
-  pst.char(13)
-  pst.str(string("Start: "))
-  pst.dec(addr)
-  pst.str(string(" Len: "))
-  pst.dec(len)
-  pst.str(string(13,"-----------------------------------------------------",13,13))
-      
+     
 PUB PrintIp(addr) | i
   repeat i from 0 to 3
     pst.dec(byte[addr][i])

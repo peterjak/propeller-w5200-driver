@@ -40,7 +40,7 @@ OBJ
 
 
  
-PUB Main | bytesToRead, buffer, bytesSent, receiving
+PUB Main | bytesToRead, buffer, bytesSent, receiving, totalBytes
 
   receiving := true
   bytesToRead := 0
@@ -93,10 +93,7 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving
   repeat while receiving 
     'Data in the buffer?
     bytesToRead := sock.Available
-    pst.str(string("Bytes to Read: "))
-    pst.dec(bytesToRead)
-    pst.char(13)
-    pst.char(13)
+    totalBytes += bytesToRead
      
     'Check for a timeout
     if(bytesToRead < 0)
@@ -116,6 +113,10 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving
       
     bytesToRead~
 
+  pst.str(string("Total Bytes: "))
+  pst.dec(totalBytes)
+  pst.char(13)
+  
   pst.str(string(CR, "Disconnect", CR)) 
   sock.Disconnect
    

@@ -36,7 +36,7 @@ OBJ
   dns           : "Dns"
    
 
-PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer
+PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, totalBytes
 
   receiving := true
   bytesToRead := 0
@@ -69,6 +69,7 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer
   dns.Init(@buff, 6)
   'remoteIP := dns.ResolveDomain(string("www.agaverobotics.com"))
   remoteIP := dns.ResolveDomain(string("finance.google.com"))
+  remoteIP := dns.GetResolvedIp(1)
   
    
   pst.str(string("Initialize", CR))
@@ -96,14 +97,11 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer
   pst.dec(bytesSent)
   pst.char(13)
 
-
+  totalBytes := 0
   repeat while receiving 
     'Data in the buffer?
     bytesToRead := sock.Available
-    pst.str(string("Bytes to Read: "))
-    pst.dec(bytesToRead)
-    pst.char(13)
-    pst.char(13)
+    totalBytes += bytesToRead
      
     'Check for a timeout
     if(bytesToRead < 0)
@@ -123,6 +121,10 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer
       
     bytesToRead~
 
+  pst.str(string("Total Bytes: "))
+  pst.dec(totalBytes)
+  pst.char(13)
+  
   pst.str(string(CR, "Disconnect", CR)) 
   sock.Disconnect
     
