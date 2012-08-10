@@ -64,11 +64,11 @@ PUB StartListners | i
 
 
 PUB MultiSocketServer | bytesToRead, i
-  bytesToRead := i := 0 
+  bytesToRead := i := 0
   repeat
     pst.str(string("TCP Service", CR))
     repeat until sock[i].Connected
-      i := i++ // LISTENERS
+      i := ++i // LISTENERS
       pause(100)    
 
     pst.str(string("Connected "))
