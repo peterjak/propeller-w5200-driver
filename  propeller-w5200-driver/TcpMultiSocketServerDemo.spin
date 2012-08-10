@@ -100,7 +100,7 @@ PUB MultiSocketServer | bytesToRead, i
     sock[i].Disconnect
     sock[i].Open
     sock[i].Listen
-    
+    i := ++i // LISTENERS
     bytesToRead~
     
      
