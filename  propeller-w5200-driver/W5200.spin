@@ -1,5 +1,14 @@
+'*********************************************************************************************
+{
+ AUTHOR: Mike Gebhard
+ COPYRIGHT: Parallax Inc.
+ LAST MODIFIED: 8/12/2012
+ VERSION 1.0
+ LICENSE: MIT (see end of file)
+}
+'*********************************************************************************************
 CON
-  {{ Common register enumeration  }}
+  {{ W5200 Common register enumeration }}
   '      1              2              3              4              5              6
   '--------------------|--------------|--------------|--------------|--------------|-------------|    
   #0000,  MODE_REG,{
@@ -25,7 +34,7 @@ CON
   34}     PSTATUS,{
   36}     IMR                                                                                               
 
-  {{Socket Register Base Addresses}}
+  {{ W5200  Socket Register Base Addresses }}
   #0000,  S_MR,{
  01     } S_CR,{
  02     } S_IR,{
@@ -103,10 +112,11 @@ CON
   #0, READ_OPCODE, WRITE_OPCODE
 
   ' SPI pins
-  SPI_CS            = 3 ' SPI chip select (active low)
-  SPI_SCK           = 0 ' SPI clock from master to all slaves
   SPI_MOSI          = 1 ' SPI master out serial in to slave
+  SPI_SCK           = 0 ' SPI clock from master to all slaves
+  SPI_CS            = 3 ' SPI chip select (active low)
   SPI_MISO          = 2 ' SPI master in serial out from slave
+   
 
   NULL              = 0
                                                             
@@ -117,7 +127,7 @@ DAT
   _subnetmask     byte  255, 255, 255,   0 
   _mac            byte  $00, $08, $DC, $16, $F8, $01
   _ip             byte  192, 168,   1,   199
-  endcm           byte  $00', $00
+  _endcm          byte  $00
 
   _dns1           byte  $00, $00, $00, $00
   _dns2           byte  $00, $00, $00, $00
@@ -129,10 +139,10 @@ DAT
   
   sockRxMem       byte  $02[SOCKETS]
   sockTxMem       byte  $02[SOCKETS]
-  sockRxBase      word  $C000[SOCKETS]
-  sockRxMask      word  $07FF[SOCKETS]
-  sockTxBase      word  $8000[SOCKETS]
-  sockTxMask      word  $07FF[SOCKETS]
+  sockRxBase      word  INTERNAL_RX_BUFFER_ADDRESS[SOCKETS]
+  sockRxMask      word  DEFAULT_RX_TX_BUFFER_MASK[SOCKETS]
+  sockTxBase      word  INTERNAL_TX_BUFFER_ADDRESS[SOCKETS]
+  sockTxMask      word  DEFAULT_RX_TX_BUFFER_MASK[SOCKETS]
 
 
 
@@ -140,78 +150,141 @@ OBJ
   spi           : "Spi.spin"
   
 PUB Init
+{{
+DESCRIPTION:
+  Initialize default values.  All 8 Rx/Tx bufffers are set to 2k.
 
-  'Init buffer
-  bytefill(@workSpace, 0, BUFFER_16) 
+  Hardcoded SPI IO
+  SPI_MOSI          = 1 ' SPI master out serial in to slave
+  SPI_SCK           = 0 ' SPI clock from master to all slaves
+  SPI_CS            = 3 ' SPI chip select (active low)
+  SPI_MISO          = 2 ' SPI master in serial out from slave 
+
+PARMS:
+  None
+
+RETURNS:
+  Nothing
+}}
+  'Init workspace buffer
+  'bytefill(@workSpace, 0, BUFFER_16) 
 
   'Internal Rx and Tx Base buffer addresses
-  sockRxBase[0] := INTERNAL_RX_BUFFER_ADDRESS
-  sockTxBase[0] := INTERNAL_TX_BUFFER_ADDRESS
+  'sockRxBase[0] := INTERNAL_RX_BUFFER_ADDRESS
+  'sockTxBase[0] := INTERNAL_TX_BUFFER_ADDRESS
 
   'Init the SPI bus
   spi.Init( SPI_CS, SPI_SCK, SPI_MOSI, SPI_MISO )
 
-  'This can/will be replaced with DHCP in higher level objects
   SetCommonDefaults
 
+  ' Set Interrupt mask register
+  SetIMR2($FF)
 
-PUB GetCommonRegister(register)
-  return @_mode + register
-
-PUB GetWorkSpace
-  return @workSpace
-
-
-
+  
 PUB InitSocket(socket, protocol, port)
+{{
+DESCRIPTION:
+  Initialize a socket.
+  W5100 has 4 sockets
+  W5200 has 8 sockets
+
+PARMS:
+  socket    - Socket ID to initialize (0-n)
+  protocol  - TCP/UPD
+  port      - Listener port (0-65535)  
+
+RETURNS:
+  Nothing
+}}
   SetSocketMode(socket, protocol)
   SetSocketPort(socket, port)
-
-PUB SocketRxSize(socket)
-  return sockRxMem[socket] * 1024
-
-PUB SocketTxSize(socket)
-  return sockTxMem[socket] * 1024 
 
 '----------------------------------------------------
 ' Receive data
 '----------------------------------------------------  
 PUB Rx(socket, buffer, length) | src_mask, src_ptr, upper_size, left_size
+{{
+DESCRIPTION:
+  Read the Rx socket(n) buffer into HUB memory.  The W5200/W5100
+  uses a circlar buffer. If the buffer is 100 bytes, we're
+  currently at 91, and we receice 20 bytes the first 10 byte fill
+  addresses 91-100. The remaining 10 bytes fill addresses 0-9.
 
-  src_mask := GetRxReadPointer(socket) & sockRxMask[socket] 
+  The Rx method figures ot if the buffer wraps an updates the
+  buffer pointers for the next read.
+
+PARMATERS:
+  socket    - Socket ID
+  buffer    - Pointer to HUB memory
+  length    - Bytes to read into HUB memory
+
+RETURNS:
+  Nothing
+}}
+  'Rx memory buffer offset and Physical Rx buffer address
+  src_mask := GetRxReadPointer(socket) & sockRxMask[socket]
   src_ptr :=  src_mask + sockRxBase[socket]
 
-  'Check for overflow
+  'Check for Rx buffer wrap around
   if((src_mask + length) > (sockRxMask[socket] + 1))
+  
+    'Data wraps, get the upper buffer, read into HUB memory
+    'and update the buffer pointer
     upper_size := sockRxMask[socket] + 1 - src_mask
     Read(src_ptr, buffer, upper_size)
     buffer += upper_size
+    
+    'Calculate the remaining byte and read Rx into
+    'HUB memory starting at the base buffer address
     left_size := length - upper_size
     Read(sockRxBase[socket] , buffer, left_size)
+    
   else
+    'The data did not wrap, just copy Rx to HUB memory
     Read(src_ptr, buffer, length)
 
-  'This might have to go elsewhere in the receive process
-  'update the pointers
+  'Update the current Rx read buffer pointer
   length += GetRxReadPointer(socket)
-
-  'Not sure about this
   SetRxReadPointer(socket, length)
+
+  'Set the command register to receive
   SetSocketCommandRegister(socket, RECV) 
   
 
 '----------------------------------------------------
 ' Transmit data
 '----------------------------------------------------
-PUB Tx(socket, buffer, length) | dst_mask, dst_ptr, upper_size, left_size, ptr1
+PUB Tx(socket, buffer, length) | dst_mask, dst_ptr, upper_size, left_size, ptr
+{{
+DESCRIPTION:
+  Write HUB memory to the socket(n) Tx buffer.  If the Tx buffer is 100
+  bytes, we're  currently pointing to 91, and we need to transmit 20 bytes
+  the first 10 byte fill addresses 91-100. The remaining 10 bytes
+  fill addresses 0-9.
+
+PARMS:
+  socket    - Socket ID
+  buffer    - Pointer to HUB memory
+  length    - Bytes to write to the socket(n) buffer
+  
+RETURNS:
+  Nothing
+}}
+
+  'Exit if the the bytes to write are larger than the available Tx socket size
+  'This should not happen as the socket object handles buffer overflow but the
+  'implementer might decide to byapss the socket object
   if(GetFreeTxSize(socket) < length)
     return -2
 
-  ptr1 := GetTxWritePointer(socket)
-  dst_mask := ptr1 & sockTxMask[socket]  
+  'Calculate the physical socket(n) Tx address
+  ptr := GetTxWritePointer(socket)
+  dst_mask := ptr & sockTxMask[socket]  
   dst_ptr :=  sockTxBase[socket] + dst_mask
-
+  
   if((dst_mask + length) > (sockTxMask[socket] + 1))
+    'Wrap and write the Tx data
     upper_size := (sockTxMask[socket] + 1) - dst_mask
     Write(dst_ptr, buffer, upper_size)
     buffer += upper_size
@@ -220,37 +293,47 @@ PUB Tx(socket, buffer, length) | dst_mask, dst_ptr, upper_size, left_size, ptr1
   else
     Write(dst_ptr, buffer, length)
 
-  SetTxWritePointer(socket, length+ptr1) 
+  'Set Tx pointers for the next Tx
+  SetTxWritePointer(socket, length+ptr) 
 
 
 '----------------------------------------------------
-' Buffer Pointer Methods
+' Socket Buffer Pointer Methods
 '----------------------------------------------------
 PUB GetRxBytesToRead(socket)
-  return ReadSocket16(socket, S_RX_RCV_SIZE0)
+{{
+DESCRIPTION:
+
+PARMS:
+
+RETURNS:
+}}
+  return SocketReadWord(socket, S_RX_RCV_SIZE0)
 
 PUB GetFreeTxSize(socket)
-  return ReadSocket16(socket, S_TX_FREE0)
+  return SocketReadWord(socket, S_TX_FREE0)
 
 PUB GetRxReadPointer(socket)
-  return ReadSocket16(socket, S_RX_R_PTR0)
+  return SocketReadWord(socket, S_RX_R_PTR0)
 
 PUB SetRxReadPointer(socket, value)
-  WriteSocket16(socket, S_RX_R_PTR0, value) 
+  SocketWriteWord(socket, S_RX_R_PTR0, value) 
 
 PUB GetTxWritePointer(socket)
-  return ReadSocket16(socket, S_TX_W_PTR0)
+  return SocketReadWord(socket, S_TX_W_PTR0)
 
 PUB SetTxWritePointer(socket, value)
-  WriteSocket16(socket, S_TX_W_PTR0, value)
+  SocketWriteWord(socket, S_TX_W_PTR0, value)
 
 PUB GetTxReadPointer(socket)
-  return ReadSocket16(socket, S_TX_R_PTR0)
+  return SocketReadWord(socket, S_TX_R_PTR0)
 
+PUB SocketRxSize(socket)
+  return sockRxMem[socket] * 1024
+
+PUB SocketTxSize(socket)
+  return sockTxMem[socket] * 1024
   
-  
-
-
 '----------------------------------------------------
 ' Socket Commands
 '----------------------------------------------------  
@@ -259,7 +342,6 @@ PUB OpenSocket(socket)
 
 PUB StartListener(socket)
   SetSocketCommandRegister(socket, LISTEN)
-
 
 PUB FlushSocket(socket)
   SetSocketCommandRegister(socket, SEND)
@@ -287,7 +369,6 @@ PUB IsCloseWait(socket)
 
 PUB IsClosed(socket)
   return GetSocketStatus(socket) ==  SOCK_CLOSED
-  
 
 PUB SocketStatus(socket)
   return GetSocketStatus(socket)  
@@ -328,15 +409,12 @@ PUB SetMac(octet5, octet4, octet3, octet2, octet1, octet0)
   _mac[5] := octet0
   Write(MAC0, @_mac, 6)
 
-PUB  SetIp(octet3, octet2, octet1, octet0)
+PUB SetIp(octet3, octet2, octet1, octet0)
   _ip[0] := octet3 
   _ip[1] := octet2
   _ip[2] := octet1
   _ip[3] := octet0
   Write(SOURCE_IP0, @_ip, 4 )
-
-PUB GetIp
-  return @_ip
 
 PUB RemoteIp(socket, octet3, octet2, octet1, octet0)
   workSpace[0] := octet3 
@@ -345,32 +423,38 @@ PUB RemoteIp(socket, octet3, octet2, octet1, octet0)
   workSpace[3] := octet0
   Write(GetSocketRegister(socket, S_DEST_IP0), @workspace, 4)
 
+
+'----------------------------------------------------
+' Common Register Properties
+'----------------------------------------------------
+PUB GetIp
+  return @_ip
+  
 PUB GetRemoteIp(socket)
   Read(GetSocketRegister(socket, S_DEST_IP0), @workspace, 4) 
 
 PUB SetRemotePort(socket, port)
-  WriteSocket16(socket, S_DEST_PORT0, port)
+  SocketWriteWord(socket, S_DEST_PORT0, port)
 
-{
-PUB  SetDns1(octet3, octet2, octet1, octet0)
-  _dns1[0] := octet3 
-  _dns1[1] := octet2
-  _dns1[2] := octet1
-  _dns1[3] := octet0
+PUB GetIR2
+  return ReadByte(IR2)
+  
+PUB SetIR2(value)   
+  WriteByte(IR2, value)
 
-PUB  SetDns2(octet3, octet2, octet1, octet0)
-  _dns2[0] := octet3 
-  _dns2[1] := octet2
-  _dns2[2] := octet1
-  _dns2[3] := octet0
+PUB GetIMR2
+  return ReadByte(INTM2)
 
-PUB  SetDns3(octet3, octet2, octet1, octet0)
-  _dns3[0] := octet3 
-  _dns3[1] := octet2
-  _dns3[2] := octet1
-  _dns3[3] := octet0
-}
+Pub SetIMR2(value)
+  WriteByte(INTM2, value)
 
+
+
+'----------------------------------------------------
+' DHCP and DNS
+' These methods are accessed by DHCP and DNS
+' objects
+'----------------------------------------------------
 PUB CopyDns(source, len)
   bytemove(@_dns1, source, len)
 
@@ -403,7 +487,11 @@ PUB GetRouter
 
 PRI IsNullIp(ipaddr)
   return (byte[ipaddr][0] + byte[ipaddr][1] + byte[ipaddr][2] + byte[ipaddr][3]) == 0    
-     
+
+
+'----------------------------------------------------
+' Set defaults
+'----------------------------------------------------     
 PUB SetDefault2kRxTxBuffers | i
 
   repeat i from 0 to 7
@@ -424,47 +512,54 @@ PUB SetDefault2kRxTxBuffers | i
 
 
 '----------------------------------------------------
-' Socket Register Methods
+' Wrapped Socket Register Methods
 '----------------------------------------------------
 PRI SetSocketMode(socket, value)
-  WriteSocket8(socket, S_MR, value)
+  SocketWriteByte(socket, S_MR, value)
 
 PRI SetSocketPort(socket, port)
-  WriteSocket16(socket, S_PORT0, port)
+  SocketWriteWord(socket, S_PORT0, port)
 
 PRI SetSocketCommandRegister(socket, value)
-  WriteSocket8(socket, S_CR, value)
+  SocketWriteByte(socket, S_CR, value)
 
 PRI GetSocketCommandRegister(socket)
-  return ReadByte(GetSocketRegister(socket, S_CR))
+  return SocketReadByte(socket, S_CR)
 
 PRI GetSocketStatus(socket)
-  return ReadByte(GetSocketRegister(socket, S_SR))
+  return SocketReadByte(socket, S_SR)
+
+PUB GetSocketIR(socket)
+  return SocketReadByte(socket, S_IR)
+
+PUB SetSocketIR(socket, value)
+  SocketWriteByte(socket, S_IR, value)
   
 '----------------------------------------------------
-' Helper Methods
+' Socket Helper Methods
 '----------------------------------------------------
-
-
-PRI WriteSocket16(socket, register, value)
+PRI SocketReadWord(socket, register)
+  Read(GetSocketRegister(socket, register), @workSpace, 2)
+  return DeserializeWord(@workSpace)
+  
+PRI SocketWriteWord(socket, register, value)
   SerializeWord(value, @workSpace)
   Write(GetSocketRegister(socket, register), @workSpace, 2)
 
-PRI WriteSocket8(socket, register, value)
-  WriteByte(GetSocketRegister(socket, register), value)
-
-PRI ReadSocket16(socket, register)
-  Read(GetSocketRegister(socket, register), @workSpace, 2)
-  return DeserializeWord(@workSpace)
-
-PRI ReadSocket8(socket, register)
+PRI SocketReadByte(socket, register)
   return ReadByte(GetSocketRegister(socket, register))
   
-PRI SerializeWord(value, buffer)
+PRI SocketWriteByte(socket, register, value)
+  WriteByte(GetSocketRegister(socket, register), value)
+
+'----------------------------------------------------
+' Helper Methods
+'---------------------------------------------------- 
+PUB SerializeWord(value, buffer)
   byte[buffer++] := (value & $FF00) >> 8
   byte[buffer] := value & $FF 
 
-PRI DeserializeWord(buffer) | value
+PUB DeserializeWord(buffer) | value
   value := byte[buffer++] << 8
   value += byte[buffer]
   return value
@@ -501,8 +596,18 @@ PRI SendCommand(register, opcode, length) | cmd
   spi.WriteRead( 32, cmd, $FF )
 
 
-{  } 
- 
+'----------------------------------------------------
+' Debug methods
+' Expose varaibles to higher level objects
+'----------------------------------------------------
+
+
+PUB GetCommonRegister(register)
+  return @_mode + register
+{ 
+PUB GetWorkSpace
+  return @workSpace
+  
 PUB DebugGet
   return _mode
 
@@ -529,3 +634,24 @@ PUB DebugSockReadWord(socket, register)
 
 PUB DebugSockReadByte(socket, register)
   return ReadByte(GetSocketRegister(socket, register))
+}
+
+CON
+
+{{
+ ______________________________________________________________________________________________________________________________
+|                                                   TERMS OF USE: MIT License                                                  |                                                            
+|______________________________________________________________________________________________________________________________|
+|Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation    |     
+|files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,    |
+|modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software|
+|is furnished to do so, subject to the following conditions:                                                                   |
+|                                                                                                                              |
+|The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.|
+|                                                                                                                              |
+|THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE          |
+|WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR         |
+|COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,   |
+|ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                         |
+ ------------------------------------------------------------------------------------------------------------------------------ 
+}}

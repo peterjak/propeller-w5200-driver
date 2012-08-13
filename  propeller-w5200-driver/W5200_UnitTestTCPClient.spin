@@ -32,11 +32,11 @@ PUB Main | sock, port, bytesToRead
   pst.Start(115_200)
   pause(500)
   
-  wiz.Init(@buff)
+  wiz.Init
 
   'Initialize Socket 0 port 8080
-  wiz.Mac($00, $08, $DC, $16, $F8, $01)
-  wiz.Ip(192, 168, 1, 130)
+  wiz.SetMac($00, $08, $DC, $16, $F8, $01)
+  wiz.SetIp(192, 168, 1, 130)
 
   sock := 0
   port := 8080
@@ -51,7 +51,7 @@ PUB Main | sock, port, bytesToRead
 
 
   wiz.RemoteIp(sock, 65, 98, 8, 151)
-  wiz.RemotePort(sock, 80)
+  wiz.SetRemotePort(sock, 80)
 
 
   wiz.DebugRead($4000, @buff, 25)
@@ -66,7 +66,7 @@ PUB Main | sock, port, bytesToRead
   'wiz.DebugRead($4010, @buff, 2)
   'DeserializeWord(@buff)
   
-  return 
+  'return 
 
   'pst.hex(wiz.GetSocketRegister(sock, wiz#S_DEST_IP0), 4)
   'pst.char(CR)

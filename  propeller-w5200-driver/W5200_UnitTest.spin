@@ -23,7 +23,7 @@ OBJ
 
 
  
-PUB Main | sock, port, bytesToRead
+PUB Main | sock, port, bytesToRead, byteToWrite
 
   pst.Start(115_200)
   pause(500)
@@ -32,11 +32,12 @@ PUB Main | sock, port, bytesToRead
 
   'Initialize Socket 0 port 8080
   wiz.SetMac($00, $08, $DC, $16, $F8, $01)
-  wiz.SetIp(192, 168, 1, 130)
+  wiz.SetIp(192, 168, 1, 107)
 
   sock := 0
   port := 8080
   wiz.InitSocket(sock, TCP, port)
+  wiz.SetSocketIR(sock, $FF)
 
 
   'wiz.DebugRead(sock, wiz#GATEWAY0, @buff, 4)
@@ -46,19 +47,36 @@ PUB Main | sock, port, bytesToRead
     '----------------------------------------------------
     'Open
     '----------------------------------------------------
+    pst.str(string("Open", CR))
     wiz.OpenSocket(sock)
+    PrintNameValue(string("Status"), wiz.SocketStatus(sock), 2) 
 
     '---------------------------------------------------- 
     'Listen
     '----------------------------------------------------
+    pst.str(string("Listen", CR)) 
     wiz.StartListener(sock)
+    PrintNameValue(string("Status"), wiz.SocketStatus(sock), 2)
+
+    '---------------------------------------------------- 
+    'Interrupt
+    '----------------------------------------------------
+    PrintNameValue(string("INT (socket)"), wiz.GetSocketIR(sock), 2)
     
     '---------------------------------------------------- 
     'Connection?
     '----------------------------------------------------
+    pst.str(string("Waiting for connection", CR))
     repeat until wiz.IsEstablished(sock)
-      pause(100)
+      pause(1)
+    PrintNameValue(string("Status"), wiz.SocketStatus(sock), 2)
 
+    '---------------------------------------------------- 
+    'Interrupt
+    '----------------------------------------------------
+    PrintNameValue(string("INT (socket)"), wiz.GetSocketIR(sock), 2)
+    PrintNameValue(string("INT2"), wiz.GetIR2, 2)
+    
     '----------------------------------------------------      
     'Request
     '----------------------------------------------------
@@ -66,64 +84,89 @@ PUB Main | sock, port, bytesToRead
     bytesToRead := wiz.GetRxBytesToRead(sock)
     PrintNameValue(string("Bytes To Read"), bytesToRead, 4) 
 
-    PrintPointers(sock)
+
+    '---------------------------------------------------- 
+    'Interrupt
+    '----------------------------------------------------
+    PrintNameValue(string("INT (socket)"), wiz.GetSocketIR(sock), 2)
+    
+    'PrintPointers(sock)
     
     'Process request
     wiz.Rx(sock, @buff, bytesToRead)
-    
     pst.char(CR)
+    {
     pst.str(string(CR, "Print Buffer", CR))
     DisplayMemory(@buff, strsize(@buff), true)
+    }
     pst.str(@buff)
     pst.char(CR)
-
+   
     
     '----------------------------------------------------      
     'Response
-    '---------------------------------------------------- 
-    bytesToRead := wiz.Tx(sock, @hello, strsize(@hello))
+    '----------------------------------------------------
+    PrintNameValue(string("Bytes to Write"), strsize(@hello), 4) 
+    byteToWrite := wiz.Tx(sock, @hello, strsize(@hello))
     wiz.FlushSocket(sock)
-    PrintNameValue(string("Tx Result"), bytesToRead, 4)
+    PrintNameValue(string("Write bytes left"), byteToWrite, 4)
 
 
     '----------------------------------------------------      
     'Send FIN
     '----------------------------------------------------
-    wiz.DisconnectSocket(sock) 
+    pst.str(string("Disconnect", CR))
+    wiz.DisconnectSocket(sock)
+    PrintNameValue(string("Status"), wiz.SocketStatus(sock), 2) 
 
     'Close wait?
     repeat 1
-      pause(100)
       if(wiz.IsCloseWait(sock))
         wiz.DisconnectSocket(sock)
-        PrintNameValue(string("Close Wait"), 1, 2)
+        PrintNameValue(string("Is close wait state"), 1, 2)
       else
-        PrintNameValue(string("Close Wait"), 0, 2)    
-    'Are we dissconnected?
+        PrintNameValue(string("Not close wait state (ok)"), 0, 2)
+      PrintNameValue(string("Status"), wiz.SocketStatus(sock), 2)
+
+    pause(100)
+      
     repeat 1
-      pause(100)
       if(wiz.IsClosed(sock))
-        PrintNameValue(string("Is Closed"), 1, 2)
-        next
+        PrintNameValue(string("Socket is closed"), 1, 2)
       else
-        PrintNameValue(string("Is Closed"), 0, 2)  
+        PrintNameValue(string("Socket is not closed"), 0, 2)  
 
    'Did we timeout?
-    wiz.CloseSocket(sock)
-    PrintNameValue(string("Forse close"), 1, 2)
+   'if som, force a close
+    ifnot(wiz.IsClosed(sock))
+      wiz.CloseSocket(sock)
+      PrintNameValue(string("Forse close"), 1, 2)
 
-    ClearBuffer 
+    
+    'wiz.SetIR2($00)
+    'wiz.SetIR2($FF)
+    PrintNameValue(string("INT (socket)"), wiz.GetSocketIR(sock), 2) 
+    wiz.SetSocketIR(sock, $FF)
+    '---------------------------------------------------- 
+    'Interrupt
+    '----------------------------------------------------
+    PrintNameValue(string("INT (socket)"), wiz.GetSocketIR(sock), 2)
+    
+    
+    ClearBuffer
+    pst.char(CR)
+    pst.char(CR)
     
 
 PRI ClearBuffer
   bytefill(@buff, 0, $800)
-
+{
 PRI PrintPointers(sock)
   PrintNameValue(string("S_TX_R_PTR0"), wiz.DebugReadWord(sock, wiz#S_TX_R_PTR0), 4)
   PrintNameValue(string("S_TX_W_PTR0"), wiz.GetTxWritePointer(sock), 4)
   PrintNameValue(string("S_RX_R_PTR0"), wiz.DebugReadWord(sock, wiz#S_RX_R_PTR0), 4)
   PrintNameValue(string("S_RX_W_PTR0"), wiz.DebugReadWord(sock, wiz#S_RX_W_PTR0), 4)
-
+}
     
   
 PRI SerializeWord(value, buffer)
