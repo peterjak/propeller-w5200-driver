@@ -52,9 +52,7 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, totalBytes
   wiz.Init
   wiz.SetIp(192, 168, 1, 107)
   wiz.SetMac($00, $08, $DC, $16, $F8, $01)
-  
 
-  'DoDhcp(7)
 
   pst.str(string("Initialize", CR))
   'Initialize Socket 0 port 8080
@@ -87,6 +85,7 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, totalBytes
   bytesSent := sock.Send(@request2, strsize(@request2))
   pst.str(string("Bytes Sent: "))
   pst.dec(bytesSent)
+  pst.char(13)
   pst.char(13)
 
 
