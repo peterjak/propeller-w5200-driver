@@ -75,7 +75,7 @@ PUB Main | bytesToRead
     pst.str(string("Copy Rx Data",CR))
   
     'Get the Rx buffer  
-    sock.Receive(@buff)
+    sock.Receive(@buff, bytesToRead)
 
     {{ Process the Rx data}}
     pst.char(CR)

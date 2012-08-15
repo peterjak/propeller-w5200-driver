@@ -42,7 +42,7 @@ PUB Main | sock, port, bytesToRead
   port := 8080
   wiz.InitSocket(sock, TCP, port)
 
-  wiz.DebugRead(wiz#MODE_REG, @buff, $34)
+  'wiz.DebugRead(wiz#MODE_REG, @buff, $34)
   PrintIp(@buff+wiz#GATEWAY0)
   PrintIp(@buff+wiz#SUBNET_MASK0)
   PrintIp(@buff+wiz#SOURCE_IP0)
@@ -54,7 +54,7 @@ PUB Main | sock, port, bytesToRead
   wiz.SetRemotePort(sock, 80)
 
 
-  wiz.DebugRead($4000, @buff, 25)
+  'wiz.DebugRead($4000, @buff, 25)
   DisplayMemory(@buff, 25, true)
   
   'pst.hex(DeserializeWord(@buff), 4)
@@ -186,10 +186,10 @@ PRI ClearBuffer
   bytefill(@buff, 0, $800)
 
 PRI PrintPointers(sock)
-  PrintNameValue(string("S_TX_R_PTR0"), wiz.DebugReadWord(sock, wiz#S_TX_R_PTR0), 4)
+  {PrintNameValue(string("S_TX_R_PTR0"), wiz.DebugReadWord(sock, wiz#S_TX_R_PTR0), 4)
   PrintNameValue(string("S_TX_W_PTR0"), wiz.GetTxWritePointer(sock), 4)
   PrintNameValue(string("S_RX_R_PTR0"), wiz.DebugReadWord(sock, wiz#S_RX_R_PTR0), 4)
-  PrintNameValue(string("S_RX_W_PTR0"), wiz.DebugReadWord(sock, wiz#S_RX_W_PTR0), 4)
+  PrintNameValue(string("S_RX_W_PTR0"), wiz.DebugReadWord(sock, wiz#S_RX_W_PTR0), 4) }
 
     
   

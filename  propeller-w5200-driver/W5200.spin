@@ -144,7 +144,14 @@ DAT
   sockTxBase      word  INTERNAL_TX_BUFFER_ADDRESS[SOCKETS]
   sockTxMask      word  DEFAULT_RX_TX_BUFFER_MASK[SOCKETS]
 
+{{
+DESCRIPTION:
 
+PARMS:
+  
+RETURNS:
+  
+}}
 
 OBJ
   spi           : "Spi.spin"
@@ -226,7 +233,7 @@ RETURNS:
   src_mask := GetRxReadPointer(socket) & sockRxMask[socket]
   src_ptr :=  src_mask + sockRxBase[socket]
 
-  'Check for Rx buffer wrap around
+  'Check for Rx buffer wrap
   if((src_mask + length) > (sockRxMask[socket] + 1))
   
     'Data wraps, get the upper buffer, read into HUB memory
@@ -303,30 +310,47 @@ RETURNS:
 PUB GetRxBytesToRead(socket)
 {{
 DESCRIPTION:
-
+  Read socket(n) receive size register
 PARMS:
-
+  socket    - Socket ID   
 RETURNS:
+  The number of bytes received
 }}
-  return SocketReadWord(socket, S_RX_RCV_SIZE0)
+  return ReadSocketWord(socket, S_RX_RCV_SIZE0)
 
 PUB GetFreeTxSize(socket)
-  return SocketReadWord(socket, S_TX_FREE0)
+{{
+DESCRIPTION:
+  Read socket(n) Tx available size register
+PARMS:
+  socket    - Socket ID   
+RETURNS:
+  Socket(n) avaialbe Tx size   
+}}
+  return ReadSocketWord(socket, S_TX_FREE0)
 
 PUB GetRxReadPointer(socket)
-  return SocketReadWord(socket, S_RX_R_PTR0)
+{{
+DESCRIPTION:
+
+PARMS:
+  
+RETURNS:
+  
+}}
+  return ReadSocketWord(socket, S_RX_R_PTR0)
 
 PUB SetRxReadPointer(socket, value)
   SocketWriteWord(socket, S_RX_R_PTR0, value) 
 
 PUB GetTxWritePointer(socket)
-  return SocketReadWord(socket, S_TX_W_PTR0)
+  return ReadSocketWord(socket, S_TX_W_PTR0)
 
 PUB SetTxWritePointer(socket, value)
   SocketWriteWord(socket, S_TX_W_PTR0, value)
 
 PUB GetTxReadPointer(socket)
-  return SocketReadWord(socket, S_TX_R_PTR0)
+  return ReadSocketWord(socket, S_TX_R_PTR0)
 
 PUB SocketRxSize(socket)
   return sockRxMem[socket] * 1024
@@ -338,6 +362,14 @@ PUB SocketTxSize(socket)
 ' Socket Commands
 '----------------------------------------------------  
 PUB OpenSocket(socket)
+{{
+DESCRIPTION:
+
+PARMS:
+  
+RETURNS:
+  
+}}
   SetSocketCommandRegister(socket, OPEN)
 
 PUB StartListener(socket)
@@ -359,6 +391,14 @@ PUB CloseSocket(socket)
 ' Socket Status
 '----------------------------------------------------
 PUB IsInit(socket)
+{{
+DESCRIPTION:
+
+PARMS:
+  
+RETURNS:
+  
+}}
   return GetSocketStatus(socket) ==  SOCK_INIT
 
 PUB IsEstablished(socket)
@@ -377,6 +417,14 @@ PUB SocketStatus(socket)
 ' Common Register Initialize Methods
 '----------------------------------------------------
 PUB SetCommonDefaults
+{{
+DESCRIPTION:
+
+PARMS:
+  
+RETURNS:
+  
+}}
   Write(MODE_REG, @_mode, 19)
    'Use the default 8x2k Rx and Tx Buffers 
   SetDefault2kRxTxBuffers
@@ -386,6 +434,14 @@ PUB SetCommonnMode(value)
   Write(MODE_REG, @_mode, 1)     
  
 PUB SetGateway(octet3, octet2, octet1, octet0)
+{{
+DESCRIPTION:
+
+PARMS:
+  
+RETURNS:
+  
+}}
   _gateway[0] := octet3
   _gateway[1] := octet2
   _gateway[2] := octet1
@@ -428,6 +484,14 @@ PUB RemoteIp(socket, octet3, octet2, octet1, octet0)
 ' Common Register Properties
 '----------------------------------------------------
 PUB GetIp
+{{
+DESCRIPTION:
+
+PARMS:
+  
+RETURNS:
+  
+}}
   return @_ip
   
 PUB GetRemoteIp(socket)
@@ -456,6 +520,14 @@ Pub SetIMR2(value)
 ' objects
 '----------------------------------------------------
 PUB CopyDns(source, len)
+{{
+DESCRIPTION:
+
+PARMS:
+  
+RETURNS:
+  
+}}
   bytemove(@_dns1, source, len)
 
 PUB CopyDhcpServer(source, len)
@@ -493,7 +565,14 @@ PRI IsNullIp(ipaddr)
 ' Set defaults
 '----------------------------------------------------     
 PUB SetDefault2kRxTxBuffers | i
+{{
+DESCRIPTION:
 
+PARMS:
+  
+RETURNS:
+  
+}}
   repeat i from 0 to 7
     sockRxMem[i] := $02
     sockTxMem[i] := $02
@@ -515,6 +594,14 @@ PUB SetDefault2kRxTxBuffers | i
 ' Wrapped Socket Register Methods
 '----------------------------------------------------
 PRI SetSocketMode(socket, value)
+{{
+DESCRIPTION:
+
+PARMS:
+  
+RETURNS:
+  
+}}
   SocketWriteByte(socket, S_MR, value)
 
 PRI SetSocketPort(socket, port)
@@ -538,7 +625,15 @@ PUB SetSocketIR(socket, value)
 '----------------------------------------------------
 ' Socket Helper Methods
 '----------------------------------------------------
-PRI SocketReadWord(socket, register)
+PRI ReadSocketWord(socket, register)
+{{
+DESCRIPTION:
+
+PARMS:
+  
+RETURNS:
+  
+}}
   Read(GetSocketRegister(socket, register), @workSpace, 2)
   return DeserializeWord(@workSpace)
   
@@ -556,6 +651,14 @@ PRI SocketWriteByte(socket, register, value)
 ' Helper Methods
 '---------------------------------------------------- 
 PUB SerializeWord(value, buffer)
+{{
+DESCRIPTION:
+
+PARMS:
+  
+RETURNS:
+  
+}}
   byte[buffer++] := (value & $FF00) >> 8
   byte[buffer] := value & $FF 
 
@@ -571,6 +674,14 @@ PUB GetSocketRegister(sock, register)
 ' SPI Interface
 '----------------------------------------------------  
 PRI Read(register, buffer, length) | idx, data
+{{
+DESCRIPTION:
+
+PARMS:
+  
+RETURNS:
+  
+}}
   SendCommand(register, READ_OPCODE, length)
   repeat idx from 0 to length-1
     data := spi.WriteRead( 8, $00, $FF ) 
@@ -604,6 +715,7 @@ PRI SendCommand(register, opcode, length) | cmd
 
 PUB GetCommonRegister(register)
   return @_mode + register
+  
 { 
 PUB GetWorkSpace
   return @workSpace

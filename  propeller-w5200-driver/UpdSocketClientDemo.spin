@@ -78,7 +78,7 @@ PUB Main | bytesToRead, bytesSent, receiving, ptr
 
     if(bytesToRead > 0) 
       'Get the Rx buffer  
-      ptr := sock.Receive(@buff)
+      ptr := sock.Receive(@buff, bytesToRead)
       pst.char(CR)
       pst.str(string("UPD Header:",CR))
       PrintIp(@buff)

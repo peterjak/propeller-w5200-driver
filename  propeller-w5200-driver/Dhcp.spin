@@ -266,7 +266,7 @@ PUB SendReceive(buffer, len) | receiving, bytesToRead, ptr
 
     if(bytesToRead > 0) 
       'Get the Rx buffer  
-      ptr := sock.Receive(buffer)
+      ptr := sock.Receive(buffer, bytesToRead)
       
     bytesToRead~
 

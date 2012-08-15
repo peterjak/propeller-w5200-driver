@@ -303,7 +303,7 @@ PUB SendReceive(buffer, len) | receiving, bytesToRead, ptr
 
     if(bytesToRead > 0) 
       'Get the Rx buffer  
-      ptr := sock.Receive(buffer)
+      ptr := sock.Receive(buffer, bytesToRead)
       pst.char(CR)
       pst.str(string("UPD Header:",CR))
       PrintIp(buffer)

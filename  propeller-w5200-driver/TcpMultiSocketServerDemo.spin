@@ -86,7 +86,7 @@ PUB MultiSocketServer | bytesToRead, i
     pst.str(string("Copy Rx Data",CR))
   
     'Get the Rx buffer  
-    sock[i].Receive(@buff)
+    sock[i].Receive(@buff, bytesToRead)
 
     {{ Process the Rx data}}
     pst.char(CR)
