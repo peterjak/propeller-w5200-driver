@@ -107,7 +107,7 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, totalBytes
 
     if(bytesToRead > 0) 
       'Get the Rx buffer  
-      buffer := sock.Receive(@buff)
+      buffer := sock.Receive(@buff, bytesToRead)
       pst.str(buffer)
       
     bytesToRead~
