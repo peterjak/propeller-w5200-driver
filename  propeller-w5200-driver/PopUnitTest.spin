@@ -42,8 +42,9 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving
   buffer := sock.Init(0, TCP, 8080)
 
   'Wiz Mac and Ip
-  sock.Mac($00, $08, $DC, $16, $F8, $01)
-  sock.Ip(192, 168, 1, 107)
+  wiz.Init
+  wiz.SetIp(192, 168, 1, 107)
+  wiz.SetMac($00, $08, $DC, $16, $F8, $01)
 
   sock.RemoteIp(0,0,0,0)
   sock.RemotePort(110)
@@ -63,7 +64,7 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving
   pst.str(string("Connected", CR))
   
   bytesToRead := sock.Available
-  buffer := sock.Receive(@buff)
+  buffer := sock.Receive(@buff, bytesToRead)
   pst.str(buffer)
 
   Send(@user, true)
@@ -77,14 +78,14 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving
   sock.Close
    
 
-PUB Send(cmd, response) | buffer
+PUB Send(cmd, response) | buffer, bytesToRead
   sock.Send(cmd, strsize(cmd))
   pst.str(cmd)
   pause(100)
 
   if(response)
-    sock.Available
-    buffer := sock.Receive(@buff)
+    bytesToRead := sock.Available
+    buffer := sock.Receive(@buff, bytesToRead)
     pst.str(buffer)  
   
 
