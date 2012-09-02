@@ -19,7 +19,7 @@ CON
   13-14}  RES13,RES14,{
   15}     INTR,{
   16}     INTM2,{
-  17-19}  RTIME0,        RTIME1,{
+  17-18}  RTIME0,        RTIME1,{
   19}     RETRY_COUNT,{
   1A-1B}  RES1A,         RES1B,{
   1C-1D}  P_AUTH_TYPE0,  P_AUTH_TYPE1,{
