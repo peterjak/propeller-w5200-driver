@@ -44,7 +44,7 @@ PUB Main | bytesToRead, bytesSent, receiving, ptr
   sock.Init(0, UDP, 8080)
 
 
-  sock.RemoteIp(192, 168, 1, 103)
+  sock.RemoteIp(192, 168, 1, 104)
   sock.RemotePort(8080)
   
   pst.str(string("Start UPD Client",CR))

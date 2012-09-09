@@ -15,7 +15,7 @@ CON
   UDP_HEADER_PORT   = $04
   UDP_HEADER_LENGTH = $06
   UPD_DATA          = $08
-  TIMEOUT           = 500
+  TIMEOUT           = 10000
 
   CR    = $0D
   LF    = $0A
@@ -29,7 +29,6 @@ VAR
   byte  _remoteIp[4]
   byte  readCount
   word  _remotePort
-  'long bytesToRead
 
 DAT
   _port       byte  $2710
@@ -58,6 +57,7 @@ RETURNS:
     
   'wiz.Init
   wiz.InitSocket(socketId, protocol, portNum)
+  wiz.SetSocketIR(_sock, $FF)
 
   readCount := 0
 
@@ -198,7 +198,7 @@ RETURNS:
 
   return ptr
       
-PUB Send(buffer, len) | before, after, bytesToWrite
+PUB Send(buffer, len) | bytesToWrite
 {{
 DESCRIPTION:
 
@@ -206,24 +206,19 @@ PARMS:
   
 RETURNS:
   
-}}
+}}   
   'Validate max Rx length in bytes
   bytesToWrite := len
   if(bytesToWrite > wiz.SocketTxSize(_sock))
     bytesToWrite := wiz.SocketTxSize(_sock)
 
-  before := after := 0  
   wiz.Tx(_sock, buffer, bytesToWrite)
-
-  repeat until ((after - before) == bytesToWrite)
-    before :=  wiz.GetTxReadPointer(_sock)
-    wiz.FlushSocket(_sock)
-    after :=  wiz.GetTxReadPointer(_sock)
-    
+  wiz.FlushSocket(_sock)
   return  bytesToWrite
+ 
 
 
-PUB Disconnect | i
+PUB Disconnect : i
 {{
 DESCRIPTION:
 
@@ -237,7 +232,18 @@ RETURNS:
   repeat until wiz.IsClosed(_sock)
     if(i++ > 500)
       wiz.CloseSocket(_sock)
-    
+      return false
+
+  return true  
+
+PUB IsCloseWait
+  wiz.IsCloseWait(_sock)
+
+PUB GetSocketIR
+  return wiz.GetSocketIR(_sock)
+  
+PUB SetSocketIR(value)
+  wiz.SetSocketIR(_sock, value)
 
 PRI ParseHeader(header, bytesToRead)
 {{

@@ -154,8 +154,9 @@ RETURNS:
 }}
 
 OBJ
-  spi           : "Spi.spin"
-  
+  'spi           : "Spi.spin"
+  spi           : "SpiPasm.spin" 
+
 PUB Init
 {{
 DESCRIPTION:
@@ -182,6 +183,7 @@ RETURNS:
 
   'Init the SPI bus
   spi.Init( SPI_CS, SPI_SCK, SPI_MOSI, SPI_MISO )
+
 
   SetCommonDefaults
 
@@ -278,7 +280,6 @@ PARMS:
 RETURNS:
   Nothing
 }}
-
   'Exit if the the bytes to write are larger than the available Tx socket size
   'This should not happen as the socket object handles buffer overflow but the
   'implementer might decide to byapss the socket object
@@ -296,12 +297,13 @@ RETURNS:
     Write(dst_ptr, buffer, upper_size)
     buffer += upper_size
     left_size := length - upper_size
-    Write(buffer, sockTxBase[socket], left_size)
+    Write(sockTxBase[socket], buffer, left_size)
   else
     Write(dst_ptr, buffer, length)
 
   'Set Tx pointers for the next Tx
-  SetTxWritePointer(socket, length+ptr) 
+  SetTxWritePointer(socket, length+ptr)
+
 
 
 '----------------------------------------------------
@@ -499,7 +501,8 @@ PUB GetRemoteIp(socket)
 
 PUB SetRemotePort(socket, port)
   SocketWriteWord(socket, S_DEST_PORT0, port)
-
+  
+{    }
 PUB GetIR2
   return ReadByte(IR2)
   
@@ -613,7 +616,7 @@ PRI SetSocketCommandRegister(socket, value)
 PRI GetSocketCommandRegister(socket)
   return SocketReadByte(socket, S_CR)
 
-PRI GetSocketStatus(socket)
+PUB GetSocketStatus(socket)
   return SocketReadByte(socket, S_SR)
 
 PUB GetSocketIR(socket)
@@ -670,6 +673,7 @@ PUB DeserializeWord(buffer) | value
 PUB GetSocketRegister(sock, register)
   return sock * SOCKET_REG_SIZE + SOCKET_BASE_ADDRESS + register
 
+
 '----------------------------------------------------
 ' SPI Interface
 '----------------------------------------------------  
@@ -682,31 +686,21 @@ PARMS:
 RETURNS:
   
 }}
-  SendCommand(register, READ_OPCODE, length)
-  repeat idx from 0 to length-1
-    data := spi.WriteRead( 8, $00, $FF ) 
-    byte[buffer][idx] := data & $FF
+  spi.Read(register, length, buffer)
 
 PRI Write(register, buffer, length) | idx, data
-  SendCommand(register, WRITE_OPCODE, length)
-  repeat idx from 0 to length-1
-    data := byte[buffer][idx]
-    spi.WriteRead( 8, data, $FF )
+  spi.Write(register, length, buffer)
+
     
 PRI ReadByte(register) | opcode, data
-  SendCommand(register, READ_OPCODE, 1) 
-  data := spi.WriteRead( 8, $00, $FF ) 
-  return data & $FF
+  spi.Read(register, 1, @workSpace)
+  return workSpace[0] & $FF
 
 PRI WriteByte(register, value) | idx, data
-  SendCommand(register, WRITE_OPCODE, 1)
-  spi.WriteRead( 8, value, $FF )
+  workSpace[0] := value
+  spi.Write(register, 1, @workSpace)
+
   
-PRI SendCommand(register, opcode, length) | cmd
-  cmd := (register << 16) + (opcode << 15) + length
-  spi.WriteRead( 32, cmd, $FF )
-
-
 '----------------------------------------------------
 ' Debug methods
 ' Expose varaibles to higher level objects

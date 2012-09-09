@@ -19,7 +19,7 @@ DAT
 
 OBJ
   pst           : "Parallax Serial Terminal"
-  wiz           : "W5200"
+  wiz           : "W5200Pasm.spin"
 
 
  
@@ -34,8 +34,10 @@ PUB Main | sock, port, bytesToRead, byteToWrite
   wiz.SetMac($00, $08, $DC, $16, $F8, $01)
   wiz.SetIp(192, 168, 1, 107)
 
+  'return
+
   sock := 0
-  port := 8080
+  port := 8080                                                                                
   wiz.InitSocket(sock, TCP, port)
   wiz.SetSocketIR(sock, $FF)
 

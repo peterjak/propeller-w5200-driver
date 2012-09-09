@@ -86,8 +86,6 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, totalBytes
   pst.str(string("Bytes Sent: "))
   pst.dec(bytesSent)
   pst.char(13)
-  pst.char(13)
-
 
   repeat while receiving 
     'Data in the buffer?

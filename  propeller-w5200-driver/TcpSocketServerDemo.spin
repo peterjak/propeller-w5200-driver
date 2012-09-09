@@ -49,7 +49,7 @@ PUB Main | bytesToRead
     sock.Open
 
     pst.str(string("Status "))  
-    pst.dec(wiz.SocketStatus(0))
+    pst.hex(wiz.SocketStatus(0), 2)
     pst.char(CR)
 
     

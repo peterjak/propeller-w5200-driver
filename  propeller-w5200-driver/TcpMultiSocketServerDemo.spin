@@ -24,7 +24,7 @@ DAT
 OBJ
   pst           : "Parallax Serial Terminal"
   wiz           : "W5200" 
-  sock[4]          : "Socket"
+  sock[4]       : "Socket"
  
 PUB Main | i
 
@@ -61,34 +61,61 @@ PUB StartListners | i
     pst.dec(i)
     pst.char(CR)
 
-
+PUB CloseWait | i
+  repeat i from 0 to LISTENERS-1  
+    if(sock[i].IsCloseWait)
+      sock[i].Disconnect
+      sock[i].Open
+      sock[i].Listen
 
 PUB MultiSocketServer | bytesToRead, i
   bytesToRead := i := 0
   repeat
     pst.str(string("TCP Service", CR))
+    CloseWait
+    
+    pst.str(string("Socket 0 "))
+    pst.hex(wiz.GetSocketStatus(0), 2)
+    pst.char(13)
+     
+    pst.str(string("Socket 1 "))
+    pst.hex(wiz.GetSocketStatus(1), 2)
+    pst.char(13)
+     
+    pst.str(string("Socket 2 "))
+    pst.hex(wiz.GetSocketStatus(2), 2)
+    pst.char(13)
+     
+    pst.str(string("Socket 3 "))
+    pst.hex(wiz.GetSocketStatus(3), 2)
+    pst.char(13)
+
+    
+   
     repeat until sock[i].Connected
       i := ++i // LISTENERS
-      pause(100)    
 
     pst.str(string("Connected "))
     pst.dec(i)
     pst.char(CR)
     
-    'Data in the buufer?
+    'Data in the buffer?
     repeat until bytesToRead := sock[i].Available
 
     'Check for a timeout
     if(bytesToRead < 0)
+      pst.str(string("Timeout",CR))
+      sock[i].Disconnect
+      sock[i].Open
+      sock[i].Listen
       bytesToRead~
       next
-
+      
+    'Get the Rx buffer
     pst.str(string("Copy Rx Data",CR))
-  
-    'Get the Rx buffer  
     sock[i].Receive(@buff, bytesToRead)
 
-    {{ Process the Rx data}}
+    'Process the Rx data
     pst.char(CR)
     pst.str(string("Request:",CR))
     pst.str(@buff)
@@ -96,10 +123,16 @@ PUB MultiSocketServer | bytesToRead, i
     pst.str(string("Send Response",CR))
     sock[i].Send(@index, strsize(@index))
 
-    pst.str(string("Disconnect",CR))
-    sock[i].Disconnect
+
+    if(sock[i].Disconnect)
+      pst.str(string("Disconnected", CR))
+    else
+      pst.str(string("Force Close", CR))
+      
     sock[i].Open
     sock[i].Listen
+    sock[i].SetSocketIR($FF)
+
     i := ++i // LISTENERS
     bytesToRead~
     
