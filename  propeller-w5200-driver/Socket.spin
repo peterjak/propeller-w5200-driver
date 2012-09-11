@@ -237,7 +237,7 @@ RETURNS:
   return true  
 
 PUB IsCloseWait
-  wiz.IsCloseWait(_sock)
+  return wiz.IsCloseWait(_sock)
 
 PUB GetSocketIR
   return wiz.GetSocketIR(_sock)
