@@ -91,11 +91,12 @@ PUB Read(addr, numberOfBytes, dest_buffer_ptr) | _index, _data, _spi_word
 
 DAT
                     org     0
+'--------------------------------------------------------------------------
+'Initialize SPI pin masks
+'--------------------------------------------------------------------------                     
 startSpi             
                     mov     t1,     par           'Command Read/Write
-                    add     t1,     #8            'Point to SPI pins parameters       
-                     
-                    'Get SPI pin masks
+                    add     t1,     #8            'Point to SPI pins parameters
                     rdbyte  t2,     t1            'Master out slave in
                     mov     mosi,   #1
                     shl     mosi,   t2
@@ -147,56 +148,33 @@ startSpi
 '--------------------------------------------------------------------------
 ' Execute the 32 bit W5200 command
 '--------------------------------------------------------------------------  
-:exeCmd             andn    outa,   cs            'CS active low 
+:exeCmd             andn    outa,   cs            'Select chip
                     mov     bits,   #32           'Number of bit to process                
 :cmdBit
-                    rol     cmd,    #1            'Rotate MSB to LSB
-                    andn    outa,   sck           'Clock low
-                    test    cmd,    #1       wc   'AND #1 and set C flag for odd parity
-                    muxc    outa,   mosi          'send high or low depending on C flag
-                    test    miso,   ina      wc   'C is set if odd parity after the AND
-                    rcl     idata,  #1            'rotate carry right (MSB) into axdata 1 time
-
-                    or      outa,   sck           'Clock high
-                    djnz    bits,   #:cmdBit      'decrement value and jump to address if not 0.
-
+                    rol     cmd,    #1      wc    'MSB to LSB   
+                    andn    outa,   sck           'clock low  
+                    muxc    outa,   mosi          'Send bit
+                    or      outa,   sck           'clock high
+                    
+                    djnz    bits,   #:cmdBit      'Next bit
 '--------------------------------------------------------------------------
 ' Execute Read or Write
 '--------------------------------------------------------------------------
                     cmp     op,     zero      wz   'Jump tp read if 0
           if_z      jmp     #:read                 'Otherwise write
                     jmp     #:write
-
 '--------------------------------------------------------------------------
 ' Read
-'--------------------------------------------------------------------------                    jmp     #:write                   
-:read
-                    mov     idata,  zero
-                    mov     odata,  zero
-                    test    odata,  #1      wc    'Set mosi low
-                    muxc    outa,   mosi
+'--------------------------------------------------------------------------                  
+:read 
+                    andn    outa,   mosi          'Set mosi low
 
-                    'Bit 0
+                    'Bit 7
 :readNext           andn    outa,   sck           'Clock low
                     test    miso,   ina     wc    'Read 
                     or      outa,   sck           'Clock high 
                     rcl     idata,  #1            'Rotate C to LSB
-                    'Bit 1          
-                    andn    outa,   sck
-                    test    miso,   ina     wc    
-                    or      outa,   sck            
-                    rcl     idata,  #1
-                    'Bit 2          
-                    andn    outa,   sck
-                    test    miso,   ina     wc    
-                    or      outa,   sck            
-                    rcl     idata,  #1
-                    'Bit 3         
-                    andn    outa,   sck
-                    test    miso,   ina     wc    
-                    or      outa,   sck            
-                    rcl     idata,  #1
-                    'Bit 4         
+                    'Bit 6          
                     andn    outa,   sck
                     test    miso,   ina     wc    
                     or      outa,   sck            
@@ -206,12 +184,27 @@ startSpi
                     test    miso,   ina     wc    
                     or      outa,   sck            
                     rcl     idata,  #1
-                    'Bit 6          
+                    'Bit 4         
                     andn    outa,   sck
                     test    miso,   ina     wc    
                     or      outa,   sck            
                     rcl     idata,  #1
-                    'Bit 7          
+                    'Bit 3         
+                    andn    outa,   sck
+                    test    miso,   ina     wc    
+                    or      outa,   sck            
+                    rcl     idata,  #1
+                    'Bit 2          
+                    andn    outa,   sck
+                    test    miso,   ina     wc    
+                    or      outa,   sck            
+                    rcl     idata,  #1
+                    'Bit 1          
+                    andn    outa,   sck
+                    test    miso,   ina     wc    
+                    or      outa,   sck            
+                    rcl     idata,  #1
+                    'Bit 0          
                     andn    outa,   sck
                     test    miso,   ina     wc    
                     or      outa,   sck            
@@ -230,62 +223,52 @@ startSpi
 '--------------------------------------------------------------------------
 :write
                     rdbyte  odata,  pbuff         'Init params
-                    mov     idata,  zero
                     rol     odata,  #32-8         'Frame the bit in MSB
-
-                    'Bit 0
+                    'Bit 7
                     rol     odata,  #1      wc    'Rotate MSB to LSB
                     andn    outa,   sck           'Clock low
                     muxc    outa,   mosi          'Send the bit
                     or      outa,   sck           'Clock high
-
-                    'Bit 1
-                    rol     odata,  #1      wc       
-                    andn    outa,   sck           'clock low  
-                    muxc    outa,   mosi          
-                    or      outa,   sck           'clock high
-
-                    'Bit 2
-                    rol     odata,  #1      wc       
-                    andn    outa,   sck           'clock low  
-                    muxc    outa,   mosi          
-                    or      outa,   sck           'clock high
-                    
-                    'Bit 3
-                    rol     odata,  #1      wc       
-                    andn    outa,   sck           'clock low  
-                    muxc    outa,   mosi          
-                    or      outa,   sck           'clock high
-                    
-                    'Bit 4
-                    rol     odata,  #1      wc       
-                    andn    outa,   sck           'clock low  
-                    muxc    outa,   mosi          
-                    or      outa,   sck           'clock high
-                    
-                    'Bit 5
-                    rol     odata,  #1      wc       
-                    andn    outa,   sck           'clock low  
-                    muxc    outa,   mosi          
-                    or      outa,   sck           'clock high
-                    
                     'Bit 6
                     rol     odata,  #1      wc       
                     andn    outa,   sck           'clock low  
                     muxc    outa,   mosi          
                     or      outa,   sck           'clock high
-                    
-                    'Bit 7
+                    'Bit 5
                     rol     odata,  #1      wc       
-                    andn    outa,   sck           'clock low  
+                    andn    outa,   sck           
                     muxc    outa,   mosi          
-                    or      outa,   sck           'clock high
-                    
-                    and     idata,  #$FF          'trim
+                    or      outa,   sck
+                    'Bit 4
+                    rol     odata,  #1      wc       
+                    andn    outa,   sck            
+                    muxc    outa,   mosi          
+                    or      outa,   sck
+                    'Bit 3
+                    rol     odata,  #1      wc       
+                    andn    outa,   sck            
+                    muxc    outa,   mosi          
+                    or      outa,   sck
+                    'Bit 2
+                    rol     odata,  #1      wc       
+                    andn    outa,   sck            
+                    muxc    outa,   mosi          
+                    or      outa,   sck
+                    'Bit 1
+                    rol     odata,  #1      wc       
+                    andn    outa,   sck             
+                    muxc    outa,   mosi          
+                    or      outa,   sck
+                    'Bit 0
+                    rol     odata,  #1      wc       
+                    andn    outa,   sck            
+                    muxc    outa,   mosi          
+                    or      outa,   sck           
+
                     add     pbuff,  #1            '+ HUB pointer
                     djnz    len,    #:write       'Next byte
+                    
                     or      outa,   cs            'Deselect
-                     
                     jmp     #:done 
 '--------------------------------------------------------------------------
 'Done - return
@@ -301,7 +284,6 @@ startSpi
 zero                    long    $0000_0000
 opMask                  long    $0000_8000
 lenMask                 long    $0000_7FFF
-
 '
 ' Uninitialized data
 '
