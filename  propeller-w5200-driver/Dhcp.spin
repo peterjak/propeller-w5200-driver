@@ -7,7 +7,6 @@ CON
   
   CR                = $0D
   LF                = $0A
-  NULL              = $00
   DHCP_OPTIONS      = $F0
   DHCP_END          = $FF
   HARDWARE_ADDR_LEN = $06
@@ -54,18 +53,31 @@ CON
   DHCP_DECLINE        = 4       
   DHCP_ACK            = 5       
   DHCP_NAK            = 6       
-  DHCP_RELEASE        = 7      
+  DHCP_RELEASE        = 7
+
+  DELAY               = 500
+
+  #0, SUCCESS, DISCOVER_ERROR, OFFER_ERROR, REQUEST_ERROR, ACK_ERROR      
                         
        
 VAR
 
 DAT
+  noErr           byte  "Success", 0
+  errDis          byte  "Discover Error", 0
+  errOff          byte  "Offer Error", 0
+  errReq          byte  "Request Error", 0
+  errAck          byte  "Ack Error", 0
+  errorCode       byte  $00
   magicCookie     byte  $63, $82, $53, $63
   paramReq        byte  $01, $03, $06, $2A ' Paramter Request; mask, router, domain name server, network time
   hostName        byte  "PropNet_5200", $0 
   optionPtr       long  $F0
   buffPtr         long  $00
   transId         long  $00
+  null            long  $00
+  errors          long  @noErr, @errDis, @erroff, @errReq, @errAck
+  
 
    
 OBJ
@@ -81,23 +93,40 @@ PUB Init(buffer, socket)
 
   'Broadcast to port 67
   sock.RemoteIp(255, 255, 255, 255)
+  'sock.RemoteIp(0, 0, 0, 0) 
   sock.RemotePort(67)
 
-PUB DoDhcp
+PUB GetErrorCode
+  return errorCode
+
+PUB GetErrorMessage
+  return @@errors[errorCode]
+
+PUB GetIp
+  return wiz.GetCommonRegister(Wiz#SOURCE_IP0)  
+  
+PUB DoDhcp | ptr
 
   CreateTransactionId
   
-  Discover
+  ptr := Discover
+  if(ptr == @null)
+    errorCode := DISCOVER_ERROR
+    return false   
+      
   Offer
-  Request
-  if(Ack)
-    result := true
-  else
-    result := false 
+  
+  ptr := Request
+  if(ptr == @null)
+    errorCode := REQUEST_ERROR
+    return false
+    
+  ifnot(Ack)
+    return false 
 
   sock.Close
-
-  return wiz.GetCommonRegister(Wiz#SOURCE_IP0)
+  return true
+  'return wiz.GetCommonRegister(Wiz#SOURCE_IP0)
 
 PUB Discover | len
   'optionPtr is a global pointer used in the
@@ -114,7 +143,7 @@ PUB Discover | len
   WriteDhcpOption(PARAM_REQUEST, 4, @paramReq)
   WriteDhcpOption(HOST_NAME, strsize(@hostName), @hostName)
   len := EndDhcpOptions
-  SendReceive(buffPtr, len)
+  return SendReceive(buffPtr, len)
 
   
 PUB Offer | len
@@ -122,12 +151,12 @@ PUB Offer | len
   
   buffPtr += UPD_HEADER_LEN
   
-  GetIp
+  GetSetIp
   len := ReadDhcpOption(DOMAIN_NAME_SERVER)
 
   Wiz.copyDns(optionPtr, len)
   
-  GetGateway
+  GetSetGateway
 
   len := ReadDhcpOption(SUBNET_MASK)
   wiz.CopySubnet(optionPtr, len)
@@ -143,11 +172,6 @@ PUB Offer | len
 PUB Request | len
   optionPtr := DHCP_OPTIONS + buffPtr
   
-  'Broadcast - There must be a bug if I have to decalre teh RemoteIP again?
-  'Or maybe it is because the internal register updated - bet that's it!
-  sock.RemoteIp(255, 255, 255, 255)
-
-  
   bytefill(buffPtr, 0, BUFFER_2K)
   FillOpHtypeHlenHops($01, $01, $06, $00)
   FillTransactionID
@@ -159,7 +183,7 @@ PUB Request | len
   WriteDhcpOption(DHCP_SERVER_IP, 4, wiz.GetDhcpServerIp)
   WriteDhcpOption(HOST_NAME, strsize(@hostName), @hostName)
   len := EndDhcpOptions
-  SendReceive(buffPtr, len)
+  return SendReceive(buffPtr, len)
 
 PUB Ack | len
   optionPtr := DHCP_OPTIONS + buffPtr
@@ -169,12 +193,12 @@ PUB Ack | len
   buffPtr -= UPD_HEADER_LEN
   return byte[optionPtr] == DHCP_ACK   
 
-PUB GetIp | ptr
+PUB GetSetIp | ptr
   ptr := @byte[buffPtr][DHCP_YIADDR]
   Wiz.SetIp(byte[ptr][0], byte[ptr][1], byte[ptr][2], byte[ptr][3])
   
 
-PUB GetGateway | ptr
+PUB GetSetGateway | ptr
   ptr := @byte[buffPtr][DHCP_SIADDR]
   Wiz.SetGateway(byte[ptr][0], byte[ptr][1], byte[ptr][2], byte[ptr][3])
 
@@ -241,7 +265,7 @@ PUB EndDhcpOptions | len
   return DHCP_PACKET_LEN
   'return ((optionPtr-buffPtr) // 16) + (optionPtr-buffPtr) + 1
  
-
+{
 PUB SendReceive(buffer, len) | receiving, bytesToRead, ptr 
   
   bytesToRead := 0
@@ -272,3 +296,27 @@ PUB SendReceive(buffer, len) | receiving, bytesToRead, ptr
 
   'Disconnect
   sock.Disconnect
+}
+PUB SendReceive(buffer, len) | bytesToRead, ptr 
+  
+  bytesToRead := 0
+
+  'Open socket and Send Message 
+  sock.Open
+  sock.Send(buffer, len)
+
+  waitcnt(((clkfreq / 1_000 * DELAY - 3932) #> 381) + cnt)
+  
+  bytesToRead := sock.Available
+   
+  'Check for a timeout
+  if(bytesToRead =< 0 )
+    bytesToRead~
+    return @null
+
+  if(bytesToRead > 0) 
+    'Get the Rx buffer  
+    ptr := sock.Receive(buffer, bytesToRead)
+
+  sock.Disconnect
+  return ptr

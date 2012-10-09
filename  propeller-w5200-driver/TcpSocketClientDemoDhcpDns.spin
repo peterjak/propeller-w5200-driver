@@ -52,7 +52,15 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
   pst.str(string("Getting network paramters", CR))
   dhcp.Init(@buff, 7)
   pst.str(string("Requesting IP....."))
-  PrintIp(dhcp.DoDhcp)
+  ifnot(dhcp.DoDhcp)
+    pst.str(string(CR, "Error Code: "))
+    pst.dec(dhcp.GetErrorCode)
+    pst.char(CR)
+    pst.str(dhcp.GetErrorMessage)
+    pst.char(CR)
+    return
+  else
+    PrintIp(dhcp.GetIp)
 
   pst.str(string("DNS..............."))
   dnsServer := wiz.GetDns
