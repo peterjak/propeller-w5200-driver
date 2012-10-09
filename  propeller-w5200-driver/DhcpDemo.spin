@@ -7,7 +7,6 @@ CON
   
   CR                = $0D
   LF                = $0A
-  NULL              = $00
   DHCP_OPTIONS      = $F0
   DHCP_END          = $FF
   HARDWARE_ADDR_LEN = $06
@@ -61,13 +60,14 @@ VAR
 DAT
   magicCookie     byte  $63, $82, $53, $63
   paramReq        byte  $01, $03, $06, $2A ' Paramter Request; mask, router, domain name server, network time
-  hostName        byte  "PropNet_5200", $0 
+  hostName        byte  "PropNet5200", $0 
   workspace       byte  $0[BUFFER_16]  
   buff            byte  $0[BUFFER_2K]
 
   optionPtr       long  $F0
   buffPtr         long  $00
   transId         long  $00
+  null            long  $0
 
    
 OBJ
@@ -77,7 +77,7 @@ OBJ
 
 
  
-PUB Init
+PUB Init | ptr
 
   buffPtr := @buff
 
@@ -97,12 +97,32 @@ PUB Init
 
   'Broadcast to port 67
   sock.RemoteIp(255, 255, 255, 255)
+  'sock.RemoteIp(0,0,0,0)
+  'sock.RemoteIp(192, 168, 1, 1)
   sock.RemotePort(67)
 
+  pst.str(string("Remote IP: "))
+  PrintIp(wiz.GetRemoteIP(0))
+  pst.char(CR)
+
   'DHCP Process
-  Discover
+
+  pst.str(string(CR, "Send Discover", CR))
+  ptr := Discover
+  if(ptr == @null)
+    pst.str(string(CR, "Error: Discover", CR))
+      return
+
+  pst.str(string(CR, "Receive Offer", CR))       
   Offer
-  Request
+
+  pst.str(string(CR, "Send Request", CR))  
+  ptr := Request
+  if(ptr == @null)
+    pst.str(string(CR, "Error: Request", CR))
+      return
+
+  pst.str(string(CR, "Receive Ack", CR))
   if(Ack)
     pst.str(string("IP Assigned......."))
   else
@@ -110,13 +130,13 @@ PUB Init
 
   PrintIp(wiz.GetIp)
 
-  pst.str(string("DNS..............."))
+  pst.str(string(CR, "DNS..............."))
   PrintIp(wiz.GetDns)
 
-  pst.str(string("DHCP Server......."))
+  pst.str(string(CR, "DHCP Server......."))
   printIp(wiz.GetDhcpServerIp)
 
-  pst.str(string("Router IP........."))
+  pst.str(string(CR, "Router IP........."))
   printIp(wiz.GetRouter)
   pst.char(CR)
 
@@ -139,7 +159,7 @@ PUB Discover | len
   WriteDhcpOption(HOST_NAME, strsize(@hostName), @hostName)
   len := EndDhcpOptions
   DisplayMemory(buffPtr, len, true)
-  SendReceive(buffPtr, len)
+  return SendReceive(buffPtr, len)
 
   
 PUB Offer | len
@@ -150,8 +170,6 @@ PUB Offer | len
   GetIp
   len := ReadDhcpOption(DOMAIN_NAME_SERVER)
   
-  pst.dec(len)
-  pst.char(13)
   Wiz.copyDns(optionPtr, len)
   
   GetGateway
@@ -170,10 +188,15 @@ PUB Offer | len
 PUB Request | len
   optionPtr := DHCP_OPTIONS + buffPtr
   
-  'Broadcast - There must be a bug if I have to decalre teh RemoteIP again?
+  'Broadcast - There must be a bug if I have to decalre the RemoteIP again?
   'Or maybe it is because the internal register updated - bet that's it!
-  sock.RemoteIp(255, 255, 255, 255)
+  'sock.RemoteIp(255, 255, 255, 255)
+  'sock.RemoteIp(0,0,0,0)
+  'sock.RemotePort(67)
 
+  'pst.str(string("Remote IP: "))
+  'PrintIp(wiz.GetRemoteIP(0))
+  'pst.char(CR)
   
   bytefill(@buff, 0, BUFFER_2K)
   FillOpHtypeHlenHops($01, $01, $06, $00)
@@ -187,7 +210,7 @@ PUB Request | len
   WriteDhcpOption(HOST_NAME, strsize(@hostName), @hostName)
   len := EndDhcpOptions
   DisplayMemory(buffPtr, len, true)
-  SendReceive(buffPtr, len)
+  return SendReceive(buffPtr, len)
 
 PUB Ack | len
   optionPtr := DHCP_OPTIONS + buffPtr
@@ -199,13 +222,17 @@ PUB Ack | len
 
 PUB GetIp | ptr
   ptr := @byte[buffPtr][DHCP_YIADDR]
+  pst.str(string("Assigned IP: "))
   PrintIP(ptr)
+  pst.char(CR)
   Wiz.SetIp(byte[ptr][0], byte[ptr][1], byte[ptr][2], byte[ptr][3])
   
 
 PUB GetGateway | ptr
   ptr := @byte[buffPtr][DHCP_SIADDR]
+  pst.str(string("Gateway IP: "))
   PrintIP(ptr)
+  pst.char(CR) 
   Wiz.SetGateway(byte[ptr][0], byte[ptr][1], byte[ptr][2], byte[ptr][3])
 
 
@@ -268,65 +295,51 @@ PUB ReadDhcpOption(option) | len
 PUB EndDhcpOptions | len
   byte[optionPtr] := DHCP_END
   return DHCP_PACKET_LEN
-  'return ((optionPtr-buffPtr) // 16) + (optionPtr-buffPtr) + 1
- 
-
-PUB SendReceive(buffer, len) | receiving, bytesToRead, ptr 
+  
+PUB SendReceive(buffer, len) | bytesToRead, ptr 
   
   bytesToRead := 0
 
-  pst.str(string("Send Bytes: "))
+  pst.str(string("Send Bytes......."))
   pst.dec(len)             
   pst.char(CR)
-  
-  pst.str(string("Open",CR))
+
   sock.Open
-  
-  pst.str(string("Send Message",CR))
-  
   sock.Send(buffer, len)
+  
+  pause(500)
 
-  receiving := true
-  repeat while receiving 
-    'Data in the buffer?
-    bytesToRead := sock.Available
-    pst.str(string("Bytes to Read: "))
-    pst.dec(bytesToRead)
-    pst.char(13)
-    pst.char(13)
-     
-    'Check for a timeout
-    if(bytesToRead == -1)
-      receiving := false
-      pst.str(string("Fail safe", CR))
-      next
-
-    if(bytesToRead == 0)
-      receiving := false
-      pst.str(string("Done", CR))
-      next 
-
-    if(bytesToRead > 0) 
-      'Get the Rx buffer  
-      ptr := sock.Receive(buffer, bytesToRead)
-      pst.char(CR)
-      pst.str(string("UPD Header:",CR))
-      PrintIp(buffer)
-      pst.dec(DeserializeWord(buffer + 4))
-      pst.char(CR)
-      pst.dec(DeserializeWord(buffer + 6))
-      pst.char(CR)
-       
-      pst.char(CR) 
-      DisplayMemory(ptr, DeserializeWord(buffer + 6), true) 
-      pst.char(CR)
-      
+  bytesToRead := sock.Available
+  pst.str(string("Bytes to Read...."))
+  pst.dec(bytesToRead)
+  pst.char(13)
+  pst.char(13)
+   
+  'Check for a timeout
+  if(bytesToRead =< 0 )
     bytesToRead~
+    return @null
 
-  pst.str(string(CR, "Disconnect", CR)) 
+  if(bytesToRead > 0) 
+    'Get the Rx buffer  
+    ptr := sock.Receive(buffer, bytesToRead)
+    PrintDebug(buffer,bytesToRead)
+
   sock.Disconnect
+  return ptr
 
-
+PUB PrintDebug(buffer,bytesToRead)
+  pst.char(CR)
+  pst.str(string(CR, "Message from: "))
+  PrintIp(buffer)
+  pst.char(":")
+  pst.dec(DeserializeWord(buffer + 4))
+  pst.str(string(" ("))
+  pst.dec(DeserializeWord(buffer + 6))
+  pst.str(string(")", CR))
+   
+  DisplayMemory(buffer+8, bytesToRead-8, true)
+  
 PUB DisplayMemory(addr, len, isHex) | j
   pst.str(string(13,"-----------------------------------------------------",13))
   pst.str(string(13, "      "))
@@ -372,8 +385,8 @@ PUB PrintIp(addr) | i
     pst.dec(byte[addr][i])
     if(i < 3)
       pst.char($2E)
-    else
-      pst.char($0D)
+    'else
+      'pst.char($0D)
       
 PRI SerializeWord(value, buffer)
   byte[buffer++] := (value & $FF00) >> 8
