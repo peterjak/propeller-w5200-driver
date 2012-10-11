@@ -100,7 +100,7 @@ PUB MultiSocketServer | bytesToRead, i
     pst.char(CR)
     
     'Data in the buffer?
-    repeat until bytesToRead := sock[i].Available
+    repeat until NULL < bytesToRead := sock[i].Available
 
     'Check for a timeout
     if(bytesToRead < 0)

@@ -46,7 +46,8 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
 
   pst.str(string("Initialize W5200", CR))
   wiz.Init
-  wiz.SetIp(192, 168, 1, 107)
+  'wiz.SetIp(192, 168, 1, 107)
+  wiz.SetIp(0, 0, 0, 0) 
   wiz.SetMac($00, $08, $DC, $16, $F8, $01)
 
   pst.str(string("Getting network paramters", CR))
@@ -77,7 +78,9 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
   dns.Init(@buff, 6)
   'remoteIP := dns.ResolveDomain(string("www.agaverobotics.com"))
   remoteIP := dns.ResolveDomain(string("finance.google.com"))
-  remoteIP := dns.GetResolvedIp(1)
+  'remoteIP := dns.GetResolvedIp(1)
+  PrintIp(remoteIP)
+  pst.char(CR)
   
    
   pst.str(string("Initialize", CR))

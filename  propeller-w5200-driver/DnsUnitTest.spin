@@ -27,8 +27,18 @@ DAT
   
   workspace       byte  $0[BUFFER_16]  
   buff            byte  $0[BUFFER_2K]
-  
-  
+                              'reg         B Rcode
+  nbNameReg       byte  $68, %0_0101_0000001_0000       {
+}                       $01, $00,                       { 
+}                       $00, $01,                       {
+}                       $0B, "PropNet5200", $00         { Question Name
+}                       $00, $20, $00, $01,             { PR_NAME
+}                       $C0, $08,                       { 
+}                       $00, $20, $00, $01,             {
+}                       $00, $00, $02, $58              { TTL = 10 minutes
+}                       $00, $06,                       {
+}                       %0_00_00000_00000000
+ enbNameReg       byte  NULL
   
   dnsQuery        byte  $68, $C8,               { Transaction Id
 }                       $01, $00,               { Flags

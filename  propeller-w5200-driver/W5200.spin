@@ -111,10 +111,7 @@ CON
 
   #0, READ_OPCODE, WRITE_OPCODE
 
-{{
-  SPI bus IO
-  Update to match your setup
-}}
+  ' SPI pins
   SPI_MOSI          = 1 ' SPI master out serial in to slave
   SPI_SCK           = 0 ' SPI clock from master to all slaves
   SPI_CS            = 3 ' SPI chip select (active low)
@@ -125,22 +122,21 @@ CON
                                                             
 
 DAT
-  {{ Default values }}
   _mode           byte  %0000_0000                  'enable ping
   _gateway        byte  192, 168,   1,   1
   _subnetmask     byte  255, 255, 255,   0 
   _mac            byte  $00, $08, $DC, $16, $F8, $01
   _ip             byte  192, 168,   1,   199
   _endcm          byte  $00
-  {{ DNS buffers }}
+
   _dns1           byte  $00, $00, $00, $00
   _dns2           byte  $00, $00, $00, $00
   _dns3           byte  $00, $00, $00, $00
   _dhcpServer     byte  $00, $00, $00, $00
   _router         byte  $00, $00, $00, $00
-  {{ Workspace buffer }}
+
   workSpace       byte  $0[BUFFER_16]
-  {{ W5200 Socket configuration }}
+  
   sockRxMem       byte  $02[SOCKETS]
   sockTxMem       byte  $02[SOCKETS]
   sockRxBase      word  INTERNAL_RX_BUFFER_ADDRESS[SOCKETS]
@@ -159,8 +155,7 @@ RETURNS:
 
 OBJ
   'spi           : "Spi.spin"
-  spi           : "SpiPasm.spin"
-  'spi           : "SpiCounterPasm.spin" 
+  spi           : "SpiPasm.spin" 
 
 PUB Init
 {{
@@ -179,15 +174,22 @@ PARMS:
 RETURNS:
   Nothing
 }}
+  'Init workspace buffer
+  'bytefill(@workSpace, 0, BUFFER_16) 
+
+  'Internal Rx and Tx Base buffer addresses
+  'sockRxBase[0] := INTERNAL_RX_BUFFER_ADDRESS
+  'sockTxBase[0] := INTERNAL_TX_BUFFER_ADDRESS
 
   'Init the SPI bus
   spi.Init( SPI_CS, SPI_SCK, SPI_MOSI, SPI_MISO )
 
-  ' Sets default W5200 buffers
+
   SetCommonDefaults
 
   ' Set Interrupt mask register
   SetIMR2($FF)
+
   
 PUB InitSocket(socket, protocol, port)
 {{
@@ -541,54 +543,15 @@ RETURNS: Byte: Socket(n) status register
 ' Common Register Initialize Methods
 '----------------------------------------------------
 PUB SetCommonDefaults
-{{
-DESCRIPTION: Write common register defaults.
-
-  Write default vaues from the DAT section.
-  These values should be set in higher level objects.
-
-    _mode           byte  %0000_0000                  'enable ping
-    _gateway        byte  192, 168,   1,   1
-    _subnetmask     byte  255, 255, 255,   0 
-    _mac            byte  $00, $08, $DC, $16, $F8, $01
-    _ip             byte  192, 168,   1,   199
-
-  Set W5200 buffers and configuration to the 2k default            
-
-PARMS:  None
-  
-RETURNS: Nothing
-}}
   Write(MODE_REG, @_mode, 19)
    'Use the default 8x2k Rx and Tx Buffers 
   SetDefault2kRxTxBuffers
 
 PUB SetCommonnMode(value)
-{{
-DESCRIPTION: Set the W5200 mode common register; 1 byte
-  Sets the default mode in the DAT section
-
-PARMS:
-  value     - mode: 0000_0000 = ping enabled 
-  
-RETURNS: Nothing
-}}
   _mode := value & $FF
   Write(MODE_REG, @_mode, 1)     
  
 PUB SetGateway(octet3, octet2, octet1, octet0)
-{{
-DESCRIPTION: Set the W5200 gatewate register; 4 bytes
-  Sets the dafault value in DAT section
-
-PARMS:
-  octet3    - Most signifigant octet.  ie 192.x.x.x
-  octet2    - x.168.x.x
-  octet1    - x.x.1.x
-  octet0    - x.x.x.1
-  
-RETURNS: Nothing
-}}
   _gateway[0] := octet3
   _gateway[1] := octet2
   _gateway[2] := octet1
@@ -642,7 +605,8 @@ RETURNS:
   return @_ip
   
 PUB GetRemoteIp(socket)
-  Read(GetSocketRegister(socket, S_DEST_IP0), @workspace, 4) 
+  Read(GetSocketRegister(socket, S_DEST_IP0), @workspace, 4)
+  return @workspace 
 
 PUB SetRemotePort(socket, port)
   SocketWriteWord(socket, S_DEST_PORT0, port)

@@ -89,7 +89,8 @@ PUB Init | ptr
 
   'Wiz Mac and Ip
   wiz.Init
-  wiz.SetIp(192, 168, 1, 107)
+  'wiz.SetIp(192, 168, 1, 107)
+  wiz.SetIp(0, 0, 0, 0) 
   wiz.SetMac($00, $08, $DC, $16, $F8, $01)
   
   'DHCP Port, Mac and Ip 

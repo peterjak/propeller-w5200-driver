@@ -55,9 +55,9 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, ipaddr, ptr, totalBytes
 
   pst.str(string("Resolve domain IP", CR)) 
   dns.Init(@buff, 6)
-  dns.SetDnsServerIp(68, 105, 28, 12)
-  'ptr := dns.ResolveDomain(string("www.agaverobotics.com"))
-  ptr := dns.ResolveDomain(string("finance.google.com"))
+  dns.SetDnsServerIp(68, 105, 28, 12)   '68.105.28.12
+  ptr := dns.ResolveDomain(string("www.agaverobotics.com"))
+  'ptr := dns.ResolveDomain(string("finance.google.com"))
    
   pst.str(string("Initialize", CR)) 
   buffer := sock.Init(0, TCP, 8080)
