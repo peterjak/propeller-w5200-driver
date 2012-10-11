@@ -17,6 +17,9 @@ CON
   UPD_DATA          = $08
   TIMEOUT           = 10000
 
+  INIT_DELAY        = 1
+  TRANS_DELAY       = 0
+
   CR    = $0D
   LF    = $0A
   NULL  = $00
@@ -172,9 +175,10 @@ RETURNS:
   if(readCount++ == 0)
     repeat until NULL < bytesToRead := wiz.GetRxBytesToRead(_sock) 
       if(i++ > TIMEOUT)
-        waitcnt(((clkfreq / 1_000 * 1 - 3932) #> 381) + cnt)
+        waitcnt(((clkfreq / 1_000 * INIT_DELAY - 3932) #> 381) + cnt)
         return -1
   else
+    waitcnt(((clkfreq / 1_000 * TRANS_DELAY - 3932) #> 381) + cnt)
     bytesToRead := wiz.GetRxBytesToRead(_sock)
    
   return bytesToRead
