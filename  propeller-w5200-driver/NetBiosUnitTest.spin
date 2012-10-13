@@ -203,11 +203,13 @@ PUB Main | ptr, bytesToRead
   CreateTransactionId($FFFF)
   FillTransactionID
   
-  'DNS Port, Mac and Ip 
+  'Set network parameters
   wiz.Init
+  wiz.SetCommonnMode(0)
+  wiz.SetGateway(192, 168, 1, 1)
+  wiz.SetSubnetMask(255, 255, 255, 0)
   wiz.SetIp(192, 168, 1, 107)
   wiz.SetMac($00, $08, $DC, $16, $F8, $01)
-  sock.Init(0, UDP, 137)
 
   'Broadcast NetBIOS on port 137
   sock.RemoteIp(192, 168, 1, 255)

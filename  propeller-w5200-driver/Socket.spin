@@ -16,7 +16,7 @@ CON
   UDP_HEADER_LENGTH = $06
   UPD_DATA          = $08
   
-  TIMEOUT           = 10000     ' Number of loops to execute before issuing a timeout
+  TIMEOUT           = 1000      ' Number of loops to execute before issuing a timeout
   INIT_DELAY        = 1         ' Amount of time (ms) to wait in each timeout loop 
   TRANS_DELAY       = 0         ' Milliseconds to wait between receiving data blocks
 
