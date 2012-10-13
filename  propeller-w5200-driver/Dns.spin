@@ -46,7 +46,7 @@ DAT
   rcPtr           long  @rc0, @rc1, @rc2, @rc3, @rc4, @rc5, @rc6
   rcode           byte  $0
 
-  dnsServerIp     byte  68, 105, 28, 12
+  dnsServerIp     byte  $00, $00, $00, $00      '68, 105, 28, 12
 
   ip1             byte  $00, $00, $00, $00
   ip2             byte  $00, $00, $00, $00
@@ -80,11 +80,10 @@ PUB Init(buffer, socket) | dnsPtr
   'Get the default DNS from DHCP
   dnsPtr := wiz.GetDns
 
-  'The DNS IP could be null if DHCP as not used 
+  'The DNS IP could be null if DHCP is not used 
   if(dnsPtr > NULL) 
     sock.RemoteIp(byte[dnsPtr][0], byte[dnsPtr][1], byte[dnsPtr][2], byte[dnsPtr][3])
     sock.RemotePort(53)
-
     
 'Use this if you need to manually set DNS
 PUB SetDnsServerIp(octet3, octet2, octet1, octet0)

@@ -43,11 +43,9 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
   pst.Start(115_200)
   pause(500)
 
-
   pst.str(string("Initialize W5200", CR))
   wiz.Init
-  'wiz.SetIp(192, 168, 1, 107)
-  wiz.SetIp(0, 0, 0, 0) 
+  'wiz.SetIp(0, 0, 0, 0) 
   wiz.SetMac($00, $08, $DC, $16, $F8, $01)
 
   pst.str(string("Getting network paramters", CR))
@@ -74,28 +72,31 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
   printIp(wiz.GetRouter)
   pst.char(CR)
 
-  pst.str(string("Resolve domain IP", CR)) 
+  pst.str(string("Resolve domain IP.")) 
   dns.Init(@buff, 6)
   'remoteIP := dns.ResolveDomain(string("www.agaverobotics.com"))
   remoteIP := dns.ResolveDomain(string("finance.google.com"))
   'remoteIP := dns.GetResolvedIp(1)
   PrintIp(remoteIP)
   pst.char(CR)
-  
-   
-  pst.str(string("Initialize", CR))
+
+  pst.str(string("Initialize Socket"))
   buffer := sock.Init(0, TCP, 8080)
   sock.RemoteIp(byte[remoteIP][0], byte[remoteIP][1], byte[remoteIP][2], byte[remoteIP][3])  
   sock.RemotePort(80) 
 
-
+  'PrintIp(wiz.GetRemoteIP(0))
+  
   pst.str(string(CR, "Begin Client Web request", CR))
 
   'Client
   pst.str(string("Open", CR))
   sock.Open
-  pst.str(string("Connect", CR))
+  pst.str(string("Connecting to....."))
   sock.Connect
+
+  PrintIp(wiz.GetRemoteIP(0))
+  pst.char(CR) 
    
   'Connection?
   repeat until sock.Connected

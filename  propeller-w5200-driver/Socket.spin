@@ -173,9 +173,9 @@ RETURNS:
   bytesToRead := i := 0
 
   if(readCount++ == 0)
-    repeat until NULL < bytesToRead := wiz.GetRxBytesToRead(_sock) 
+    repeat until NULL < bytesToRead := wiz.GetRxBytesToRead(_sock)
+      waitcnt(((clkfreq / 1_000 * INIT_DELAY - 3932) #> 381) + cnt) 
       if(i++ > TIMEOUT)
-        waitcnt(((clkfreq / 1_000 * INIT_DELAY - 3932) #> 381) + cnt)
         return -1
   else
     waitcnt(((clkfreq / 1_000 * TRANS_DELAY - 3932) #> 381) + cnt)

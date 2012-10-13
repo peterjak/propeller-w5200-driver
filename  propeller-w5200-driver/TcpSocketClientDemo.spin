@@ -34,7 +34,6 @@ DAT
 OBJ
   pst           : "Parallax Serial Terminal"
   sock          : "Socket"
-  dhcp          : "Dhcp.spin"
   wiz           : "W5200" 
 
 
@@ -48,8 +47,11 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, totalBytes
   pause(500)
 
 
-  'Wiz Mac and Ip
+  'Set network parameters
   wiz.Init
+  wiz.SetCommonnMode(0)
+  wiz.SetGateway(192, 168, 1, 1)
+  wiz.SetSubnetMask(255, 255, 255, 0)
   wiz.SetIp(192, 168, 1, 107)
   wiz.SetMac($00, $08, $DC, $16, $F8, $01)
 
@@ -117,23 +119,6 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, totalBytes
   pst.str(string(CR, "Disconnect", CR)) 
   sock.Disconnect
    
-  
-
-PUB DoDhcp(socket)
-  dhcp.Init(@buff, socket)
-  pst.str(string("Setting Up DHCP", 13))
-  pst.str(string("Requesting IP....."))
-  PrintIp(dhcp.DoDhcp)
-
-  pst.str(string("DNS..............."))
-  PrintIp(wiz.GetDns)
-
-  pst.str(string("DHCP Server......."))
-  printIp(wiz.GetDhcpServerIp)
-
-  pst.str(string("Router IP........."))
-  printIp(wiz.GetRouter)
-  pst.char(CR)
 
 
 PUB PrintNameValue(name, value, digits) | len

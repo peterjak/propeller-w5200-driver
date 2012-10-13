@@ -55,7 +55,7 @@ CON
   DHCP_NAK            = 6       
   DHCP_RELEASE        = 7
 
-  DELAY               = 500
+  DELAY               = 0
 
   #0, SUCCESS, DISCOVER_ERROR, OFFER_ERROR, REQUEST_ERROR, ACK_ERROR      
                         
@@ -88,12 +88,12 @@ PUB Init(buffer, socket)
 
   buffPtr := buffer
 
-  'DHCP Port, Mac and Ip 
+  'Set up the socket 
   sock.Init(socket, UDP, 68)
 
-  'Broadcast to port 67
-  sock.RemoteIp(255, 255, 255, 255)
-  'sock.RemoteIp(0, 0, 0, 0) 
+  'Configuratio to broadcast to port 67
+  'sock.RemoteIp(255, 255, 255, 255)
+  sock.RemoteIp(0, 0, 0, 0)
   sock.RemotePort(67)
 
 PUB GetErrorCode
@@ -265,38 +265,6 @@ PUB EndDhcpOptions | len
   return DHCP_PACKET_LEN
   'return ((optionPtr-buffPtr) // 16) + (optionPtr-buffPtr) + 1
  
-{
-PUB SendReceive(buffer, len) | receiving, bytesToRead, ptr 
-  
-  bytesToRead := 0
-
-  'Open and Send Message
-  sock.Open 
-  sock.Send(buffer, len)
-
-  receiving := true
-  repeat while receiving 
-    'Data in the buffer?
-    bytesToRead := sock.Available
- 
-    'Check for a timeout
-    if(bytesToRead == -1)
-      receiving := false
-      next
-
-    if(bytesToRead == 0)
-      receiving := false
-      next 
-
-    if(bytesToRead > 0) 
-      'Get the Rx buffer  
-      ptr := sock.Receive(buffer, bytesToRead)
-      
-    bytesToRead~
-
-  'Disconnect
-  sock.Disconnect
-}
 PUB SendReceive(buffer, len) | bytesToRead, ptr 
   
   bytesToRead := 0
@@ -305,7 +273,7 @@ PUB SendReceive(buffer, len) | bytesToRead, ptr
   sock.Open
   sock.Send(buffer, len)
 
-  waitcnt(((clkfreq / 1_000 * DELAY - 3932) #> 381) + cnt)
+  'waitcnt(((clkfreq / 1_000 * DELAY - 3932) #> 381) + cnt)
   
   bytesToRead := sock.Available
    

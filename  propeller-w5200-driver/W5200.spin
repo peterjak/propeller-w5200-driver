@@ -122,11 +122,11 @@ CON
                                                             
 
 DAT
-  _mode           byte  %0000_0000                  'enable ping
-  _gateway        byte  192, 168,   1,   1
-  _subnetmask     byte  255, 255, 255,   0 
-  _mac            byte  $00, $08, $DC, $16, $F8, $01
-  _ip             byte  192, 168,   1,   199
+  _mode           byte  %0000_0000                      'enable ping
+  _gateway        byte  $00, $00, $00, $00              '192, 168, 1,   1  
+  _subnetmask     byte  $00, $00, $00, $00              '255, 255, 255, 0 
+  _mac            byte  $00, $00, $00, $00, $00, $00    '$00, $08, $DC, $16, $F8, $01
+  _ip             byte  $00, $00, $00, $00              '192, 168,   1,   199
   _endcm          byte  $00
 
   _dns1           byte  $00, $00, $00, $00

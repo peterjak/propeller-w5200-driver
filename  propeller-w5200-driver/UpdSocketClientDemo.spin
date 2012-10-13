@@ -33,8 +33,11 @@ PUB Main | bytesToRead, bytesSent, receiving, ptr
   pst.Start(115_200)
   pause(500)
 
-  'Wiz Mac and Ip
-  wiz.Init 
+  'Set network parameters
+  wiz.Init
+  wiz.SetCommonnMode(0)
+  wiz.SetGateway(192, 168, 1, 1)
+  wiz.SetSubnetMask(255, 255, 255, 0)
   wiz.SetIp(192, 168, 1, 107)
   wiz.SetMac($00, $08, $DC, $16, $F8, $01)
   
