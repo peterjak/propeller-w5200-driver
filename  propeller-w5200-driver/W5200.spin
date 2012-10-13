@@ -157,6 +157,29 @@ OBJ
   'spi           : "Spi.spin"
   spi           : "SpiPasm.spin" 
 
+
+PUB Start(m_cs, c_clk, m_mosi, m_miso)
+{{
+DESCRIPTION:
+  Initialize default values.  All 8 Rx/Tx bufffers are set to 2k.
+
+PARMS:
+  SPI_CS            = m_cs ' SPI chip select (active low)
+  SPI_SCK           = c_clk ' SPI clock from master to all slaves
+  SPI_MOSI          = m_mosi ' SPI master out serial in to slave
+  SPI_MISO          = m_miso ' SPI master in serial out from slave 
+
+RETURNS:
+  Nothing
+}}
+  'Init the SPI bus
+  spi.Init( m_cs, c_clk, m_mosi, m_miso )
+
+  SetCommonDefaults
+
+  ' Set Interrupt mask register
+  SetIMR2($FF)
+
 PUB Init
 {{
 DESCRIPTION:
