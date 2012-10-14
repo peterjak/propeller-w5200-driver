@@ -163,7 +163,7 @@ PUB Discover | len
   return SendReceive(buffPtr, len)
 
   
-PUB Offer | len
+PUB Offer | len, hasGateway
   optionPtr := DHCP_OPTIONS + buffPtr
   
   buffPtr += UPD_HEADER_LEN
@@ -173,13 +173,16 @@ PUB Offer | len
   
   Wiz.copyDns(optionPtr, len)
   
-  GetGateway
+  hasGateway := GetGateway
 
   len := ReadDhcpOption(SUBNET_MASK)
   wiz.CopySubnet(optionPtr, len)
 
   len := ReadDhcpOption(ROUTER)
   wiz.CopyRouter(optionPtr, len)
+  
+  ifnot(hasGateway)
+    Wiz.SetGateway(byte[optionPtr][0], byte[optionPtr][1], byte[optionPtr][2], byte[optionPtr][3])
 
   len := ReadDhcpOption(DHCP_SERVER_IP)
   wiz.CopyDhcpServer(optionPtr, len) 
@@ -188,17 +191,7 @@ PUB Offer | len
 
 PUB Request | len
   optionPtr := DHCP_OPTIONS + buffPtr
-  
-  'Broadcast - There must be a bug if I have to decalre the RemoteIP again?
-  'Or maybe it is because the internal register updated - bet that's it!
-  'sock.RemoteIp(255, 255, 255, 255)
-  'sock.RemoteIp(0,0,0,0)
-  'sock.RemotePort(67)
 
-  'pst.str(string("Remote IP: "))
-  'PrintIp(wiz.GetRemoteIP(0))
-  'pst.char(CR)
-  
   bytefill(@buff, 0, BUFFER_2K)
   FillOpHtypeHlenHops($01, $01, $06, $00)
   FillTransactionID
@@ -223,7 +216,7 @@ PUB Ack | len
 
 PUB GetIp | ptr
   ptr := @byte[buffPtr][DHCP_YIADDR]
-  pst.str(string("Assigned IP: "))
+  pst.str(string("Assigned IP......."))
   PrintIP(ptr)
   pst.char(CR)
   Wiz.SetIp(byte[ptr][0], byte[ptr][1], byte[ptr][2], byte[ptr][3])
@@ -231,10 +224,14 @@ PUB GetIp | ptr
 
 PUB GetGateway | ptr
   ptr := @byte[buffPtr][DHCP_SIADDR]
-  pst.str(string("Gateway IP: "))
-  PrintIP(ptr)
-  pst.char(CR) 
-  Wiz.SetGateway(byte[ptr][0], byte[ptr][1], byte[ptr][2], byte[ptr][3])
+  if( byte[ptr][0] == null AND byte[ptr][1] == null AND  byte[ptr][2] == null AND byte[ptr][3] == null)
+    return false
+  else
+    pst.str(string("Gateway IP:......."))
+    PrintIP(ptr)
+    pst.char(CR) 
+    Wiz.SetGateway(byte[ptr][0], byte[ptr][1], byte[ptr][2], byte[ptr][3])
+    return true 
 
 
 PUB FillOpHTypeHlenHops(op, htype, hlen, hops)

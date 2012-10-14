@@ -1,7 +1,4 @@
 CON
-  _clkmode = xtal1 + pll16x     
-  _xinfreq = 5_000_000
-
   BUFFER_2K         = $800
   BUFFER_16         = $10
   
@@ -91,7 +88,7 @@ PUB Init(buffer, socket)
   'Set up the socket 
   sock.Init(socket, UDP, 68)
 
-  'Configuratio to broadcast to port 67
+  'Broadcast on port 67
   sock.RemoteIp(255, 255, 255, 255)
   sock.RemotePort(67)
 
@@ -145,27 +142,39 @@ PUB Discover | len
   return SendReceive(buffPtr, len)
 
   
-PUB Offer | len
+PUB Offer | len, hasGateway
   optionPtr := DHCP_OPTIONS + buffPtr
-  
-  buffPtr += UPD_HEADER_LEN
-  
-  GetSetIp
-  len := ReadDhcpOption(DOMAIN_NAME_SERVER)
 
+  'Move the pointer 8 bytes to the right
+  'On receive the first 8 bytes in the UDP packet are IP:Port and len
+  buffPtr += UPD_HEADER_LEN
+
+  'Set the IP
+  GetSetIp
+
+  ' Set DNS server IP
+  len := ReadDhcpOption(DOMAIN_NAME_SERVER)
   Wiz.copyDns(optionPtr, len)
-  
+
+  'Set the Gateway IP
   GetSetGateway
 
+  'Set the ubnet mask
   len := ReadDhcpOption(SUBNET_MASK)
   wiz.CopySubnet(optionPtr, len)
 
+  'Set the router IP
   len := ReadDhcpOption(ROUTER)
   wiz.CopyRouter(optionPtr, len)
 
+  ifnot(hasGateway)
+    Wiz.SetGateway(byte[optionPtr][0], byte[optionPtr][1], byte[optionPtr][2], byte[optionPtr][3])
+
+  'Set the DHCP server IP
   len := ReadDhcpOption(DHCP_SERVER_IP)
   wiz.CopyDhcpServer(optionPtr, len) 
-  
+
+  'Reset the pointer
   buffPtr -= UPD_HEADER_LEN
 
 PUB Request | len
@@ -185,21 +194,28 @@ PUB Request | len
   return SendReceive(buffPtr, len)
 
 PUB Ack | len
-  optionPtr := DHCP_OPTIONS + buffPtr
-  
   buffPtr += UPD_HEADER_LEN
+  
+  optionPtr := DHCP_OPTIONS + buffPtr
   len := ReadDhcpOption(MESSAGE_TYPE)
+  
   buffPtr -= UPD_HEADER_LEN
+  
   return byte[optionPtr] == DHCP_ACK   
 
 PUB GetSetIp | ptr
-  ptr := @byte[buffPtr][DHCP_YIADDR]
+  'ptr := @byte[buffPtr][DHCP_YIADDR]
+  ptr := buffPtr + DHCP_YIADDR
   Wiz.SetIp(byte[ptr][0], byte[ptr][1], byte[ptr][2], byte[ptr][3])
   
 
 PUB GetSetGateway | ptr
-  ptr := @byte[buffPtr][DHCP_SIADDR]
-  Wiz.SetGateway(byte[ptr][0], byte[ptr][1], byte[ptr][2], byte[ptr][3])
+  ptr := buffPtr + DHCP_SIADDR
+  if( byte[ptr][0] == null AND byte[ptr][1] == null AND  byte[ptr][2] == null AND byte[ptr][3] == null)
+    return false
+  else
+    Wiz.SetGateway(byte[ptr][0], byte[ptr][1], byte[ptr][2], byte[ptr][3])
+    return true 
 
 
 PUB FillOpHTypeHlenHops(op, htype, hlen, hops)

@@ -634,7 +634,10 @@ PUB GetRemoteIp(socket)
 PUB SetRemotePort(socket, port)
   SocketWriteWord(socket, S_DEST_PORT0, port)
   
-{    }
+PUB GetGatewayIp
+  Read( GATEWAY0, @workspace, 4)
+  return @workspace 
+
 PUB GetIR2
   return ReadByte(IR2)
   
