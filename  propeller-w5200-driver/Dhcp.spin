@@ -89,7 +89,7 @@ PUB Init(buffer, socket)
   sock.Init(socket, UDP, 68)
 
   'Broadcast on port 67
-  sock.RemoteIp(255, 255, 255, 255)
+  sock.RemoteIp(255, 255, 255, 255)   
   sock.RemotePort(67)
 
 PUB GetErrorCode

@@ -77,8 +77,8 @@ OBJ
 
 
  
-PUB Init | ptr
-
+PUB Init | ptr, i
+  i := 0
   buffPtr := @buff
 
   pst.Start(115_200)
@@ -88,9 +88,7 @@ PUB Init | ptr
   CreateTransactionId
 
   'Wiz Mac and Ip
-  wiz.Init
-  'wiz.SetIp(192, 168, 1, 107)
-  wiz.SetIp(0, 0, 0, 0) 
+  wiz.Start(3, 0, 1, 2) 
   wiz.SetMac($00, $08, $DC, $16, $F8, $01)
   
   'DHCP Port, Mac and Ip 
@@ -98,8 +96,6 @@ PUB Init | ptr
 
   'Broadcast to port 67
   sock.RemoteIp(255, 255, 255, 255)
-  'sock.RemoteIp(0,0,0,0)
-  'sock.RemoteIp(192, 168, 1, 1)
   sock.RemotePort(67)
 
   pst.str(string("Remote IP: "))
@@ -107,12 +103,21 @@ PUB Init | ptr
   pst.char(CR)
 
   'DHCP Process
+  repeat until DoDhcp
+    pause(1000)
+    pst.str(string(CR, "Retry DHCP: "))
+    pst.dec(i++)
+    pst.char(CR)
+
+  sock.Close
+
+PUB DoDhcp | ptr
 
   pst.str(string(CR, "Send Discover", CR))
   ptr := Discover
   if(ptr == @null)
     pst.str(string(CR, "Error: Discover", CR))
-      return
+      return false
 
   pst.str(string(CR, "Receive Offer", CR))       
   Offer
@@ -121,16 +126,17 @@ PUB Init | ptr
   ptr := Request
   if(ptr == @null)
     pst.str(string(CR, "Error: Request", CR))
-      return
+      return false
 
   pst.str(string(CR, "Receive Ack", CR))
   if(Ack)
     pst.str(string("IP Assigned......."))
   else
     pst.str(string("DHCP Failed", CR))
-
   PrintIp(wiz.GetIp)
-
+  
+  pst.char(CR)
+  pst.char(CR)
   pst.str(string(CR, "DNS..............."))
   PrintIp(wiz.GetDns)
 
@@ -139,9 +145,13 @@ PUB Init | ptr
 
   pst.str(string(CR, "Router IP........."))
   printIp(wiz.GetRouter)
+
+  pst.str(string(CR, "Gateway IP........"))
+  printIp(wiz.GetGatewayIp)
+  
   pst.char(CR)
 
-  sock.Close
+  return true
 
 
 PUB Discover | len
@@ -182,7 +192,7 @@ PUB Offer | len, hasGateway
   wiz.CopyRouter(optionPtr, len)
   
   ifnot(hasGateway)
-    Wiz.SetGateway(byte[optionPtr][0], byte[optionPtr][1], byte[optionPtr][2], byte[optionPtr][3])
+    Wiz.CopyGateway(optionPtr, len)
 
   len := ReadDhcpOption(DHCP_SERVER_IP)
   wiz.CopyDhcpServer(optionPtr, len) 
@@ -215,7 +225,7 @@ PUB Ack | len
   return byte[optionPtr] == DHCP_ACK   
 
 PUB GetIp | ptr
-  ptr := @byte[buffPtr][DHCP_YIADDR]
+  ptr := buffPtr + DHCP_YIADDR
   pst.str(string("Assigned IP......."))
   PrintIP(ptr)
   pst.char(CR)
@@ -223,8 +233,9 @@ PUB GetIp | ptr
   
 
 PUB GetGateway | ptr
-  ptr := @byte[buffPtr][DHCP_SIADDR]
+  ptr := buffPtr + DHCP_SIADDR
   if( byte[ptr][0] == null AND byte[ptr][1] == null AND  byte[ptr][2] == null AND byte[ptr][3] == null)
+    pst.str(string("Gateway IP:.......Not assigned or 0.0.0.0"))
     return false
   else
     pst.str(string("Gateway IP:......."))
@@ -305,7 +316,7 @@ PUB SendReceive(buffer, len) | bytesToRead, ptr
   sock.Open
   sock.Send(buffer, len)
   
-  pause(500)
+  'pause(500)
 
   bytesToRead := sock.Available
   pst.str(string("Bytes to Read...."))

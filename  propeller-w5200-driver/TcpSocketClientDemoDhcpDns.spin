@@ -91,7 +91,7 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
   'PrintIp(wiz.GetRemoteIP(0))
   
   pst.str(string(CR, "Begin Client Web request", CR))
-
+  'wiz.setGateway(0,0,0,0)
   'Client
   pst.str(string("Open", CR))
   sock.Open
@@ -132,7 +132,7 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
     if(bytesToRead > 0) 
       'Get the Rx buffer  
       buffer := sock.Receive(@buff, bytesToRead)
-      pst.str(buffer)
+      'pst.str(buffer)
       
     bytesToRead~
 
