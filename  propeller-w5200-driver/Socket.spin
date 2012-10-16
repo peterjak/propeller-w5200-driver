@@ -17,7 +17,7 @@ CON
   UPD_DATA          = $08
   
   TIMEOUT           = 10000      ' Number of loops to execute before issuing a timeout
-  INIT_DELAY        = 0         ' Amount of time (ms) to wait in each timeout loop 
+  INIT_DELAY        = 1         ' Amount of time (ms) to wait in each timeout loop 
   TRANS_DELAY       = 0         ' Milliseconds to wait between receiving data blocks
 
   CR    = $0D

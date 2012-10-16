@@ -676,6 +676,7 @@ PUB CopyRouter(source, len)
 
 PUB CopyGateway(source, len)
   bytemove(@_gateway, source, len)
+  Write(GATEWAY0, @_gateway, 4)
 
 PUB CopySubnet(source, len)
   bytemove(@_subnetMask, source, len)

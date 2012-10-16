@@ -173,7 +173,7 @@ PUB Discover | len
   return SendReceive(buffPtr, len)
 
   
-PUB Offer | len, hasGateway
+PUB Offer | len', hasGateway
   optionPtr := DHCP_OPTIONS + buffPtr
   
   buffPtr += UPD_HEADER_LEN
@@ -183,7 +183,7 @@ PUB Offer | len, hasGateway
   
   Wiz.copyDns(optionPtr, len)
   
-  hasGateway := GetGateway
+  'hasGateway := GetGateway
 
   len := ReadDhcpOption(SUBNET_MASK)
   wiz.CopySubnet(optionPtr, len)
@@ -191,8 +191,8 @@ PUB Offer | len, hasGateway
   len := ReadDhcpOption(ROUTER)
   wiz.CopyRouter(optionPtr, len)
   
-  ifnot(hasGateway)
-    Wiz.CopyGateway(optionPtr, len)
+  'ifnot(hasGateway)
+  Wiz.CopyGateway(optionPtr, len)
 
   len := ReadDhcpOption(DHCP_SERVER_IP)
   wiz.CopyDhcpServer(optionPtr, len) 
