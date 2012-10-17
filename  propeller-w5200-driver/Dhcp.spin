@@ -142,7 +142,7 @@ PUB Discover | len
   return SendReceive(buffPtr, len)
 
   
-PUB Offer | len, hasGateway
+PUB Offer | len
   optionPtr := DHCP_OPTIONS + buffPtr
 
   'Move the pointer 8 bytes to the right
@@ -157,18 +157,19 @@ PUB Offer | len, hasGateway
   Wiz.copyDns(optionPtr, len)
 
   'Set the Gateway IP
-  GetSetGateway
+  'GetSetGateway
 
   'Set the ubnet mask
   len := ReadDhcpOption(SUBNET_MASK)
   wiz.CopySubnet(optionPtr, len)
 
-  'Set the router IP
+  'Set the router IP to the Gateway
+  'Mike G 10/16/2012
+  'From research and asking network guys the router IP (option 3)
+  'should also be the gateway.
   len := ReadDhcpOption(ROUTER)
   wiz.CopyRouter(optionPtr, len)
-
-  ifnot(hasGateway)
-    Wiz.SetGateway(byte[optionPtr][0], byte[optionPtr][1], byte[optionPtr][2], byte[optionPtr][3])
+  Wiz.CopyGateway(optionPtr, len)
 
   'Set the DHCP server IP
   len := ReadDhcpOption(DHCP_SERVER_IP)
@@ -208,7 +209,7 @@ PUB GetSetIp | ptr
   ptr := buffPtr + DHCP_YIADDR
   Wiz.SetIp(byte[ptr][0], byte[ptr][1], byte[ptr][2], byte[ptr][3])
   
-
+{  Deprecated
 PUB GetSetGateway | ptr
   ptr := buffPtr + DHCP_SIADDR
   if( byte[ptr][0] == null AND byte[ptr][1] == null AND  byte[ptr][2] == null AND byte[ptr][3] == null)
@@ -216,7 +217,7 @@ PUB GetSetGateway | ptr
   else
     Wiz.SetGateway(byte[ptr][0], byte[ptr][1], byte[ptr][2], byte[ptr][3])
     return true 
-
+}
 
 PUB FillOpHTypeHlenHops(op, htype, hlen, hops)
   byte[buffPtr][DHCP_OP] := op
