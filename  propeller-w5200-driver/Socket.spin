@@ -16,8 +16,8 @@ CON
   UDP_HEADER_LENGTH = $06
   UPD_DATA          = $08
   
-  TIMEOUT           = 10000      ' Number of loops to execute before issuing a timeout
-  INIT_DELAY        = 1         ' Amount of time (ms) to wait in each timeout loop 
+  TIMEOUT           = 30000     ' Number of loops to execute before issuing a timeout
+  INIT_DELAY        = 0         ' Amount of time (ms) to wait in each timeout loop 
   TRANS_DELAY       = 0         ' Milliseconds to wait between receiving data blocks
 
   CR    = $0D
@@ -161,6 +161,26 @@ RETURNS:
 }}
   return wiz.IsClosed(_sock)
 
+
+
+PUB Available | i, bytesToRead
+{{
+DESCRIPTION:
+
+PARMS:
+  
+RETURNS:
+  
+}}
+  bytesToRead := i := 0
+  repeat until NULL < bytesToRead := wiz.GetRxBytesToRead(_sock)
+    waitcnt(((clkfreq / 1_000 * INIT_DELAY - 3932) #> 381) + cnt) 
+    if(i++ > TIMEOUT)
+      return -1
+   
+  return bytesToRead
+
+{
 PUB Available | i, bytesToRead
 {{
 DESCRIPTION:
@@ -182,7 +202,7 @@ RETURNS:
     bytesToRead := wiz.GetRxBytesToRead(_sock)
    
   return bytesToRead
-  
+ } 
 PUB Receive(buffer, bytesToRead) | ptr
 {{
 DESCRIPTION:

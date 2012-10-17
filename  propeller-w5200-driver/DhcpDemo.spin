@@ -104,6 +104,7 @@ PUB Init | ptr, i
 
   'DHCP Process
   repeat until DoDhcp
+    CreateTransactionId 
     pause(1000)
     pst.str(string(CR, "Retry DHCP: "))
     pst.dec(i++)
