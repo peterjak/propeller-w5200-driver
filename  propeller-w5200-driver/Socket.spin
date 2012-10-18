@@ -17,8 +17,8 @@ CON
   UPD_DATA          = $08
   
   TIMEOUT           = 30000     ' Number of loops to execute before issuing a timeout
-  INIT_DELAY        = 0         ' Amount of time (ms) to wait in each timeout loop 
-  TRANS_DELAY       = 0         ' Milliseconds to wait between receiving data blocks
+  TIMEOUT2          = 3000      ' Number of loops to wait between receiving data blocks
+  TIMEOUT_DELAY     = 0         ' Amount of time (ms) to wait in each timeout loop 
 
   CR    = $0D
   LF    = $0A
@@ -162,26 +162,7 @@ RETURNS:
   return wiz.IsClosed(_sock)
 
 
-
-PUB Available | i, bytesToRead
-{{
-DESCRIPTION:
-
-PARMS:
-  
-RETURNS:
-  
-}}
-  bytesToRead := i := 0
-  repeat until NULL < bytesToRead := wiz.GetRxBytesToRead(_sock)
-    waitcnt(((clkfreq / 1_000 * INIT_DELAY - 3932) #> 381) + cnt) 
-    if(i++ > TIMEOUT)
-      return -1
-   
-  return bytesToRead
-
-{
-PUB Available | i, bytesToRead
+PUB Available | i, bytesToRead, tout
 {{
 DESCRIPTION:
 
@@ -193,16 +174,21 @@ RETURNS:
   bytesToRead := i := 0
 
   if(readCount++ == 0)
-    repeat until NULL < bytesToRead := wiz.GetRxBytesToRead(_sock)
-      'waitcnt(((clkfreq / 1_000 * INIT_DELAY - 3932) #> 381) + cnt) 
-      if(i++ > TIMEOUT)
-        return -1
+    tout := TIMEOUT 
   else
-    'waitcnt(((clkfreq / 1_000 * TRANS_DELAY - 3932) #> 381) + cnt)
-    bytesToRead := wiz.GetRxBytesToRead(_sock)
-   
+    tout := TIMEOUT2
+
+  repeat until NULL < bytesToRead := wiz.GetRxBytesToRead(_sock)
+    'waitcnt(((clkfreq / 1_000 * TIMEOUT_DELAY - 3932) #> 381) + cnt) 
+    if(i++ > tout)
+      if(tout == TIMEOUT)
+        readCount := 0
+        return -1
+      else
+        return 0 
+
   return bytesToRead
- } 
+
 PUB Receive(buffer, bytesToRead) | ptr
 {{
 DESCRIPTION:

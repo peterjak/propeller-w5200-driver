@@ -7,7 +7,6 @@ CON
   
   CR                = $0D
   LF                = $0A
-  NULL              = $00
   DOT               = $2E 
 
   
@@ -65,6 +64,7 @@ DAT
   
   buffPtr         long  $00
   transId         long  $00
+  null            long  $00
 
 OBJ
   sock          : "Socket"
@@ -221,6 +221,30 @@ PRI DeserializeWord(buffer) | value
   value += byte[buffer]
   return value
 
+PUB SendReceive(buffer, len) | bytesToRead, ptr 
+  
+  bytesToRead := 0
+
+  'Open socket and Send Message 
+  sock.Open
+  sock.Send(buffer, len)
+
+  'waitcnt(((clkfreq / 1_000 * DELAY - 3932) #> 381) + cnt)
+  
+  bytesToRead := sock.Available
+   
+  'Check for a timeout
+  if(bytesToRead =< 0 )
+    bytesToRead~
+    return @null
+
+  if(bytesToRead > 0) 
+    'Get the Rx buffer  
+    ptr := sock.Receive(buffer, bytesToRead)
+
+  sock.Disconnect
+  return ptr
+{
 PUB SendReceive(buffer, len) | receiving, bytesToRead, ptr 
   
   bytesToRead := 0
@@ -252,3 +276,4 @@ PUB SendReceive(buffer, len) | receiving, bytesToRead, ptr
   'Disconnect
   sock.Disconnect
   return ptr
+  }

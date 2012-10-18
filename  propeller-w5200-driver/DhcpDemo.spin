@@ -13,7 +13,7 @@ CON
   MAGIC_COOKIE_LEN  = $04
   UPD_HEADER_LEN    = $08
   MAX_DHCP_OPTIONS  = $10
-  DHCP_PACKET_LEN        = $156 '342
+  DHCP_PACKET_LEN   = $156 '342
   
   #0, CLOSED, TCP, UDP, IPRAW, MACRAW, PPPOE
 
@@ -316,8 +316,6 @@ PUB SendReceive(buffer, len) | bytesToRead, ptr
 
   sock.Open
   sock.Send(buffer, len)
-  
-  'pause(500)
 
   bytesToRead := sock.Available
   pst.str(string("Bytes to Read...."))
