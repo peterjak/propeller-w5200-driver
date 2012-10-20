@@ -289,14 +289,17 @@ PUB SendReceive(buffer, len) | bytesToRead, ptr
   sock.Open
   sock.Send(buffer, len)
 
-  'waitcnt(((clkfreq / 1_000 * DELAY - 3932) #> 381) + cnt)
-  
   bytesToRead := sock.Available
    
   'Check for a timeout
-  if(bytesToRead =< 0 )
+  if(bytesToRead == -1 )
     bytesToRead~
     return @null
+
+  'Check for a timeout
+  if(bytesToRead == 0 )
+    bytesToRead~
+    return 0
 
   if(bytesToRead > 0) 
     'Get the Rx buffer  
