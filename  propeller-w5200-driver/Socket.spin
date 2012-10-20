@@ -5,6 +5,8 @@
  LAST MODIFIED: 8/12/2012
  VERSION 1.0
  LICENSE: MIT (see end of file)
+
+
 }
 '*********************************************************************************************
 CON
@@ -15,16 +17,15 @@ CON
   UDP_HEADER_PORT   = $04
   UDP_HEADER_LENGTH = $06
   UPD_DATA          = $08
-  
-  TIMEOUT           = 30000     ' Number of loops to execute before issuing a timeout
-  TIMEOUT2          = 3000      ' Number of loops to wait between receiving data blocks
-  TIMEOUT_DELAY     = 0         ' Amount of time (ms) to wait in each timeout loop 
 
-  CR    = $0D
-  LF    = $0A
-  NULL  = $00
-
-  
+  'Increase TRANS_TIMEOUT in increments of 100*X if you are experiencing timeouts
+  'TRANS_TIMEOUT = 600 functions well on the system used for development
+  'TRANS_TIMEOUT = 3000 worked well for a forum member with a slower network
+  'Notes:
+  'TRANS_TIMEOUT = Number of loops to wait between receiving data blocks
+  'TIMEOUT = Number of loops to execute before issuing a timeout 
+  TRANS_TIMEOUT     = 3000   
+  TIMEOUT           = TRANS_TIMEOUT * 10   
        
 VAR
   byte  _sock
@@ -32,9 +33,12 @@ VAR
   byte  _remoteIp[4]
   byte  readCount
   word  _remotePort
+  word  _trans_timeout
+  word  _timeout
 
 DAT
   _port       byte  $2710
+  null        long  $00
 
 OBJ
   wiz           : "W5200"
@@ -54,6 +58,12 @@ RETURNS:
   _sock := socketId
   _protocol := protocol
 
+  if(_trans_timeout == null)
+    _trans_timeout := TRANS_TIMEOUT
+    
+  if(_timeout == null)
+    _timeout := TIMEOUT
+  
   'Increment port numbers stating at 10,000
   if(portNum == -1)
     portNum := _port++
@@ -64,6 +74,11 @@ RETURNS:
 
   readCount := 0
 
+PUB SetTimeout(value)
+  _timeout := value
+
+PUB SetTransactionTimout(value)
+  _trans_timeout := value
 
 PUB RemoteIp(octet3, octet2, octet1, octet0)
   _remoteIp[0] := octet3
@@ -84,10 +99,6 @@ RETURNS:
   _remotePort := port
   wiz.SetRemotePort(_sock, port)
 
-{
-PUB DebugRead(register, buffer, length)
-  wiz.DebugRead(_sock, register, buffer, length)
-}  
 '----------------------------------------------------
 '
 '----------------------------------------------------
@@ -174,9 +185,9 @@ RETURNS:
   bytesToRead := i := 0
 
   if(readCount++ == 0)
-    tout := TIMEOUT 
+    tout := _timeout 
   else
-    tout := TIMEOUT2
+    tout := _trans_timeout
 
   repeat until NULL < bytesToRead := wiz.GetRxBytesToRead(_sock)
     'waitcnt(((clkfreq / 1_000 * TIMEOUT_DELAY - 3932) #> 381) + cnt) 
