@@ -43,8 +43,6 @@ CON
   MESSAGE_TYPE        = 53
   DHCP_SERVER_IP      = 54
   PARAM_REQUEST       = 55
-  
-  
 
   {{ DHCP Message Types}}
   DHCP_DISCOVER       = 1       
