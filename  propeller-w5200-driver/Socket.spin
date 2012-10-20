@@ -77,7 +77,7 @@ RETURNS:
 PUB SetTimeout(value)
   _timeout := value
 
-PUB SetTransactionTimout(value)
+PUB SetTransactionTimeout(value)
   _trans_timeout := value
 
 PUB RemoteIp(octet3, octet2, octet1, octet0)
