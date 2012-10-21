@@ -138,8 +138,8 @@ DAT
 }                       $C0, $0E, $00, $00,             { PR_NAME
 }                       $00, $20, $00, $01,             { NB IN
 }                       $00, $04, $90, $E0,             { TTL = 10 minutes 
-}                       $00, $06, $00, $00,             { NB_FLAGS %0_00_00000_00000000
-}                       $C0, $A8, $01, $6B              { NB address (IP) }
+}                       $00, $06, $00, $00              { NB_FLAGS %0_00_00000_00000000}
+  ipReg           byte  $C0, $A8, $01, $68              { NB address (IP) }
   enbNameReg      byte  0
 
   nbPosQueryResp  byte  $68, $C8, $85, $00,             { %1_0000_101000_1_0000
@@ -148,8 +148,8 @@ DAT
 }                       $20, $0[32], $00,               { RP_NAME
 }                       $00, $20, $00, $01,             { NB IN
 }                       $00, $04, $90, $E0,             { TTL = 10 minutes
-}                       $00, $06, $00, $00,             { NB_FLAGS %0_00_00000_00000000
-}                       $C0, $A8, $01, $6B              { NB address (IP) }                       
+}                       $00, $06, $00, $00              { NB_FLAGS %0_00_00000_00000000 }
+  ipResp          byte  $C0, $A8, $01, $68              { NB address (IP) }                       
   enbPosQueryResp byte  0
 
   nbStatQueryResp  byte $68, $C8, $84, $00,             { 
@@ -191,6 +191,8 @@ PUB Main | ptr, bytesToRead
   pause(500)
   
   FirstLevelEncode(@encName, @nbName, $00)
+  pst.str(@encName)
+  pst.char(CR)
 
   'Fill the encoded name our 3 packets types
   bytemove(@nbNameReg[13], @encName, 32)
@@ -208,10 +210,15 @@ PUB Main | ptr, bytesToRead
   wiz.SetCommonnMode(0)
   wiz.SetGateway(192, 168, 1, 1)
   wiz.SetSubnetMask(255, 255, 255, 0)
-  wiz.SetIp(192, 168, 1, 107)
+  wiz.SetIp(192, 168, 1, 104)
   wiz.SetMac($00, $08, $DC, $16, $F8, $01)
 
+
+  bytemove(@ipReg, wiz.GetIp, 4)
+  bytemove(@ipResp, wiz.GetIp, 4)
+
   'Broadcast NetBIOS on port 137
+  sock.Init(0, UDP, 137)
   sock.RemoteIp(192, 168, 1, 255)
   sock.RemotePort(137)
   pause(500)
@@ -221,6 +228,7 @@ PUB Main | ptr, bytesToRead
   {   } 
   repeat 6
     ptr := Register
+    pause(500)
     ifnot(ptr == @null)
       pst.str(string(CR, "Not NULL", CR))
       if(IsError(ptr))
@@ -275,6 +283,11 @@ PUB PrintDebug(buffer,bytesToRead)
   DisplayMemory(buffer+8, bytesToRead-8, true)  
 
 PUB IsMine(buffer)
+
+  pst.str(@encName)
+  pst.char(CR)
+  pst.str((buffer+QUERY+1))
+  pst.char(CR)
  return strcomp((buffer+QUERY+1),@encName)
 
 PUB GetNbType(buffer)
@@ -334,8 +347,6 @@ PUB SendReceive(buffer, len) | bytesToRead, ptr
 
   sock.Open
   sock.Send(buffer, len)
-  
-  pause(500)
 
   bytesToRead := sock.Available
   pst.str(string("Bytes to Read...."))
