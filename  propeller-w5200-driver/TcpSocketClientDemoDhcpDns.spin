@@ -48,8 +48,8 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
   pause(500)
 
   pst.str(string("Initialize W5200", CR))
-  'wiz.Start(3, 0, 1, 2)
-  wiz.start(6, 5, 4, 7)
+  wiz.Start(3, 0, 1, 2)
+  'wiz.Start(4, 5, 6, 7)
   wiz.SetMac($00, $08, $DC, $16, $F8, $01)
 
   pst.str(string("Getting network paramters", CR))
@@ -60,7 +60,7 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
     if(++t1 > DHCP_ATTEMPTS)
       quit
 
-  if(dhcp.GetErrorCode > 0  OR t1 > DHCP_ATTEMPTS)
+  if(t1 > DHCP_ATTEMPTS)
     pst.char(CR) 
     pst.str(string(CR, "DHCP Attempts: "))
     pst.dec(t1)

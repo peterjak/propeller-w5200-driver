@@ -12,7 +12,7 @@ CON
   
   #0, CLOSED, TCP, UDP, IPRAW, MACRAW, PPPOE
 
-  DHCP_ATTEMPTS = 5  
+  DHCP_ATTEMPTS = 10  
     
 VAR
   long  seed
@@ -76,7 +76,7 @@ PUB Main | i, page, dnsServer
   pause(500)
   
   pst.str(string("Initialize W5200", CR))
-  wiz.Init
+  wiz.Start(3, 0, 1, 2) 
   wiz.SetMac($00, $08, $DC, $16, $F8, $01)
 
   pst.str(string("Getting network paramters", CR))
@@ -87,7 +87,7 @@ PUB Main | i, page, dnsServer
     if(++i > DHCP_ATTEMPTS)
       quit
 
-  if(dhcp.GetErrorCode > 0  OR i > DHCP_ATTEMPTS)
+  if(dhcp.GetErrorCode > 0 OR i > DHCP_ATTEMPTS)
     pst.char(CR) 
     pst.str(string(CR, "DHCP Attempts: "))
     pst.dec(i)
