@@ -11,6 +11,8 @@ CON
   SOCKETS       = 7
   
   #0, CLOSED, TCP, UDP, IPRAW, MACRAW, PPPOE
+
+  DHCP_ATTEMPTS = 5  
     
 VAR
   long  seed
@@ -58,7 +60,7 @@ DAT
   
   buff  byte  $0[BUFFER_2K] 
 
-  resPtr long $0[25]
+  resPtr long $0[25] 
   
 OBJ
   pst             : "Parallax Serial Terminal"
@@ -68,9 +70,11 @@ OBJ
  
 PUB Main | i, page, dnsServer
 
+  i := 0
+
   pst.Start(115_200)
   pause(500)
-
+  
   pst.str(string("Initialize W5200", CR))
   wiz.Init
   wiz.SetMac($00, $08, $DC, $16, $F8, $01)
@@ -78,7 +82,15 @@ PUB Main | i, page, dnsServer
   pst.str(string("Getting network paramters", CR))
   dhcp.Init(@buff, 7)
   pst.str(string("Requesting IP....."))
-  ifnot(dhcp.DoDhcp)
+
+  repeat until dhcp.DoDhcp
+    if(++i > DHCP_ATTEMPTS)
+      quit
+
+  if(dhcp.GetErrorCode > 0  OR i > DHCP_ATTEMPTS)
+    pst.char(CR) 
+    pst.str(string(CR, "DHCP Attempts: "))
+    pst.dec(i)
     pst.str(string(CR, "Error Code: "))
     pst.dec(dhcp.GetErrorCode)
     pst.char(CR)
