@@ -104,10 +104,12 @@ PUB GetIp
 PUB DoDhcp | ptr
 
   CreateTransactionId
+  errorCode := 0
   
   ptr := Discover
   if(ptr == @null)
     errorCode := DISCOVER_ERROR
+    sock.Close 
     return false   
       
   Offer
@@ -115,12 +117,14 @@ PUB DoDhcp | ptr
   ptr := Request
   if(ptr == @null)
     errorCode := REQUEST_ERROR
+    sock.Close 
     return false
     
   ifnot(Ack)
+    sock.Close
     return false 
 
-  sock.Close
+  sock.Close 
   return true
 
 PUB Discover | len
