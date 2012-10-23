@@ -122,7 +122,6 @@ PUB DoDhcp | ptr
 
   sock.Close
   return true
-  'return wiz.GetCommonRegister(Wiz#SOURCE_IP0)
 
 PUB Discover | len
   'optionPtr is a global pointer used in the

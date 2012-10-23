@@ -9,6 +9,8 @@ CON
   NULL          = $00
   
   #0, CLOSED, TCP, UDP, IPRAW, MACRAW, PPPOE
+
+  DHCP_ATTEMPTS = 5
   
        
 VAR
@@ -28,6 +30,8 @@ DAT
 
   buff          byte  $0[BUFFER_2K]
 
+  t1            long  $0
+
 OBJ
   pst           : "Parallax Serial Terminal"
   wiz           : "W5200"
@@ -44,13 +48,22 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
   pause(500)
 
   pst.str(string("Initialize W5200", CR))
-  wiz.Start(3, 0, 1, 2)
+  'wiz.Start(3, 0, 1, 2)
+  wiz.start(6, 5, 4, 7)
   wiz.SetMac($00, $08, $DC, $16, $F8, $01)
 
   pst.str(string("Getting network paramters", CR))
   dhcp.Init(@buff, 7)
   pst.str(string("Requesting IP....."))
-  ifnot(dhcp.DoDhcp)
+
+  repeat until dhcp.DoDhcp
+    if(++t1 > DHCP_ATTEMPTS)
+      quit
+
+  if(dhcp.GetErrorCode > 0  OR t1 > DHCP_ATTEMPTS)
+    pst.char(CR) 
+    pst.str(string(CR, "DHCP Attempts: "))
+    pst.dec(t1)
     pst.str(string(CR, "Error Code: "))
     pst.dec(dhcp.GetErrorCode)
     pst.char(CR)
@@ -70,7 +83,7 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
   pst.str(string("Router IP........."))
   printIp(wiz.GetRouter)
 
-  pst.str(string("Gateway IP........"))
+  pst.str(string("Gateway IP........"))                                        
   printIp(wiz.GetGatewayIp)
   
   pst.char(CR) 
