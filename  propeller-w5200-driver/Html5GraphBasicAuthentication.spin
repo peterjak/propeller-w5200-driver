@@ -104,7 +104,7 @@ PUB Main | i, page, dnsServer
   pst.char(CR)
   
   pst.str(string("Initialize W5200", CR))
-  wiz.Start(3, 0, 1, 2, 4) 
+  wiz.Start(3, 0, 1, 2) 
   wiz.SetMac($00, $08, $DC, $16, $F8, $01)
 
   pst.str(string("Getting network paramters", CR))
@@ -168,6 +168,7 @@ PUB StartListners | i
       pst.str(string("Listen "))
     else
       pst.str(string("Listener failed ",CR))
+      sock.Disconnect 
     pst.dec(i)
     pst.char(CR)
 
