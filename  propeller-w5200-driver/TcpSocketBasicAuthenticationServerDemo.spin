@@ -66,7 +66,7 @@ PUB Main | bytesToRead
   pst.char(CR)
 
   wiz.Init 
-  wiz.SetIp(192, 168, 1, 107)
+  wiz.SetIp(192, 168, 1, 104)
   wiz.SetMac($00, $08, $DC, $16, $F8, $01)
   
   pst.str(string("Initialize Socket",CR))
@@ -74,20 +74,16 @@ PUB Main | bytesToRead
 
   pst.str(string("Start Socket server",CR))
   repeat
-    wiz.SocketStatus(0)
-    
-    pst.str(string(CR, "---------------------------",CR))
+    CloseWait
     sock.Open
     
-    if(sock.Listen)
-      pst.str(string("Listen"))
-    else
-      pst.str(string("Listener failed!"))  
-    pst.str(string(CR, "---------------------------",CR))
+    ifnot(sock.Listen)
+      pst.str(string("Listener failed!"))
+      sock.Disconnect 
+      next 
     
     'Connection?
     repeat until sock.Connected
-      pause(100)
     
     'Data in the buffer?
     repeat until bytesToRead := sock.Available
@@ -95,13 +91,14 @@ PUB Main | bytesToRead
     'Check for a timeout
     if(bytesToRead < 0)
       bytesToRead~
+      pst.str(string("Timeout",CR))
       next
 
     'Get the Rx buffer  
     sock.Receive(@buff, bytesToRead)
 
-    pst.str(@buff)
-    pst.str(string(CR, "******[ End of Header ]********************", CR))
+    'pst.str(@buff)
+    'pst.str(string(CR, "******[ End of Header ]********************", CR))
 
     'Tokenize the header
     req.TokenizeHeader(@buff, bytesToRead)
@@ -117,7 +114,7 @@ PUB Main | bytesToRead
     {{ Process the Rx data}}
     'Check for Authorization header
     if(IsAuthenticated)
-      pst.str(string("Authenticated", CR))
+      'pst.str(string("Authenticated", CR))
       sock.Send(@index, strsize(@index))
     else
       pst.str(string("Not Authenticated", CR))
@@ -127,6 +124,10 @@ PUB Main | bytesToRead
     sock.Disconnect
     bytesToRead~
 
+PUB CloseWait | i
+  if(sock.IsCloseWait) 
+    sock.Close
+    
 PUB IsAuthenticated
   return strcomp( @authValue, req.Header( string("Authorization") ) )
 
