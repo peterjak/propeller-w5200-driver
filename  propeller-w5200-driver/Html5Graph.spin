@@ -71,7 +71,7 @@ OBJ
 PUB Main | i, page, dnsServer
 
   i := 0
-
+  
   pst.Start(115_200)
   pause(500)
   
@@ -96,6 +96,8 @@ PUB Main | i, page, dnsServer
     pst.char(CR)
     pst.str(dhcp.GetErrorMessage)
     pst.char(CR)
+    Toggle(19, 1)
+    Toggle(20, 1)
     return
   else
     PrintIp(dhcp.GetIp)
@@ -118,7 +120,7 @@ PUB Main | i, page, dnsServer
            
     OpenListeners
     StartListners
-        
+    
     pst.str(string("Start Socket server",CR))
     \MultiSocketServer
     pst.str(string("I blew up!"))
@@ -142,7 +144,6 @@ PUB StartListners | i
 
 PUB CloseWait | i
   repeat i from 0 to SOCKETS-1
-   
     if(sock[i].IsCloseWait) 
       sock[i].Disconnect
       sock[i].Close
@@ -172,8 +173,11 @@ PUB MultiSocketServer | bytesToRead, i, page, j, x , bytesSent, ptr
     pst.char(CR)
     
     'Data in the buffer?
-    repeat until bytesToRead := sock[i].Available
+    repeat until NULL < bytesToRead := sock[i].Available
 
+
+    Toggle(19, 2)
+    
     'Check for a timeout
     if(bytesToRead < 0)
       pst.str(string("Timeout",CR))
@@ -313,7 +317,11 @@ PUB WriteNode(buffer, value) | t1
   byte[buffer][3] := t1 + $30
 
 
-
+PUB Toggle(pin, count)
+  repeat count
+    dira[pin]~~
+      !outa[pin]
+      waitcnt(80_000_000/8 + cnt)
 
 
      

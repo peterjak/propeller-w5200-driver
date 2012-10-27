@@ -162,8 +162,8 @@ DAT
 }                       "PROPNET        ", $00,         {
 }                       $04, $00,                       {
 }                       "WORKGROUP      ", $00,         {
-}                       $84, $00,                       {
-}                       $00, $08, $DC, $16, $F8, $01,   { MAC
+}                       $84, $00                       { }
+  nbMac            byte $00, $08, $DC, $16, $F8, $01,   { MAC
 }                       $00, $00, $00, $00, $00, $00,    { Jumpers; test; version; stats
 }                       $00, $00, $00, $00, $00, $00,    { CRC, alignment error; collitions
 }                       $00, $00, $00, $00, $00, $00,    { aborts;  sends 
@@ -197,7 +197,8 @@ PUB Main | ptr, bytesToRead
   'Fill the encoded name our 3 packets types
   bytemove(@nbNameReg[13], @encName, 32)
   bytemove(@nbPosQueryResp[13], @encName, 32)
-  bytemove(@nbStatQueryResp[13], @encName, 32)  
+  bytemove(@nbStatQueryResp[13], @encName, 32)
+     
   
   pst.str(string("Initialize", CR))
 
@@ -212,6 +213,7 @@ PUB Main | ptr, bytesToRead
   wiz.SetSubnetMask(255, 255, 255, 0)
   wiz.SetIp(192, 168, 1, 104)
   wiz.SetMac($00, $08, $DC, $16, $F8, $01)
+  bytemove(@nbMac, wiz.GetMac, 6)
 
 
   bytemove(@ipReg, wiz.GetIp, 4)
