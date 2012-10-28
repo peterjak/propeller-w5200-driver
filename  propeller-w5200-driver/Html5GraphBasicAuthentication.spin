@@ -187,14 +187,7 @@ PUB MultiSocketServer | bytesToRead, i, page, j, x , bytesSent, ptr
   repeat
     pst.str(string("TCP Service", CR))
     CloseWait
-    {
-    repeat j from 0 to SOCKETS-1
-      pst.str(string("Socket "))
-      pst.dec(j)
-      pst.str(string(" = "))
-      pst.hex(wiz.GetSocketStatus(j), 2)
-      pst.char(13)
-    } 
+
     repeat until sock[i].Connected
       i := ++i // SOCKETS
 
@@ -203,17 +196,12 @@ PUB MultiSocketServer | bytesToRead, i, page, j, x , bytesSent, ptr
     pst.char(CR)
     
     'Data in the buffer?
-    repeat until NULL < bytesToRead := sock[i].Available
-
-
-    Toggle(19, 2)
+    repeat until bytesToRead := sock[i].Available
     
     'Check for a timeout
     if(bytesToRead < 0)
       pst.str(string("Timeout",CR))
       sock[i].Disconnect
-      sock[i].Open
-      sock[i].Listen
       bytesToRead~
       next
 
@@ -280,34 +268,10 @@ PUB ParseResource | value
     'Do something
 
   return @index
-  
- 
+
 
 PUB IsAuthenticated
   return strcomp( @authValue, req.Header( string("Authorization") ) )
-  
-PUB IsToken(value)
-  return lookdown(value: "/", "?", "=", " ")
-
-PUB IsEndOfLine(value)
-  return lookdown(value: CR, LF)    
-
-      
-{    
-PUB ParseResource(header) | ptr, value
-  ptr := header
-  repeat until byte[ptr++] == $2F '/ forward slash
-  if(byte[ptr] == $20) ' space
-    return @index
-  else
-    value := GetTemp
-    WriteNode(@temperature, value)
-    value := GetHumidity
-    WriteNode(@humidity, value) 
-    return @xml
- }
-
-
 
 PUB GetTemp
   seed := CNT 

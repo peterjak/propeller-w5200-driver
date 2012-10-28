@@ -158,25 +158,23 @@ PUB MultiSocketServer | bytesToRead, i, page, j, x , bytesSent, ptr
     pst.str(string("TCP Service", CR))
     CloseWait
 
+    {
     repeat j from 0 to SOCKETS-1
       pst.str(string("Socket "))
       pst.dec(j)
       pst.str(string(" = "))
       pst.hex(wiz.GetSocketStatus(j), 2)
       pst.char(13)
-     
+    } 
     repeat until sock[i].Connected
       i := ++i // SOCKETS
-
+    {
     pst.str(string("Connected Socket "))
     pst.dec(i)
     pst.char(CR)
-    
+    }
     'Data in the buffer?
-    repeat until NULL < bytesToRead := sock[i].Available
-
-
-    Toggle(19, 2)
+    repeat until bytesToRead := sock[i].Available
     
     'Check for a timeout
     if(bytesToRead < 0)
@@ -187,16 +185,17 @@ PUB MultiSocketServer | bytesToRead, i, page, j, x , bytesSent, ptr
       bytesToRead~
       next
 
-    pst.str(string("Copy Rx Data",CR))
+    'pst.str(string("Copy Rx Data",CR))
   
     'Get the Rx buffer  
     sock[i].Receive(@buff, bytesToRead)
 
     {{ Process the Rx data}}
+    {
     pst.char(CR)
     pst.str(string("Request:",CR))
     pst.str(@buff)
-
+    }
     pst.str(string("Send Response",CR))
     page :=  ParseResource(@buff)
     
@@ -215,11 +214,11 @@ PUB MultiSocketServer | bytesToRead, i, page, j, x , bytesSent, ptr
     pst.str(string("Bytes Sent "))
     pst.dec(bytesSent)
     pst.char(CR)
-
+    {
     pst.str(string("Disconnect socket "))
     pst.dec(i)
     pst.char(CR)
-
+    }
     if(sock[i].Disconnect)
       pst.str(string("Disconnected", CR))
     else
