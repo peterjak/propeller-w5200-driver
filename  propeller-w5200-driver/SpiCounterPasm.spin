@@ -15,10 +15,10 @@ DAT
   cog       long  $0
   _cmd      long  $0
   _iobuff   long  $0
-  _mosi     byte  $0
-  _sck      byte  $0
-  _cs       byte  $0
-  _miso     byte  $0
+  _mosi     long  $0
+  _sck      long  $0
+  _cs       long  $0
+  _miso     long  $0
 
 PUB Init(p_cs, p_sck, p_mosi, p_miso)
   Start(p_cs, p_sck, p_mosi, p_miso)
@@ -97,7 +97,7 @@ startSpi
 '--------------------------------------------------------------------------
 'Initialize SPI pin masks and counter configurations 
 '-------------------------------------------------------------------------- 
-                    rdbyte  t2,     t1            'Master out slave in
+                    rdlong  t2,     t1            'Master out slave in
                     mov     cntout, nco           'Save counter output pin
                     add     cntout, t2
                     mov     mosi,   #1
@@ -106,20 +106,20 @@ startSpi
                     mov     frqb,  zero
                     mov     ctrb,  cntout
                      
-                    add     t1,     #1            'Clock
-                    rdbyte  t2,     t1
+                    add     t1,     #4            'Clock
+                    rdlong  t2,     t1
                     mov     cntclk, nco           'Save counter clock pin
                     add     cntclk, t2
                     mov     sck,    #1
                     shl     sck,    t2
                      
-                    add     t1,     #1            'Chip Select
-                    rdbyte  t2,     t1
+                    add     t1,     #4            'Chip Select
+                    rdlong  t2,     t1
                     mov     cs,     #1
                     shl     cs,     t2
                                
-                    add     t1,     #1            'Master in slave out
-                    rdbyte  t2,     t1
+                    add     t1,     #4            'Master in slave out
+                    rdlong  t2,     t1
 
                     mov     miso,   #1
                     shl     miso,   t2
