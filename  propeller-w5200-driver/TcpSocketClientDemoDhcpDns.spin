@@ -28,6 +28,10 @@ DAT
 }               byte  "Host: finance.google.com", CR, LF, {
 }               byte  "User-Agent: Wiz5200", CR, LF, CR, LF, $0
 
+  weather       byte  "GET / HTTP/1.1", CR, LF, {
+}               byte  "Host: www.weather.gov", CR, LF, {
+}               byte  "User-Agent: Wiz5200", CR, LF, CR, LF, $0
+
   buff          byte  $0[BUFFER_2K]
 
   t1            long  $0
@@ -49,7 +53,6 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
 
   pst.str(string("Initialize W5200", CR))
   wiz.Start(3, 0, 1, 2)
-  'wiz.Start(4, 5, 6, 7)
   wiz.SetMac($00, $08, $DC, $16, $F8, $01)
 
   pst.str(string("Getting network paramters", CR))
@@ -91,7 +94,15 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
   pst.str(string("Resolve domain IP.")) 
   dns.Init(@buff, 6)
   'remoteIP := dns.ResolveDomain(string("www.agaverobotics.com"))
-  remoteIP := dns.ResolveDomain(string("finance.google.com"))
+  'remoteIP := dns.ResolveDomain(string("finance.google.com"))
+  remoteIP := dns.ResolveDomain(string("www.weather.gov"))
+
+  'pst.str(string(cr, "Remote IP addr: "))
+  'pst.dec(remoteIp)
+  'pst.char(13)
+
+  'DisplayMemory(remoteIp, 512, true)
+  'return  
   'remoteIP := dns.GetResolvedIp(1)
   PrintIp(remoteIP)
   pst.char(CR)
@@ -120,7 +131,8 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
 
   pst.str(string("Send HTTP Header", CR)) 
   'bytesSent := sock.Send(@request2, strsize(@request2))
-  bytesSent := sock.Send(@google, strsize(@google))
+  'bytesSent := sock.Send(@google, strsize(@google))
+  bytesSent := sock.Send(@weather, strsize(@weather))
   pst.str(string("Bytes Sent: "))
   pst.dec(bytesSent)
   pst.char(13)
@@ -155,7 +167,51 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
   
   pst.str(string(CR, "Disconnect", CR)) 
   sock.Disconnect
-    
+
+PUB DisplayMemory(addr, len, isHex) | j
+  pst.str(string(13,"-----------------------------------------------------",13))
+  pst.str(string(13, "      "))
+  repeat j from 0 to $F
+    pst.hex(j, 2)
+    pst.char($20)
+  pst.str(string(13, "      ")) 
+  repeat j from 0 to $F
+    pst.str(string("-- "))
+
+  pst.char(13) 
+  repeat j from 0 to len
+    if(j == 0)
+      pst.hex(0, 4)
+      pst.char($20)
+      pst.char($20)
+      
+    if(isHex)
+      pst.hex(byte[addr + j], 2)
+    else
+      if(byte[addr+j] < $20 OR byte[addr+j] > $7E)
+        if(byte[addr+j] == 0)
+          pst.char($20)
+        else
+          pst.hex(byte[addr+j], 2)
+      else
+        pst.char($20)
+        pst.char(byte[addr+j])
+
+    pst.char($20) 
+    if((j+1) // $10 == 0) 
+      pst.char($0D)
+      pst.hex(j+1, 4)
+      pst.char($20)
+      pst.char($20)  
+  pst.char(13)
+  
+  pst.char(13)
+  pst.str(string("Start: "))
+  pst.dec(addr)
+  pst.str(string(" Len: "))
+  pst.dec(len)
+  pst.str(string(13,"-----------------------------------------------------",13,13))
+      
 PUB PrintIp(addr) | i
   repeat i from 0 to 3
     pst.dec(byte[addr][i])

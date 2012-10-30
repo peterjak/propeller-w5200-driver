@@ -75,7 +75,7 @@ PUB Init(buffer, socket) | dnsPtr
   buffPtr := buffer
 
   'DHCP Port, Mac and Ip 
-  sock.Init(socket, UDP, 8080)
+  sock.Init(socket, UDP, 53)
 
   'Get the default DNS from DHCP
   dnsPtr := wiz.GetDns
@@ -121,7 +121,7 @@ PUB ResolveDomain(url) | ptr
   ParseDnsResponse(ptr)
   return  GetResolvedIp(0)
   
-  return  ptr
+  'return  ptr
 
 
 PRI ParseUrl(src, dest) | ptr
@@ -160,7 +160,7 @@ PUB RCodeError
 PUB ParseDnsResponse(buffer) | ptr, i, len, ansRRS
 
   ansRRS := DeserializeWord(buffer+6)
-
+  i := 0
   'Query
   buffer += $0C
   repeat until byte[buffer++] == $00
@@ -189,16 +189,19 @@ PUB ParseDnsResponse(buffer) | ptr, i, len, ansRRS
 
   buffer += 2
 
-  bytemove(@@dnsIps[i++], buffer, len)
+  if(len == 4)
+    bytemove(@@dnsIps[i++], buffer, len)
 
 
   if(ansRRS-1 < 0)
     return
   
   repeat ansRRS-1
-    buffer += 4
-    if(byte[buffer] & $C0 == $C0)
-      buffer +=10
+    buffer += len
+    if(byte[buffer] & $C0 == $C0) 'Encoded name
+      if(byte[buffer+2] & $C0 == $C0) 'check for another encoded name 
+        buffer += 2
+      buffer +=10 'Get us past the 4 byte TTL
     else
       repeat until byte[buffer++] == $00
      
