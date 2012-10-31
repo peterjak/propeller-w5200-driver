@@ -20,7 +20,9 @@ CON
   AUTHORITY         = $08
   ADDITIONAL        = $0A
   QUERY             = $0C
-  DNS_HEADER_LEN    = QUERY               
+  DNS_HEADER_LEN    = QUERY
+
+  DNS_PORT          = 53               
        
 VAR
 
@@ -59,9 +61,9 @@ DAT
   ip10            byte  $00, $00, $00, $00
   ip11            byte  $00, $00, $00, $00
   ip12            byte  $00, $00, $00, $00
+  dnsCnt          byte  $00
   dnsIps          long  @ip1, @ip2, @ip3, @ip4, @ip5, @ip6, @ip7, @ip8, @ip9, @ip10, @ip11, @ip12
 
-  
   buffPtr         long  $00
   transId         long  $00
   null            long  $00
@@ -74,8 +76,8 @@ PUB Init(buffer, socket) | dnsPtr
 
   buffPtr := buffer
 
-  'DHCP Port, Mac and Ip 
-  sock.Init(socket, UDP, 53)
+  'DNS Port, Mac and Ip 
+  sock.Init(socket, UDP, DNS_PORT)
 
   'Get the default DNS from DHCP
   dnsPtr := wiz.GetDns
@@ -83,7 +85,7 @@ PUB Init(buffer, socket) | dnsPtr
   'The DNS IP could be null if DHCP is not used 
   if(dnsPtr > NULL) 
     sock.RemoteIp(byte[dnsPtr][0], byte[dnsPtr][1], byte[dnsPtr][2], byte[dnsPtr][3])
-    sock.RemotePort(53)
+    sock.RemotePort(DNS_PORT)
     
 'Use this if you need to manually set DNS
 PUB SetDnsServerIp(octet3, octet2, octet1, octet0)
@@ -95,10 +97,17 @@ PUB SetDnsServerIp(octet3, octet2, octet1, octet0)
   sock.RemoteIp(octet3 , octet2, octet1, octet0)
   sock.RemotePort(53)
 
- 
+PUB GetIpCount
+  return dnsCnt
+  
 PUB GetResolvedIp(idx)
+
+  if(idx > dnsCnt-1)
+    return @null
+    
   if(IsNullIp( @dnsIps[idx] ) )
-    return NULL
+    return @null
+    
   return @@dnsIps[idx]
 
 PRI IsNullIp(ipaddr)
@@ -110,12 +119,13 @@ PUB ResolveDomain(url) | ptr
 
   'Copy header to the buffer
   bytemove(buffPtr, @msgId, DNS_HEADER_LEN)
+  
   'Format and copy the url
   ptr := ParseUrl(url, buffPtr+DNS_HEADER_LEN)
+  
   'Add the QTYPE and QCLASS
   bytemove(ptr, @QTYPE, 4)
   ptr += 4
-
 
   ptr := SendReceive(buffPtr, ptr - buffPtr)
   ParseDnsResponse(ptr)
@@ -157,57 +167,57 @@ PUB RCodeError
     0..5  : return @@rcPtr[rcode]
     other : return @rc6
 
-PUB ParseDnsResponse(buffer) | ptr, i, len, ansRRS
+PRI ParseDnsResponse(buffer) | i, len, ansRRS
 
-  ansRRS := DeserializeWord(buffer+6)
   i := 0
-  'Query
-  buffer += $0C
+  
+  ' The number of answers to expect
+  ansRRS := DeserializeWord(buffer+ANSWERS)
+
+  '--------------------------------------
+  'Query Section
+  '--------------------------------------
+  'Point to the query section which contains 
+  'the plain text url to resolve.  Loop until 
+  'we reach a zero then jump 4 bytes.
+  buffer += QUERY
   repeat until byte[buffer++] == $00
+  'Jump past the Type(2) and Class(2)
   buffer += 4
 
-  'Answer
-  if(byte[buffer] & $C0 == $C0)
-    buffer +=10
-  else
-    repeat until byte[buffer++] == $00
-
-  len := DeserializeWord(buffer)
-
-  if(len > 4)
-    ansRRS--
-    buffer += (2 + len)
-
-      'Answer
+  '-------------------------------------- 
+  'Answer Section
+  '--------------------------------------
+  'The idea is to loop through the answer section
+  'and grab the IPs. Nto every answer section will
+  'have an IP.  Somethimes they have text only
+  repeat ansRRS
+    'Encoded name 
     if(byte[buffer] & $C0 == $C0)
-      buffer +=10
-    else
-      repeat until byte[buffer++] == $00
-
-    i := 0
-    len := DeserializeWord(buffer)
-
-  buffer += 2
-
-  if(len == 4)
-    bytemove(@@dnsIps[i++], buffer, len)
-
-
-  if(ansRRS-1 < 0)
-    return
-  
-  repeat ansRRS-1
-    buffer += len
-    if(byte[buffer] & $C0 == $C0) 'Encoded name
-      if(byte[buffer+2] & $C0 == $C0) 'check for another encoded name 
+      'Check for another encoded name                       
+      if(byte[buffer+2] & $C0 == $C0)
+        'We have two encoded names to skip                 
         buffer += 2
-      buffer +=10 'Get us past the 4 byte TTL
+      'Skip Name(2), Type(2), Class(2), and TTL(4)
+      buffer += 10  
     else
+      'Increment the pointer until we reach the end of the name
       repeat until byte[buffer++] == $00
      
     len := DeserializeWord(buffer)
-    buffer += 2
-    bytemove(@@dnsIps[i++], buffer, len)
+    
+    'If the length equals 4 we have an IP
+    'Otherwise we have text
+    if(len == 4)
+      buffer += 2 
+      bytemove(@@dnsIps[i++], buffer, len)
+      buffer += 4
+    else
+      buffer += (2 + len)
+      next
+       
+  dnsCnt := i    
+  'return i-1
 
 
 PUB CreateTransactionId(mask) 
@@ -232,8 +242,6 @@ PUB SendReceive(buffer, len) | bytesToRead, ptr
   sock.Open
   sock.Send(buffer, len)
 
-  'waitcnt(((clkfreq / 1_000 * DELAY - 3932) #> 381) + cnt)
-  
   bytesToRead := sock.Available
    
   'Check for a timeout
@@ -247,36 +255,3 @@ PUB SendReceive(buffer, len) | bytesToRead, ptr
 
   sock.Disconnect
   return ptr
-{
-PUB SendReceive(buffer, len) | receiving, bytesToRead, ptr 
-  
-  bytesToRead := 0
-
-  'Open and Send Message
-  sock.Open 
-  sock.Send(buffer, len)
-
-  receiving := true
-  repeat while receiving 
-    'Data in the buffer?
-    bytesToRead := sock.Available
- 
-    'Check for a timeout
-    if(bytesToRead == -1)
-      receiving := false
-      next
-
-    if(bytesToRead == 0)
-      receiving := false
-      next 
-
-    if(bytesToRead > 0) 
-      'Get the Rx buffer  
-      ptr := sock.Receive(buffer, bytesToRead)
-      
-    bytesToRead~
-
-  'Disconnect
-  sock.Disconnect
-  return ptr
-  }

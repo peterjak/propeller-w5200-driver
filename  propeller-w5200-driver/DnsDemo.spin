@@ -7,7 +7,6 @@ CON
   
   CR                = $0D
   LF                = $0A
-  NULL              = $00
   DOT               = $2E 
 
   
@@ -21,7 +20,11 @@ CON
   AUTHORITY         = $08
   ADDITIONAL        = $0A
   QUERY             = $0C
-  DNS_HEADER_LEN    = QUERY               
+  DNS_HEADER_LEN    = QUERY
+
+
+  ATTEMPTS      = 5
+  RESET_PIN     = 4               
        
 VAR
 
@@ -40,6 +43,7 @@ DAT
   url2  byte    "pop.west.cox.net", $0
   url3  byte    "mail.agaverobotics.com", $0
   url4  byte    "finance.google.com" , $0
+  url5  byte    "www.weather.gov", $0
 
   QTYPE  byte      $00, $01               
   QCLASS byte      $00, $01
@@ -70,6 +74,7 @@ DAT
   
   buffPtr         long  $00
   transId         long  $00
+  null            long  $00
 
 OBJ
   pst           : "Parallax Serial Terminal"
@@ -78,21 +83,31 @@ OBJ
 
 
  
-PUB Init | ptr, url
+PUB Init | ptr, url, ansRRS, i
 
   buffPtr := @buff
-
+  ansRRS := 0
+  
   pst.Start(115_200)
   pause(500)
 
   pst.str(string("Initialize", CR))
+  wiz.Start(3, 0, 1, 2) 
+
+  'Loop until we get the W5200 version
+  'This let us know that the W5200 is ready to go
+  repeat until wiz.GetVersion > 0
+    pause(250)
+    if(i++ > ATTEMPTS*5)
+      pst.str(string(CR, "W5200 SPI communication failed!", CR))
+      return
+  wiz.HardReset(RESET_PIN)
   
-  'DNS Port, Mac and Ip 
-  wiz.Init
-  wiz.SetIp(192, 168, 1, 107)
+  wiz.SetIp(192, 168, 1, 104)
   wiz.SetMac($00, $08, $DC, $16, $F8, $01)
-  sock.Init(0, UDP, 8080)
-  sock.RemoteIp(68, 105, 28, 12)
+  sock.Init(0, UDP, 53)
+
+  sock.RemoteIp(192,168,1,1)
   sock.RemotePort(53)
   pause(500)
 
@@ -100,7 +115,7 @@ PUB Init | ptr, url
   CreateTransactionId($FFFF)
   FillTransactionID
 
-  url := @url1
+  url := @url5
   'Copy header to the buffer
   bytemove(buffPtr, @msgId, DNS_HEADER_LEN)
   'Format and copy the url
@@ -108,11 +123,8 @@ PUB Init | ptr, url
   'Add the QTYPE and QCLASS
   bytemove(ptr, @QTYPE, 4)
   ptr += 4
-  
 
-
-  
-  DisplayMemory(buffPtr, ptr - buffPtr, true) 
+  DisplayMemory(buffPtr, ptr - buffPtr, true)
   ptr := SendReceive(buffPtr, ptr - buffPtr+1)
 
   GetRcode(ptr)
@@ -122,8 +134,17 @@ PUB Init | ptr, url
   pst.char(13)
 
   if(rcode == 0)
-    ParseDnsResponse(ptr) 
+    ansRRS := ParseDnsResponse(ptr) 
 
+  repeat i from 0 to ansRRS-1
+    ifnot(GetResolvedIp(i) == NULL)
+      pst.str(string("ip_"))
+      pst.dec(i)
+      pst.char($20)
+      PrintIP(GetResolvedIp(i))
+      pst.char(CR)
+      
+  
   sock.Close
 
 
@@ -145,7 +166,14 @@ PUB ParseUrl(src, dest) | ptr
   
   return dest
 
+PUB GetResolvedIp(idx)
+  if(IsNullIp( @dnsIps[idx] ) )
+    return @null
+  return @@dnsIps[idx]
 
+PRI IsNullIp(ipaddr)
+  return (byte[ipaddr][0] + byte[ipaddr][1] + byte[ipaddr][2] + byte[ipaddr][3]) == 0
+  
 PUB GetRcode(src)
   rcode := byte[src+FLAGS+1] & $000F
   return rcode
@@ -156,63 +184,57 @@ PUB RCodeError
     0..5  : return @@rcPtr[rcode]
     other : return @rc6
 
-PUB ParseDnsResponse(buffer) | ptr, i, len, ansRRS
+PUB ParseDnsResponse(buffer) | i, len, ansRRS
 
-  ansRRS := DeserializeWord(buffer+6)
-  pst.dec(ansRRS)
-  pst.char(13)
-  'Query
-  buffer += $0C
+  i := 0
+  
+  ' The number of answers to expect
+  ansRRS := DeserializeWord(buffer+ANSWERS)
+
+  '--------------------------------------
+  'Query Section
+  '--------------------------------------
+  'Point to the query section which contains 
+  'the plain text url to resolve.  Loop until 
+  'we reach a zero then jump 4 bytes.
+  buffer += QUERY
   repeat until byte[buffer++] == $00
+  'Jump past the Type(2) and Class(2)
   buffer += 4
 
-  'Answer
-  if(byte[buffer] & $C0 == $C0)
-    buffer +=10
-  else
-    repeat until byte[buffer++] == $00
-
-  
-
-  len := DeserializeWord(buffer)
-
-  
-  if(len > 4)
-    ansRRS--
-    buffer += (2 + len)
-
-      'Answer
+  '-------------------------------------- 
+  'Answer Section
+  '--------------------------------------
+  'The idea is to loop through the answer section
+  'and grab the IPs. Nto every answer section will
+  'have an IP.  Somethimes they have text only
+  repeat ansRRS
+    'Encoded name 
     if(byte[buffer] & $C0 == $C0)
-      buffer +=10
+      'Check for another encoded name                       
+      if(byte[buffer+2] & $C0 == $C0)
+        'We have two encoded names to skip                 
+        buffer += 2
+      'Skip Name(2), Type(2), Class(2), and TTL(4)
+      buffer += 10  
     else
-      repeat until byte[buffer++] == $00
-
-    i := 0
-    len := DeserializeWord(buffer)
-
-  buffer += 2
-
-  bytemove(@@dnsIps[i++], buffer, len)
-  PrintIp(@@dnsIps[i-1])
-  'pst.char(13) 
-  'return
-
-  if(ansRRS-1 < 0)
-    return
-  
-  repeat ansRRS-1
-    buffer += 4
-    if(byte[buffer] & $C0 == $C0)
-      buffer +=10
-    else
+      'Increment the pointer until we reach the end of the name
       repeat until byte[buffer++] == $00
      
     len := DeserializeWord(buffer)
-    buffer += 2
-    'PrintIp(buffer)
-    bytemove(@@dnsIps[i++], buffer, len)
-    PrintIp(@@dnsIps[i-1])
-    'pst.char(13)
+    
+    'If the length equals 4 we have an IP
+    'Otherwise we have text
+    if(len == 4)
+      buffer += 2 
+      bytemove(@@dnsIps[i++], buffer, len)
+      buffer += 4
+    else
+      buffer += (2 + len)
+      next  
+      
+  return i
+
 
 
 PUB CreateTransactionId(mask) 
@@ -222,8 +244,9 @@ PUB CreateTransactionId(mask)
 
 PUB FillTransactionID
   word[@msgId] := transId
-    
-PUB SendReceive(buffer, len) | receiving, bytesToRead, ptr 
+
+  
+PUB SendReceive(buffer, len) | bytesToRead, ptr 
   
   bytesToRead := 0
 
@@ -238,59 +261,43 @@ PUB SendReceive(buffer, len) | receiving, bytesToRead, ptr
   
   sock.Send(buffer, len)
   
-  pause(500)
   
   'receiving := true
   'repeat while receiving 
     'Data in the buffer?
-    bytesToRead := sock.Available
-    pst.str(string("Bytes to Read: "))
-    pst.dec(bytesToRead)
-    pst.char(13)
-    pst.char(13)
+  bytesToRead := sock.Available
+  pst.str(string("Bytes to Read: "))
+  pst.dec(bytesToRead)
+  pst.char(13)
+  pst.char(13)
      
-    'Check for a timeout
-    if(bytesToRead == -1)
-      receiving := false
-      pst.str(string("Fail safe", CR))
-      bytesToRead~
-      'next
+  'Check for a timeout
+  if(bytesToRead =< 0 )
+    bytesToRead~
+    return @null
 
-    if(bytesToRead == 0)
-      receiving := false
-      pst.str(string("Done", CR))
-      bytesToRead~
-      'next 
 
-    if(bytesToRead > 0) 
-      'Get the Rx buffer  
-      ptr := sock.Receive(buffer, bytesToRead)
-      pst.char(CR)
-      pst.str(string("UPD Header:",CR))
-      PrintIp(buffer)
-      pst.dec(DeserializeWord(buffer + 4))
-      pst.char(CR)
-      pst.dec(DeserializeWord(buffer + 6))
-      pst.char(CR)
-       
-      pst.char(CR) 
-      DisplayMemory(ptr, DeserializeWord(buffer + 6), true)
-      pst.char(CR)
-      'pst.char(CR)
-      
-      'TxRaw(ptr,DeserializeWord(buffer + 6)) 
-      'pst.char(CR)
-      
-      'quit
-      '
-      'receiving := false 
-      
-    'bytesToRead~
+  if(bytesToRead > 0) 
+    'Get the Rx buffer  
+    ptr := sock.Receive(buffer, bytesToRead)
+    PrintDebug(buffer,bytesToRead)
+
 
   pst.str(string(CR, "Disconnect", CR)) 
   sock.Disconnect
   return ptr
 
+PUB PrintDebug(buffer,bytesToRead)
+  pst.char(CR)
+  pst.str(string(CR, "Message from: "))
+  PrintIp(buffer)
+  pst.char(":")
+  pst.dec(DeserializeWord(buffer + 4))
+  pst.str(string(" ("))
+  pst.dec(DeserializeWord(buffer + 6))
+  pst.str(string(")", CR))
+   
+  DisplayMemory(buffer+8, bytesToRead-8, true)
 
 PUB TxRaw(addr, len) | i
   repeat 5
@@ -350,8 +357,8 @@ PUB PrintIp(addr) | i
     pst.dec(byte[addr][i])
     if(i < 3)
       pst.char($2E)
-    else
-      pst.char($0D)
+    'else
+      'pst.char($0D)
       
 PRI SerializeWord(value, buffer)
   byte[buffer++] := (value & $FF00) >> 8

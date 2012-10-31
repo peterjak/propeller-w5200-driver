@@ -7,7 +7,6 @@ CON
   
   CR                = $0D
   LF                = $0A
-  NULL              = $00
 
   
   #0, CLOSED, TCP, UDP, IPRAW, MACRAW, PPPOE
@@ -19,7 +18,10 @@ CON
   ANSWERS           = $06
   AUTHORITY         = $08
   ADDITIONAL        = $0A
-  QUERY             = $0C                
+  QUERY             = $0C
+
+  ATTEMPTS      = 5
+  RESET_PIN     = 4              
        
 VAR
 
@@ -28,17 +30,17 @@ DAT
   workspace       byte  $0[BUFFER_16]  
   buff            byte  $0[BUFFER_2K]
                               'reg         B Rcode
-  nbNameReg       byte  $68, %0_0101_0000001_0000       {
+  nbNameReg       byte  $68, %0_0101_0000001_0000,       {
 }                       $01, $00,                       { 
 }                       $00, $01,                       {
-}                       $0B, "PropNet5200", $00         { Question Name
+}                       $0B, "PropNet5200", $00,         { Question Name
 }                       $00, $20, $00, $01,             { PR_NAME
 }                       $C0, $08,                       { 
 }                       $00, $20, $00, $01,             {
-}                       $00, $00, $02, $58              { TTL = 10 minutes
+}                       $00, $00, $02, $58,              { TTL = 10 minutes
 }                       $00, $06,                       {
 }                       %0_00_00000_00000000
- enbNameReg       byte  NULL
+ enbNameReg       byte  0
   
   dnsQuery        byte  $68, $C8,               { Transaction Id
 }                       $01, $00,               { Flags
@@ -51,7 +53,7 @@ DAT
 }                       $03, "com", $00,        { Zero term
 }                       $00, $01,               { Host address: Type A
 }                       $00, $01                { Class: 01 }
-  qend            byte  NULL
+  qend            byte  0
 
   dnsEmailQuery   byte  $68, $C8,               { Transaction Id
 }                       $01, $00,               { Flags
@@ -65,7 +67,7 @@ DAT
 }                       $03, "net", $00,        { Zero term
 }                       $00, $01,               { Host address: Type A
 }                       $00, $01                { Class: 01 }
-  qeend           byte  NULL
+  qeend           byte  0
 
   dnsEmailQuery2   byte $68, $C8,               { Transaction Id
 }                       $01, $00,               { Flags
@@ -78,7 +80,7 @@ DAT
 }                       $03, "com", $00,        { Zero term
 }                       $00, $01,               { Host address: Type A
 }                       $00, $01                { Class: 01 }
-  qeend2           byte  NULL
+  qeend2           byte  0
 
   csvRequest   byte  $68, $C8,                  { Transaction Id
 }                       $01, $00,               { Flags
@@ -91,7 +93,7 @@ DAT
 }                       $03, "com", $00,        { Zero term
 }                       $00, $01,               { Host address: Type A
 }                       $00, $01                { Class: 01 }
-  csvend           byte  NULL
+  csvend           byte  0
 
   mx               byte  $68, $C8,              { Transaction Id
 }                       $01, $00,               { Flags
@@ -103,7 +105,20 @@ DAT
 }                       $03, "net", $00,        { Zero term
 }                       $00, $01,               { Host address: Type A
 }                       $00, $01                { Class: 01 }
-  mxend            byte  NULL
+  mxend            byte  0
+
+  gov               byte  $68, $C8,              { Transaction Id
+}                       $01, $00,               { Flags
+}                       $00, $01,               { Questions
+}                       $00, $00,               { Answer RRS
+}                       $00, $00,               { Authority RRS
+}                       $00, $00,               { Additional RRS
+}                       $03, "www",             { Query: Length -> 
+}                       $07, "weather",          {
+}                       $03, "gov", $00,        { Zero term
+}                       $00, $01,               { Host address: Type A
+}                       $00, $01                { Class: 01 }
+  egov            byte  0
                               
                                                              
   dnsResponse     byte  $F0, $90,                         { Transaction Id            
@@ -139,7 +154,7 @@ DAT
 }                       $C0, $B4, $00, $01, $00, $01, $00, $04, $B4, $CE, $00, $04, $D8, $EF, $22, $0A, {
 }                       $C0, $A2, $00, $01, $00, $01, $00, $04, $B3, $BE, $00, $04, $D8, $EF, $24, $0A, {
 }                       $C0, $90, $00, $01, $00, $01, $00, $04, $B3, $7A, $00, $04, $D8, $EF, $26, $0A
-  rend            byte  NULL  
+  rend            byte  0  
 
 
   ip1             byte  $00, $00, $00, $00
@@ -151,6 +166,7 @@ DAT
   
   buffPtr         long  $00
   transId         long  $00
+  null            long  $00
 
 OBJ
   pst           : "Parallax Serial Terminal"
@@ -159,7 +175,7 @@ OBJ
 
 
  
-PUB Init | ptr
+PUB Init | ptr, i, ansRRS
   'return
   buffPtr := @buff
 
@@ -174,15 +190,14 @@ PUB Init | ptr
   FillTransactionID
   
   'DNS Port, Mac and Ip 
-  wiz.Init
-  wiz.SetIp(192, 168, 1, 107)
+  wiz.Start(3, 0, 1, 2) 
+  wiz.SetIp(192, 168, 1, 104)
   wiz.SetMac($00, $08, $DC, $16, $F8, $01)
-  sock.Init(0, UDP, 8080)
+  sock.Init(0, UDP, 53)
 
-  'Broadcast to port 67
-  sock.RemoteIp(68, 105, 28, 12)
+  'DNS server IP and port
+  sock.RemoteIp(192,168,1,1)
   sock.RemotePort(53)
-  pause(500)
 
 
   'DisplayMemory(@dnsQuery, 32, true) 
@@ -194,76 +209,81 @@ PUB Init | ptr
   'DisplayMemory(@dnsEmailQuery2, 32, true) 
   'ptr := SendReceive(@dnsEmailQuery2, @qeend2 - @dnsEmailQuery2   )
 
-  DisplayMemory(@mx, 32, true) 
-  ptr := SendReceive(@mx, @mxend - @mx   )                                
+  DisplayMemory(@gov, @egov - @gov, true) 
+  ptr := SendReceive(@gov, @egov - @gov+1  )                                
 
-  ParseDnsResponse(ptr) 
-
+  ansRRS := ParseDnsResponse(ptr)
+  
+  repeat i from 0 to ansRRS-1
+    ifnot(GetResolvedIp(i) == NULL)
+      pst.str(string("ip_"))
+      pst.dec(i)
+      pst.char($20)
+      PrintIP(GetResolvedIp(i))
+      pst.char(CR)
+      
   sock.Close
 
 
-PUB ParseDnsResponse(buffer) | ptr, i, len, ansRRS
+PRI ParseDnsResponse(buffer) | i, len, ansRRS
 
-  ansRRS := DeserializeWord(buffer+6)
-  pst.dec(ansRRS)
-  pst.char(13)
-  'Query
-  buffer += $0C
+  i := 0
+  
+  ' The number of answers to expect
+  ansRRS := DeserializeWord(buffer+ANSWERS)
+
+  '--------------------------------------
+  'Query Section
+  '--------------------------------------
+  'Point to the query section which contains 
+  'the plain text url to resolve.  Loop until 
+  'we reach a zero then jump 4 bytes.
+  buffer += QUERY
   repeat until byte[buffer++] == $00
+  'Jump past the Type(2) and Class(2)
   buffer += 4
 
-  'Answer
-  if(byte[buffer] & $C0 == $C0)
-    buffer +=10
-  else
-    repeat until byte[buffer++] == $00
-
-  
-
-  len := DeserializeWord(buffer)
-
-  
-  if(len > 4)
-    ansRRS--
-    buffer += (2 + len)
-
-      'Answer
+  '-------------------------------------- 
+  'Answer Section
+  '--------------------------------------
+  'The idea is to loop through the answer section
+  'and grab the IPs. Nto every answer section will
+  'have an IP.  Somethimes they have text only
+  repeat ansRRS
+    'Encoded name 
     if(byte[buffer] & $C0 == $C0)
-      buffer +=10
+      'Check for another encoded name                       
+      if(byte[buffer+2] & $C0 == $C0)
+        'We have two encoded names to skip                 
+        buffer += 2
+      'Skip Name(2), Type(2), Class(2), and TTL(4)
+      buffer += 10  
     else
-      repeat until byte[buffer++] == $00
-
-    i := 0
-    len := DeserializeWord(buffer)
-
-  buffer += 2
-
-  bytemove(@@dnsIps[i++], buffer, len)
-  PrintIp(@@dnsIps[i-1])
-  'pst.char(13) 
-  'return
-
-  repeat ansRRS-1
-    buffer += 4
-    if(byte[buffer] & $C0 == $C0)
-      buffer +=10
-    else
+      'Increment the pointer until we reach the end of the name
       repeat until byte[buffer++] == $00
      
     len := DeserializeWord(buffer)
-    buffer += 2
-    'PrintIp(buffer)
-    bytemove(@@dnsIps[i++], buffer, len)
-    PrintIp(@@dnsIps[i-1])
-    'pst.char(13)
+    
+    'If the length equals 4 we have an IP
+    'Otherwise we have text
+    if(len == 4)
+      buffer += 2 
+      bytemove(@@dnsIps[i++], buffer, len)
+      buffer += 4
+    else
+      buffer += (2 + len)
+      next
 
+  return i
   
-     
-  
-  
-  
-  
+PUB GetResolvedIp(idx)
+  if(IsNullIp( @dnsIps[idx] ) )
+    return @null
+  return @@dnsIps[idx]
 
+PRI IsNullIp(ipaddr)
+  return (byte[ipaddr][0] + byte[ipaddr][1] + byte[ipaddr][2] + byte[ipaddr][3]) == 0
+    
 PUB CreateTransactionId(mask)
   transId := CNT
   ?transId
@@ -272,7 +292,7 @@ PUB CreateTransactionId(mask)
 PUB FillTransactionID
   word[@dnsQuery] := transId
     
-PUB SendReceive(buffer, len) | receiving, bytesToRead, ptr 
+PUB SendReceive(buffer, len) | bytesToRead, ptr 
   
   bytesToRead := 0
 
@@ -287,59 +307,43 @@ PUB SendReceive(buffer, len) | receiving, bytesToRead, ptr
   
   sock.Send(buffer, len)
   
-  pause(500)
   
   'receiving := true
   'repeat while receiving 
     'Data in the buffer?
-    bytesToRead := sock.Available
-    pst.str(string("Bytes to Read: "))
-    pst.dec(bytesToRead)
-    pst.char(13)
-    pst.char(13)
+  bytesToRead := sock.Available
+  pst.str(string("Bytes to Read: "))
+  pst.dec(bytesToRead)
+  pst.char(13)
+  pst.char(13)
      
-    'Check for a timeout
-    if(bytesToRead == -1)
-      receiving := false
-      pst.str(string("Fail safe", CR))
-      bytesToRead~
-      'next
+  'Check for a timeout
+  if(bytesToRead =< 0 )
+    bytesToRead~
+    return @null
 
-    if(bytesToRead == 0)
-      receiving := false
-      pst.str(string("Done", CR))
-      bytesToRead~
-      'next 
 
-    if(bytesToRead > 0) 
-      'Get the Rx buffer  
-      ptr := sock.Receive(buffer, bytesToRead)
-      pst.char(CR)
-      pst.str(string("UPD Header:",CR))
-      PrintIp(buffer)
-      pst.dec(DeserializeWord(buffer + 4))
-      pst.char(CR)
-      pst.dec(DeserializeWord(buffer + 6))
-      pst.char(CR)
-       
-      pst.char(CR) 
-      DisplayMemory(ptr, DeserializeWord(buffer + 6), true)
-      pst.char(CR)
-      'pst.char(CR)
-      
-      'TxRaw(ptr,DeserializeWord(buffer + 6)) 
-      'pst.char(CR)
-      
-      'quit
-      '
-      'receiving := false 
-      
-    'bytesToRead~
+  if(bytesToRead > 0) 
+    'Get the Rx buffer  
+    ptr := sock.Receive(buffer, bytesToRead)
+    PrintDebug(buffer,bytesToRead)
+
 
   pst.str(string(CR, "Disconnect", CR)) 
   sock.Disconnect
   return ptr
 
+PUB PrintDebug(buffer,bytesToRead)
+  pst.char(CR)
+  pst.str(string(CR, "Message from: "))
+  PrintIp(buffer)
+  pst.char(":")
+  pst.dec(DeserializeWord(buffer + 4))
+  pst.str(string(" ("))
+  pst.dec(DeserializeWord(buffer + 6))
+  pst.str(string(")", CR))
+   
+  DisplayMemory(buffer+8, bytesToRead-8, true)
 
 PUB TxRaw(addr, len) | i
   repeat 5
@@ -394,8 +398,8 @@ PUB PrintIp(addr) | i
     pst.dec(byte[addr][i])
     if(i < 3)
       pst.char($2E)
-    else
-      pst.char($0D)
+    'else
+      'pst.char($0D)
       
 PRI SerializeWord(value, buffer)
   byte[buffer++] := (value & $FF00) >> 8
