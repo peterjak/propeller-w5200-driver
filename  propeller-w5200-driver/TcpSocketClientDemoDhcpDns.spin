@@ -6,11 +6,11 @@ CON
   
   CR            = $0D
   LF            = $0A
-  NULL          = $00
   
   #0, CLOSED, TCP, UDP, IPRAW, MACRAW, PPPOE
 
-  DHCP_ATTEMPTS = 5
+  ATTEMPTS      = 5
+  RESET_PIN     = 4
   
        
 VAR
@@ -35,6 +35,7 @@ DAT
   buff          byte  $0[BUFFER_2K]
 
   t1            long  $0
+  null          long  $00
 
 OBJ
   pst           : "Parallax Serial Terminal"
@@ -44,7 +45,7 @@ OBJ
   dns           : "Dns"
    
 
-PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, totalBytes
+PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, totalBytes, i
 
   receiving := true
   bytesToRead := 0
@@ -53,6 +54,16 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
 
   pst.str(string("Initialize W5200", CR))
   wiz.Start(3, 0, 1, 2)
+
+  'Loop until we get the W5200 version
+  'This let us know that the W5200 is ready to go
+  repeat until wiz.GetVersion > 0
+    pause(250)
+    if(i++ > ATTEMPTS*5)
+      pst.str(string(CR, "W5200 SPI communication failed!", CR))
+      return
+  wiz.HardReset(RESET_PIN)
+  
   wiz.SetMac($00, $08, $DC, $16, $F8, $01)
 
   pst.str(string("Getting network paramters", CR))
@@ -60,10 +71,10 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
   pst.str(string("Requesting IP....."))
 
   repeat until dhcp.DoDhcp
-    if(++t1 > DHCP_ATTEMPTS)
+    if(++t1 > ATTEMPTS)
       quit
 
-  if(t1 > DHCP_ATTEMPTS)
+  if(t1 > ATTEMPTS)
     pst.char(CR) 
     pst.str(string(CR, "DHCP Attempts: "))
     pst.dec(t1)
@@ -97,15 +108,14 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
   'remoteIP := dns.ResolveDomain(string("finance.google.com"))
   remoteIP := dns.ResolveDomain(string("www.weather.gov"))
 
-  'pst.str(string(cr, "Remote IP addr: "))
-  'pst.dec(remoteIp)
-  'pst.char(13)
-
-  'DisplayMemory(remoteIp, 512, true)
-  'return  
-  'remoteIP := dns.GetResolvedIp(1)
   PrintIp(remoteIP)
-  pst.char(CR)
+
+  pst.str(string("Resolved IPs......"))
+  pst.dec(dns.GetIpCount)
+  pst.char(13)
+  pst.char(13)
+
+   'remoteIP := dns.GetResolvedIp(1) 
 
   pst.str(string("Initialize Socket"))
   buffer := sock.Init(0, TCP, 8080)
@@ -133,7 +143,7 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
   'bytesSent := sock.Send(@request2, strsize(@request2))
   'bytesSent := sock.Send(@google, strsize(@google))
   bytesSent := sock.Send(@weather, strsize(@weather))
-  pst.str(string("Bytes Sent: "))
+  pst.str(string("Bytes Sent........"))
   pst.dec(bytesSent)
   pst.char(13)
 
@@ -161,7 +171,7 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
       
     bytesToRead~
 
-  pst.str(string("Total Bytes: "))
+  pst.str(string("Bytes received...."))
   pst.dec(totalBytes)
   pst.char(13)
   
