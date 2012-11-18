@@ -7,6 +7,7 @@ CON
   CR            = $0D
   LF            = $0A
   NULL          = $00
+  RESET_PIN     = 4 
   
   #0, CLOSED, TCP, UDP, IPRAW, MACRAW, PPPOE
     
@@ -65,7 +66,9 @@ PUB Main | bytesToRead
   pst.str(@base64auth)
   pst.char(CR)
 
-  wiz.Init 
+  wiz.Start(3, 0, 1, 2)
+  wiz.HardReset(RESET_PIN)
+  
   wiz.SetIp(192, 168, 1, 104)
   wiz.SetMac($00, $08, $DC, $16, $F8, $01)
   
@@ -97,15 +100,15 @@ PUB Main | bytesToRead
     'Get the Rx buffer  
     sock.Receive(@buff, bytesToRead)
 
-    'pst.str(@buff)
-    'pst.str(string(CR, "******[ End of Header ]********************", CR))
+    pst.str(@buff)
+    pst.str(string(CR, "******[ End of Header ]********************", CR))
 
     'Tokenize the header
     req.TokenizeHeader(@buff, bytesToRead)
 
     'Quit if the browser is looking for favicon.ico
     if(req.UrlContains(string("favicon.ico")))
-      pst.str(string("404 Error", CR))
+      'pst.str(string("404 Error", CR))
       sock.Send(@notFound, strsize(@notFound))
       sock.Disconnect
       bytesToRead~

@@ -6,9 +6,14 @@ CON
   
   CR            = $0D
   LF            = $0A
-  NULL          = $00
+  SOCKETS       = 4
 
-  LISTENERS     = 4
+  ' W5200 I/O
+  SPI_MOSI      = 1 ' SPI master out serial in to slave
+  SPI_SCK       = 0 ' SPI clock from master to all slaves
+  SPI_CS        = 3 ' SPI chip select (active low)
+  SPI_MISO      = 2 ' SPI master in serial out from slave
+  RESET_PIN     = 4 ' Reset
   
   #0, CLOSED, TCP, UDP, IPRAW, MACRAW, PPPOE
     
@@ -19,7 +24,8 @@ DAT
 }                     "Content-Type: text/html", CR, LF, CR, LF, {
 }                     "Hello World!", CR, LF, $0
 
-  buff            byte  $0[BUFFER_2K] 
+  buff          byte  $0[BUFFER_2K]
+  null          long  $00 
 
 OBJ
   pst           : "Parallax Serial Terminal"
@@ -32,15 +38,17 @@ PUB Main | i
   pause(500)
 
    'Set network parameters
-  wiz.Init
+  wiz.Start(SPI_CS, SPI_SCK, SPI_MOSI, SPI_MISO)
+  wiz.HardReset(RESET_PIN)
+  
   wiz.SetCommonnMode(0)
   wiz.SetGateway(192, 168, 1, 1)
   wiz.SetSubnetMask(255, 255, 255, 0)
-  wiz.SetIp(192, 168, 1, 107)
+  wiz.SetIp(192, 168, 1, 104)
   wiz.SetMac($00, $08, $DC, $16, $F8, $01)
   
   pst.str(string("Initialize Sockets",CR))
-  repeat i from 0 to LISTENERS-1
+  repeat i from 0 to SOCKETS-1
     sock[i].Init(i, TCP, 8080)
 
   OpenListeners
@@ -53,11 +61,11 @@ PUB Main | i
   
 PUB OpenListeners | i
   pst.str(string("Open",CR))
-  repeat i from 0 to LISTENERS-1  
+  repeat i from 0 to SOCKETS-1  
     sock[i].Open
       
 PUB StartListners | i
-  repeat i from 0 to LISTENERS-1
+  repeat i from 0 to SOCKETS-1
     if(sock[i].Listen)
       pst.str(string("Listen "))
     else
@@ -66,7 +74,7 @@ PUB StartListners | i
     pst.char(CR)
 
 PUB CloseWait | i
-  repeat i from 0 to LISTENERS-1  
+  repeat i from 0 to SOCKETS-1  
     if(sock[i].IsCloseWait)
       sock[i].Disconnect
       sock[i].Open
@@ -78,26 +86,17 @@ PUB MultiSocketServer | bytesToRead, i
     pst.str(string("TCP Service", CR))
     CloseWait
     
-    pst.str(string("Socket 0 "))
-    pst.hex(wiz.GetSocketStatus(0), 2)
-    pst.char(13)
-     
-    pst.str(string("Socket 1 "))
-    pst.hex(wiz.GetSocketStatus(1), 2)
-    pst.char(13)
-     
-    pst.str(string("Socket 2 "))
-    pst.hex(wiz.GetSocketStatus(2), 2)
-    pst.char(13)
-     
-    pst.str(string("Socket 3 "))
-    pst.hex(wiz.GetSocketStatus(3), 2)
-    pst.char(13)
+   {
+    repeat j from 0 to SOCKETS-1
+      pst.str(string("Socket "))
+      pst.dec(j)
+      pst.str(string(" = "))
+      pst.hex(wiz.GetSocketStatus(j), 2)
+      pst.char(13)
+    } 
 
-    
-   
     repeat until sock[i].Connected
-      i := ++i // LISTENERS
+      i := ++i // SOCKETS
 
     pst.str(string("Connected "))
     pst.dec(i)
@@ -137,7 +136,7 @@ PUB MultiSocketServer | bytesToRead, i
     sock[i].Listen
     sock[i].SetSocketIR($FF)
 
-    i := ++i // LISTENERS
+    i := ++i // SOCKETS
     bytesToRead~
     
      

@@ -35,7 +35,7 @@ PUB Main | bytesToRead
   wiz.SetCommonnMode(0)
   wiz.SetGateway(192, 168, 1, 1)
   wiz.SetSubnetMask(255, 255, 255, 0)
-  wiz.SetIp(192, 168, 1, 107)
+  wiz.SetIp(192, 168, 1, 104)
   wiz.SetMac($00, $08, $DC, $16, $F8, $01)
   
   pst.str(string("Initialize Socket",CR))

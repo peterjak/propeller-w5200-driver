@@ -11,6 +11,8 @@ CON
 
   ATTEMPTS      = 5
   RESET_PIN     = 4
+  USB_Rx        = 31
+  USB_Tx        = 30
   
        
 VAR
@@ -49,8 +51,12 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
 
   receiving := true
   bytesToRead := 0
-  pst.Start(115_200)
-  pause(500)
+
+  if ina[USB_Rx] == 0       '' Check to see if USB port is powered
+    outa[USB_Tx] := 0       '' Force Propeller Tx line LOW if USB not connected
+  else                      '' Initialize normal serial communication to the PC here                              
+    pst.Start(115_200)      '' http://forums.parallax.com/showthread.php?135067-Serial-Quirk&p=1043169&viewfull=1#post1043169
+    pause(500)
 
   pst.str(string("Initialize W5200", CR))
   wiz.Start(3, 0, 1, 2)
@@ -68,12 +74,48 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
 
   pst.str(string("Getting network paramters", CR))
   dhcp.Init(@buff, 7)
-  pst.str(string("Requesting IP....."))
+  'dhcp.SetRequestIp(192, 168, 1, 110)
+  'pst.str(string("Requesting IP....."))
+
+
+  REPEAT
+    pst.str(string("Requesting IP....."))
+    t1 := 0
+    repeat until dhcp.DoDhcp
+      if(++t1 > ATTEMPTS)
+        quit
+    if(t1 > ATTEMPTS)
+      pst.char(CR) 
+      pst.str(string(CR, "DHCP Attempts: "))
+      pst.dec(t1)
+      pst.str(string(CR, "Error Code: "))
+      pst.dec(dhcp.GetErrorCode)
+      pst.char(CR)
+      pst.str(dhcp.GetErrorMessage)
+      pst.char(CR)
+      return
+    else
+      PrintIp(dhcp.GetIp)
+    pause(2000)
+
+  {  
+  t1 := 0
+  repeat
+    pst.str(string("Init", CR))
+    bytefill(@buff, 0, $F0)
+    repeat until dhcp.DoDhcp
+      if(++t1 > ATTEMPTS)
+        pst.str(string("Attments TO", 13))
+        t1 := 0 
+        quit
+    t1 := 0 
+    pause(2000)
+ 
 
   repeat until dhcp.DoDhcp
     if(++t1 > ATTEMPTS)
       quit
-
+   
   if(t1 > ATTEMPTS)
     pst.char(CR) 
     pst.str(string(CR, "DHCP Attempts: "))
@@ -86,7 +128,7 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
     return
   else
     PrintIp(dhcp.GetIp)
-
+  }
   pst.str(string("DNS..............."))
   dnsServer := wiz.GetDns
   PrintIp(wiz.GetDns)
@@ -105,8 +147,8 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
   pst.str(string("Resolve domain IP.")) 
   dns.Init(@buff, 6)
   'remoteIP := dns.ResolveDomain(string("www.agaverobotics.com"))
-  'remoteIP := dns.ResolveDomain(string("finance.google.com"))
-  remoteIP := dns.ResolveDomain(string("www.weather.gov"))
+  remoteIP := dns.ResolveDomain(string("finance.google.com"))
+  'remoteIP := dns.ResolveDomain(string("www.weather.gov"))
 
   PrintIp(remoteIP)
 
@@ -141,8 +183,8 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
 
   pst.str(string("Send HTTP Header", CR)) 
   'bytesSent := sock.Send(@request2, strsize(@request2))
-  'bytesSent := sock.Send(@google, strsize(@google))
-  bytesSent := sock.Send(@weather, strsize(@weather))
+  bytesSent := sock.Send(@google, strsize(@google))
+  'bytesSent := sock.Send(@weather, strsize(@weather))
   pst.str(string("Bytes Sent........"))
   pst.dec(bytesSent)
   pst.char(13)

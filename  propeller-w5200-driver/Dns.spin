@@ -1,3 +1,17 @@
+'*********************************************************************************************
+{
+AUTHOR: Mike Gebhard
+COPYRIGHT: Parallax Inc.
+LAST MODIFIED: 10/30/2012
+VERSION 1.0
+LICENSE: MIT (see end of file)
+
+DESCRIPTION:
+The DNS object
+
+}
+'*********************************************************************************************
+ 
 CON
   _clkmode = xtal1 + pll16x     
   _xinfreq = 5_000_000
@@ -44,7 +58,8 @@ DAT
   rc4             byte  "Not Implemented", $0
   rc5             byte  "Refused", $0
   rc6             byte  "Unknow error", $0
-  rcPtr           long  @rc0, @rc1, @rc2, @rc3, @rc4, @rc5, @rc6
+  rc7             byte  "DNS IP is empty", 0
+  rcPtr           long  @rc0, @rc1, @rc2, @rc3, @rc4, @rc5, @rc6, @rc7
   rcode           byte  $0
 
   dnsServerIp     byte  $00, $00, $00, $00      '68, 105, 28, 12
@@ -73,7 +88,14 @@ OBJ
   wiz           : "W5200"
  
 PUB Init(buffer, socket) | dnsPtr
+{{
+DESCRIPTION:
 
+PARMS:
+  
+RETURNS:
+  
+}}
   buffPtr := buffer
 
   'DNS Port, Mac and Ip 
@@ -82,10 +104,15 @@ PUB Init(buffer, socket) | dnsPtr
   'Get the default DNS from DHCP
   dnsPtr := wiz.GetDns
 
-  'The DNS IP could be null if DHCP is not used 
+  'Note: The DNS IP could be null if DHCP is not used
+  'or DNS is not manully set. 
   if(dnsPtr > NULL) 
     sock.RemoteIp(byte[dnsPtr][0], byte[dnsPtr][1], byte[dnsPtr][2], byte[dnsPtr][3])
     sock.RemotePort(DNS_PORT)
+    return true
+  else
+    rcode := 7
+    return false
     
 'Use this if you need to manually set DNS
 PUB SetDnsServerIp(octet3, octet2, octet1, octet0)
@@ -164,7 +191,7 @@ PUB GetRcode(src)
 
 PUB RCodeError
   case rcode
-    0..5  : return @@rcPtr[rcode]
+    0..7  : return @@rcPtr[rcode]
     other : return @rc6
 
 PRI ParseDnsResponse(buffer) | i, len, ansRRS
@@ -217,7 +244,6 @@ PRI ParseDnsResponse(buffer) | i, len, ansRRS
       next
        
   dnsCnt := i    
-  'return i-1
 
 
 PUB CreateTransactionId(mask) 
@@ -255,3 +281,22 @@ PUB SendReceive(buffer, len) | bytesToRead, ptr
 
   sock.Disconnect
   return ptr
+  
+CON
+{{
+ ______________________________________________________________________________________________________________________________
+|                                                   TERMS OF USE: MIT License                                                  |                                                            
+|______________________________________________________________________________________________________________________________|
+|Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation    |     
+|files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,    |
+|modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software|
+|is furnished to do so, subject to the following conditions:                                                                   |
+|                                                                                                                              |
+|The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.|
+|                                                                                                                              |
+|THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE          |
+|WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR         |
+|COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,   |
+|ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                         |
+ ------------------------------------------------------------------------------------------------------------------------------ 
+}}

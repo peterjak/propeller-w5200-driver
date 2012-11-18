@@ -6,7 +6,7 @@ CON
   
   CR            = $0D
   LF            = $0A
-  NULL          = $00
+  RESET_PIN     = 4 
   
   #0, CLOSED, TCP, UDP, IPRAW, MACRAW, PPPOE
   
@@ -27,10 +27,8 @@ DAT
 }               byte  "User-Agent: Wiz5200", CR, LF, CR, LF, $0
 
   buff          byte  $0[BUFFER_2K]
-
-
-
-
+  null          long  $00
+  
 OBJ
   pst           : "Parallax Serial Terminal"
   sock          : "Socket"
@@ -48,7 +46,7 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, totalBytes
 
 
   'Set network parameters
-  wiz.Init
+  wiz.Start(3, 0, 1, 2) 
   wiz.SetCommonnMode(0)
   wiz.SetGateway(192, 168, 1, 1)
   wiz.SetSubnetMask(255, 255, 255, 0)

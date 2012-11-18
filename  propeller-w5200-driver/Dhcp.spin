@@ -52,9 +52,12 @@ CON
   DHCP_NAK            = 6       
   DHCP_RELEASE        = 7
 
-  DELAY               = 0
+  {{ Packet Types }}
+  #0, SUCCESS, DISCOVER_ERROR, OFFER_ERROR, REQUEST_ERROR, ACK_ERROR
 
-  #0, SUCCESS, DISCOVER_ERROR, OFFER_ERROR, REQUEST_ERROR, ACK_ERROR      
+  HOST_PORT           = 68
+  REMOTE_PORT         = 67
+      
                         
        
 VAR
@@ -65,14 +68,16 @@ DAT
   errOff          byte  "Offer Error", 0
   errReq          byte  "Request Error", 0
   errAck          byte  "Ack Error", 0
+  requestIp       byte  00, 00, 00, 00
+  'requestIp       byte  192, 168, 1, 110
   errorCode       byte  $00
   magicCookie     byte  $63, $82, $53, $63
   paramReq        byte  $01, $03, $06, $2A ' Paramter Request; mask, router, domain name server, network time
-  hostName        byte  "PropNet_5200", $0 
+  hostName        byte  "propnet", $0 
   optionPtr       long  $F0
-  buffPtr         long  $00
-  transId         long  $00
-  null            long  $00
+  buffPtr         long  $00_00_00_00
+  transId         long  $00_00_00_00
+  null            long  $00_00_00_00
   errors          long  @noErr, @errDis, @erroff, @errReq, @errAck
   
 
@@ -85,12 +90,9 @@ PUB Init(buffer, socket)
 
   buffPtr := buffer
 
-  'Set up the socket 
-  sock.Init(socket, UDP, 68)
+  'Set up the host socket 
+  sock.Init(socket, UDP, HOST_PORT)
 
-  'Broadcast on port 67
-  sock.RemoteIp(255, 255, 255, 255)   
-  sock.RemotePort(67)
 
 PUB GetErrorCode
   return errorCode
@@ -100,34 +102,71 @@ PUB GetErrorMessage
 
 PUB GetIp
   return wiz.GetCommonRegister(Wiz#SOURCE_IP0)  
-  
-PUB DoDhcp | ptr
 
-  CreateTransactionId
+PUB SetRequestIp(octet3, octet2, octet1, octet0)
+  requestIp[0] := octet3 
+  requestIp[1] := octet2
+  requestIp[2] := octet1
+  requestIp[3] := octet0
+
+PRI IsRequestIp
+   return requestIp[0] | requestIp[1] | requestIp[2] | requestIp[3]
+
+PUB GetRequestIP
+  return @requestIp
+ 
+PUB DoDhcp 
   errorCode := 0
+  CreateTransactionId
+
+  ifnot(DiscoverOffer)
+    sock.Close
+    return false
+
+  ifnot(RequestAck) 
+    sock.Close
+    return false
+ 
+  sock.Close 
+  return true
+
+PRI DiscoverOffer | ptr
+
+  InitRequest
   
   ptr := Discover
   if(ptr == @null)
     errorCode := DISCOVER_ERROR
-    sock.Close 
-    return false   
-      
+    return false
+        
   Offer
+
+  return true
+
+  
+PRI RequestAck  | ptr
+
+  InitRequest
   
   ptr := Request
   if(ptr == @null)
     errorCode := REQUEST_ERROR
-    sock.Close 
     return false
     
   ifnot(Ack)
-    sock.Close
-    return false 
+    errorCode := ACK_ERROR
+    return false
 
-  sock.Close 
-  return true
+  return true 
 
-PUB Discover | len
+ 
+PRI InitRequest
+  bytefill(buffPtr, 0, DHCP_MAGIC_COOKIE)
+  sock.RemoteIp(255, 255, 255, 255)   
+  sock.RemotePort(REMOTE_PORT)
+
+  
+PRI Discover | len
   'optionPtr is a global pointer used in the
   'WriteDhcpOption and ReadDhcpOption methods
   optionPtr := DHCP_OPTIONS + buffPtr
@@ -138,14 +177,15 @@ PUB Discover | len
   FillMac
   FillMagicCookie
   WriteDhcpOption(MESSAGE_TYPE, 1, DHCP_DISCOVER)
-  WriteDhcpOption(REQUEST_IP, 4, wiz.GetCommonRegister(wiz#SOURCE_IP0))
+  if(IsRequestIp)
+    WriteDhcpOption(REQUEST_IP, 4, @requestIp)
   WriteDhcpOption(PARAM_REQUEST, 4, @paramReq)
   WriteDhcpOption(HOST_NAME, strsize(@hostName), @hostName)
   len := EndDhcpOptions
   return SendReceive(buffPtr, len)
 
   
-PUB Offer | len
+PRI Offer | len
   optionPtr := DHCP_OPTIONS + buffPtr
 
   'Move the pointer 8 bytes to the right
@@ -154,7 +194,7 @@ PUB Offer | len
 
   'Set the IP
   GetSetIp
-
+  
   ' Set DNS server IP
   len := ReadDhcpOption(DOMAIN_NAME_SERVER)
   Wiz.copyDns(optionPtr, len)
@@ -181,7 +221,7 @@ PUB Offer | len
   'Reset the pointer
   buffPtr -= UPD_HEADER_LEN
 
-PUB Request | len
+PRI Request | len
   optionPtr := DHCP_OPTIONS + buffPtr
   
   bytefill(buffPtr, 0, BUFFER_2K)
@@ -191,15 +231,16 @@ PUB Request | len
   FillServerIp
   FillMagicCookie
   WriteDhcpOption(MESSAGE_TYPE, 1, DHCP_REQUEST)
-  WriteDhcpOption(REQUEST_IP, 4, wiz.GetCommonRegister(wiz#SOURCE_IP0))
+  IsRequestIp
+    WriteDhcpOption(REQUEST_IP, 4, @requestIp)
   WriteDhcpOption(DHCP_SERVER_IP, 4, wiz.GetDhcpServerIp)
   WriteDhcpOption(HOST_NAME, strsize(@hostName), @hostName)
   len := EndDhcpOptions
   return SendReceive(buffPtr, len)
 
-PUB Ack | len
+PRI Ack | len
   buffPtr += UPD_HEADER_LEN
-  
+
   optionPtr := DHCP_OPTIONS + buffPtr
   len := ReadDhcpOption(MESSAGE_TYPE)
   
@@ -207,47 +248,41 @@ PUB Ack | len
   
   return byte[optionPtr] == DHCP_ACK   
 
-PUB GetSetIp | ptr
-  'ptr := @byte[buffPtr][DHCP_YIADDR]
+PRI GetSetIp | ptr
   ptr := buffPtr + DHCP_YIADDR
   Wiz.SetIp(byte[ptr][0], byte[ptr][1], byte[ptr][2], byte[ptr][3])
+  requestIp[0] := byte[ptr][0]
+  requestIp[1] := byte[ptr][1]
+  requestIp[2] := byte[ptr][2]
+  requestIp[3] := byte[ptr][3] 
   
-{  Deprecated
-PUB GetSetGateway | ptr
-  ptr := buffPtr + DHCP_SIADDR
-  if( byte[ptr][0] == null AND byte[ptr][1] == null AND  byte[ptr][2] == null AND byte[ptr][3] == null)
-    return false
-  else
-    Wiz.SetGateway(byte[ptr][0], byte[ptr][1], byte[ptr][2], byte[ptr][3])
-    return true 
-}
 
-PUB FillOpHTypeHlenHops(op, htype, hlen, hops)
+PRI FillOpHTypeHlenHops(op, htype, hlen, hops)
   byte[buffPtr][DHCP_OP] := op
   byte[buffPtr][DHCP_HTYPE] := htype
   byte[buffPtr][DHCP_HLEN] := hlen
   byte[buffPtr][DHCP_HOPS] := hops  
 
 
-PUB CreateTransactionId
+PRI CreateTransactionId
   transId := CNT
   ?transId
   
-PUB FillTransactionID
-  long[buffPtr+DHCP_XID] := transId
+PRI FillTransactionID
+  bytemove(buffPtr+DHCP_XID, @transId, 4)
 
-PUB FillMac
+PRI FillMac
   bytemove(buffPtr+DHCP_CHADDR, wiz.GetCommonRegister(wiz#MAC0), HARDWARE_ADDR_LEN)    
 
-PUB FillServerIp
+PRI FillServerIp
   bytemove(buffPtr+DHCP_SIADDR, wiz.GetDhcpServerIp, 4)
 
   
-PUB FillMagicCookie
+PRI FillMagicCookie
   bytemove(buffPtr+DHCP_MAGIC_COOKIE, @magicCookie, MAGIC_COOKIE_LEN)
 
 
-PUB WriteDhcpOption(option, len, data)
+PRI WriteDhcpOption(option, len, data)
   byte[optionPtr++] := option
   byte[optionPtr++] := len
   
@@ -259,7 +294,7 @@ PUB WriteDhcpOption(option, len, data)
   optionPtr += len
 
   
-PUB ReadDhcpOption(option) | len
+PRI ReadDhcpOption(option) | len
   'Init pointer to options
   optionPtr := DHCP_OPTIONS + buffPtr
 
@@ -279,12 +314,12 @@ PUB ReadDhcpOption(option) | len
   return -1 
       
   
-PUB EndDhcpOptions | len
+PRI EndDhcpOptions | len
   byte[optionPtr] := DHCP_END
   return DHCP_PACKET_LEN
-  'return ((optionPtr-buffPtr) // 16) + (optionPtr-buffPtr) + 1
+
  
-PUB SendReceive(buffer, len) | bytesToRead, ptr 
+PRI SendReceive(buffer, len) | bytesToRead, ptr 
   
   bytesToRead := 0
 
@@ -296,17 +331,16 @@ PUB SendReceive(buffer, len) | bytesToRead, ptr
    
   'Check for a timeout
   if(bytesToRead == -1 )
-    bytesToRead~
     return @null
 
-  'Check for a timeout
+  'Check for data received
   if(bytesToRead == 0 )
-    bytesToRead~
     return 0
-
+    
+   'Get the Rx buffer 
   if(bytesToRead > 0) 
-    'Get the Rx buffer  
     ptr := sock.Receive(buffer, bytesToRead)
 
   sock.Disconnect
+  
   return ptr

@@ -6,8 +6,7 @@ CON
   
   CR            = $0D
   LF            = $0A
-  NULL          = $00
-
+  RESET_PIN     = 4
   SOCKETS       = 7
   
   #0, CLOSED, TCP, UDP, IPRAW, MACRAW, PPPOE
@@ -55,12 +54,12 @@ DAT
   xml   byte  "HTTP/1.1 200 OK", CR, LF, {
   }           "Content-Type: text/xml", CR, LF, CR, LF, {
   }           "<?xml version='1.0' encoding='utf-8'?><root><temp>"
-  temperature  byte  $30, $30, $2E, $30, "</temp><humidity>"
-  humidity     byte  $30, $30, $2E, $30, "</humidity></root>", 0
   
-  buff  byte  $0[BUFFER_2K] 
-
-  resPtr long $0[25] 
+  temperature   byte  $30, $30, $2E, $30, "</temp><humidity>"
+  humidity      byte  $30, $30, $2E, $30, "</humidity></root>", 0
+  buff          byte  $0[BUFFER_2K] 
+  resPtr        long $0[25]
+  null          long  $00
   
 OBJ
   pst             : "Parallax Serial Terminal"
@@ -76,7 +75,10 @@ PUB Main | i, page, dnsServer
   pause(500)
   
   pst.str(string("Initialize W5200", CR))
-  wiz.Start(3, 0, 1, 2) 
+  wiz.Start(3, 0, 1, 2)
+
+  wiz.HardReset(RESET_PIN)
+ 
   wiz.SetMac($00, $08, $DC, $16, $F8, $01)
 
   pst.str(string("Getting network paramters", CR))

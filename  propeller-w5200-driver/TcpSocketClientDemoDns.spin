@@ -6,9 +6,10 @@ CON
   
   CR            = $0D
   LF            = $0A
-  NULL          = $00
+  RESET_PIN     = 4
   
   #0, CLOSED, TCP, UDP, IPRAW, MACRAW, PPPOE
+   
   
        
 VAR
@@ -26,6 +27,7 @@ DAT
 }               byte  "User-Agent: Wiz5200", CR, LF, CR, LF, $0
 
   buff          byte  $0[BUFFER_2K]
+  null          long  $00
 
 
 
@@ -50,21 +52,25 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, ipaddr, ptr, totalBytes
 
   pst.str(string("Initialize W5200", CR))
   'Set network parameters
-  wiz.Init
+  wiz.Start(3, 0, 1, 2)
+  wiz.HardReset(RESET_PIN)
+  
   wiz.SetCommonnMode(0)
   wiz.SetGateway(192, 168, 1, 1)
   wiz.SetSubnetMask(255, 255, 255, 0)
-  wiz.SetIp(192, 168, 1, 107)
+  wiz.SetIp(192, 168, 1, 104)
   wiz.SetMac($00, $08, $DC, $16, $F8, $01)
 
-  pst.str(string("Resolve domain IP", CR)) 
-  dns.Init(@buff, 6)
-  dns.SetDnsServerIp(68, 105, 28, 12)   '68.105.28.12
-  ptr := dns.ResolveDomain(string("www.agaverobotics.com"))
-  'ptr := dns.ResolveDomain(string("finance.google.com"))
+  pst.str(string("Resolve domain IP", CR))
+
+  ifnot(dns.Init(@buff, 6))
+    dns.SetDnsServerIp(68, 105, 28, 12)   '68, 105, 28, 12   '192, 168, 1, 1
+    
+  'ptr := dns.ResolveDomain(string("www.agaverobotics.com"))
+  ptr := dns.ResolveDomain(string("finance.google.com"))
    
   pst.str(string("Initialize", CR)) 
-  buffer := sock.Init(0, TCP, 8080)
+  buffer := sock.Init(0, TCP, -1)
   sock.RemoteIp(byte[ptr][0], byte[ptr][1], byte[ptr][2], byte[ptr][3])  
   sock.RemotePort(80)
 
