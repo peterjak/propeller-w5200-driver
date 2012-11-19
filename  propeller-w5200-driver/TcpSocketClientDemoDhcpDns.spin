@@ -75,9 +75,9 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
   pst.str(string("Getting network paramters", CR))
   dhcp.Init(@buff, 7)
   'dhcp.SetRequestIp(192, 168, 1, 110)
-  'pst.str(string("Requesting IP....."))
+  pst.str(string("Requesting IP....."))
 
-
+  {
   REPEAT
     pst.str(string("Requesting IP....."))
     t1 := 0
@@ -97,21 +97,9 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
     else
       PrintIp(dhcp.GetIp)
     pause(2000)
-
-  {  
-  t1 := 0
-  repeat
-    pst.str(string("Init", CR))
-    bytefill(@buff, 0, $F0)
-    repeat until dhcp.DoDhcp
-      if(++t1 > ATTEMPTS)
-        pst.str(string("Attments TO", 13))
-        t1 := 0 
-        quit
-    t1 := 0 
-    pause(2000)
+  }
  
-
+  {  } 
   repeat until dhcp.DoDhcp
     if(++t1 > ATTEMPTS)
       quit
@@ -128,7 +116,11 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
     return
   else
     PrintIp(dhcp.GetIp)
-  }
+
+  pst.str(string("Lease Time........"))
+  pst.dec(dhcp.GetLeaseTime)
+  pst.char(CR)
+ 
   pst.str(string("DNS..............."))
   dnsServer := wiz.GetDns
   PrintIp(wiz.GetDns)
@@ -209,7 +201,7 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
     if(bytesToRead > 0) 
       'Get the Rx buffer  
       buffer := sock.Receive(@buff, bytesToRead)
-      pst.str(buffer)
+      'pst.str(buffer)
       
     bytesToRead~
 

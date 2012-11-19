@@ -37,6 +37,7 @@ CON
   DOMAIN_NAME_SERVER  = 06
   HOST_NAME           = 12
   REQUEST_IP          = 50
+  IP_LEASE_TIME       = 51
   MESSAGE_TYPE        = 53
   DHCP_SERVER_IP      = 54
   PARAM_REQUEST       = 55
@@ -69,11 +70,11 @@ DAT
   errReq          byte  "Request Error", 0
   errAck          byte  "Ack Error", 0
   requestIp       byte  00, 00, 00, 00
-  'requestIp       byte  192, 168, 1, 110
   errorCode       byte  $00
   magicCookie     byte  $63, $82, $53, $63
   paramReq        byte  $01, $03, $06, $2A ' Paramter Request; mask, router, domain name server, network time
-  hostName        byte  "propnet", $0 
+  hostName        byte  "propnet", $0
+  leaseTime       byte  $00, $00, $00, $00
   optionPtr       long  $F0
   buffPtr         long  $00_00_00_00
   transId         long  $00_00_00_00
@@ -99,6 +100,11 @@ PUB GetErrorCode
 
 PUB GetErrorMessage
   return @@errors[errorCode]
+
+PUB GetLeaseTime | lease
+  lease := byte[@leaseTime][0] << 24 | byte[@leaseTime][1]  << 16 | byte[@leaseTime][2] << 8 | byte[@leaseTime][3]
+  return lease
+  'return byte[@leaseTime][2]
 
 PUB GetIp
   return wiz.GetCommonRegister(Wiz#SOURCE_IP0)  
@@ -239,10 +245,15 @@ PRI Request | len
   return SendReceive(buffPtr, len)
 
 PRI Ack | len
+
   buffPtr += UPD_HEADER_LEN
 
   optionPtr := DHCP_OPTIONS + buffPtr
-  len := ReadDhcpOption(MESSAGE_TYPE)
+
+  ReadDhcpOption(IP_LEASE_TIME)
+  FillLeaseTime(optionPtr)
+
+  len := ReadDhcpOption(MESSAGE_TYPE) 
   
   buffPtr -= UPD_HEADER_LEN
   
@@ -267,6 +278,10 @@ PRI FillOpHTypeHlenHops(op, htype, hlen, hops)
 PRI CreateTransactionId
   transId := CNT
   ?transId
+
+PRI FillLeaseTime(ptr)
+  'leaseTime :=  ptr[0] << 24 |  ptr[1] << 16 | ptr[2] << 8 | ptr[3]
+  bytemove(@leaseTime, ptr, 4)
   
 PRI FillTransactionID
   bytemove(buffPtr+DHCP_XID, @transId, 4)
