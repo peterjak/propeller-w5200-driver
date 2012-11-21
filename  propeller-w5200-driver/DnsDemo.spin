@@ -4,6 +4,7 @@ CON
 
   BUFFER_2K         = $800
   BUFFER_16         = $10
+  URL_BUFFER        = 128
   
   CR                = $0D
   LF                = $0A
@@ -44,6 +45,8 @@ DAT
   url3  byte    "mail.agaverobotics.com", $0
   url4  byte    "finance.google.com" , $0
   url5  byte    "www.weather.gov", $0
+
+  urlBuff byte  $0[URL_BUFFER]
 
   QTYPE  byte      $00, $01               
   QCLASS byte      $00, $01
@@ -103,7 +106,7 @@ PUB Init | ptr, url, ansRRS, i
       return
   wiz.HardReset(RESET_PIN)
   
-  wiz.SetIp(192, 168, 1, 104)
+  wiz.SetIp(192, 168, 1, 107)
   wiz.SetMac($00, $08, $DC, $16, $F8, $01)
   sock.Init(0, UDP, 53)
 
@@ -111,42 +114,46 @@ PUB Init | ptr, url, ansRRS, i
   sock.RemotePort(53)
   pause(500)
 
-
-  CreateTransactionId($FFFF)
-  FillTransactionID
-
   url := @url5
-  'Copy header to the buffer
-  bytemove(buffPtr, @msgId, DNS_HEADER_LEN)
-  'Format and copy the url
-  ptr := ParseUrl(url, buffPtr+DNS_HEADER_LEN)
-  'Add the QTYPE and QCLASS
-  bytemove(ptr, @QTYPE, 4)
-  ptr += 4
-
-  DisplayMemory(buffPtr, ptr - buffPtr, true)
-  ptr := SendReceive(buffPtr, ptr - buffPtr+1)
-
-  GetRcode(ptr)
-  pst.str(RCodeError)
-  pst.char($20)
-  pst.dec(rcode)
-  pst.char(13)
-
-  if(rcode == 0)
-    ansRRS := ParseDnsResponse(ptr) 
-
-  repeat i from 0 to ansRRS-1
-    ifnot(GetResolvedIp(i) == NULL)
-      pst.str(string("ip_"))
-      pst.dec(i)
-      pst.char($20)
-      PrintIP(GetResolvedIp(i))
-      pst.char(CR)
-      
   
-  sock.Close
-
+  repeat
+    CreateTransactionId($FFFF)
+    FillTransactionID
+    
+    bytemove(@urlBuff, url, strsize(url))
+    byte[strsize(url)] := 0
+    pst.str(string("URL: "))
+    pst.str(@urlBuff)
+    pst.char(CR)
+    
+    'Copy header to the buffer
+    bytemove(buffPtr, @msgId, DNS_HEADER_LEN)
+    'Format and copy the url
+    ptr := ParseUrl(@urlBuff, buffPtr+DNS_HEADER_LEN)
+    'Add the QTYPE and QCLASS
+    bytemove(ptr, @QTYPE, 4)
+    ptr += 4
+     
+    DisplayMemory(buffPtr, ptr - buffPtr, true)
+    ptr := SendReceive(buffPtr, ptr - buffPtr+1)
+     
+    GetRcode(ptr)
+    pst.dec(rcode)
+    pst.str(string(": "))
+    pst.str(RCodeError)
+    pst.char(CR)
+     
+    if(rcode == 0)
+      ansRRS := ParseDnsResponse(ptr) 
+     
+    repeat i from 0 to ansRRS-1
+      ifnot(GetResolvedIp(i) == NULL)
+        pst.str(string("ip_"))
+        pst.dec(i)
+        pst.char($20)
+        PrintIP(GetResolvedIp(i))
+        pst.char(CR)
+    pause(2000)      
 
 PUB ParseUrl(src, dest) | ptr
   ptr := src
@@ -283,8 +290,9 @@ PUB SendReceive(buffer, len) | bytesToRead, ptr
     PrintDebug(buffer,bytesToRead)
 
 
-  pst.str(string(CR, "Disconnect", CR)) 
+  pst.str(string(CR, "Disconnect", CR))
   sock.Disconnect
+  sock.Close
   return ptr
 
 PUB PrintDebug(buffer,bytesToRead)

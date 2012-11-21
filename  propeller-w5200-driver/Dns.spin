@@ -18,6 +18,7 @@ CON
 
   BUFFER_2K         = $800
   BUFFER_16         = $10
+  URL_BUFFER        = $80
   
   CR                = $0D
   LF                = $0A
@@ -50,7 +51,8 @@ DAT
 
   qtype           byte  $00, $01                { Host address: Type A }
   qclass          byte  $00, $01                { Class: 01 }
-               
+
+  urlBuff         byte  $0[URL_BUFFER]              
   rc0             byte  "No error condition." ,$0
   rc1             byte  "Format error", $0
   rc2             byte  "Server failure", $0
@@ -102,6 +104,7 @@ RETURNS:
   sock.Init(socket, UDP, DNS_PORT)
 
   'Get the default DNS from DHCP
+  'dnsPtr := wiz.GetRouter
   dnsPtr := wiz.GetDns
 
   'Note: The DNS IP could be null if DHCP is not used
@@ -129,32 +132,47 @@ PUB GetIpCount
   
 PUB GetResolvedIp(idx)
 
-  if(idx > dnsCnt-1)
-    return @null
+  'if(idx > dnsCnt-1)
+    'return @null
     
-  if(IsNullIp( @dnsIps[idx] ) )
-    return @null
+  'if(IsNullIp( @dnsIps[idx] ) )
+    'return @null
     
   return @@dnsIps[idx]
 
 PRI IsNullIp(ipaddr)
   return (byte[ipaddr][0] + byte[ipaddr][1] + byte[ipaddr][2] + byte[ipaddr][3]) == 0 
     
-PUB ResolveDomain(url) | ptr
+PUB ResolveDomain(url) | ptr, dnsPtr
+
+  bytefill(@ip1, 0, @dnsIps-@ip1)
+
+  bytemove(@urlBuff, url, strsize(url))
+  byte[strsize(url)] := 0
+  
+  {    
+  dnsPtr := wiz.GetDns
+  sock.RemoteIp(byte[dnsPtr][0], byte[dnsPtr][1], byte[dnsPtr][2], byte[dnsPtr][3])
+  sock.RemotePort(DNS_PORT)
+  }
+     
   CreateTransactionId($FFFF)
   FillTransactionID
-
+  
   'Copy header to the buffer
   bytemove(buffPtr, @msgId, DNS_HEADER_LEN)
   
   'Format and copy the url
-  ptr := ParseUrl(url, buffPtr+DNS_HEADER_LEN)
+  ptr := ParseUrl(@urlBuff, buffPtr+DNS_HEADER_LEN)
   
   'Add the QTYPE and QCLASS
   bytemove(ptr, @QTYPE, 4)
   ptr += 4
 
   ptr := SendReceive(buffPtr, ptr - buffPtr)
+
+  if(ptr == @null)
+  
   ParseDnsResponse(ptr)
   return  GetResolvedIp(0)
   
