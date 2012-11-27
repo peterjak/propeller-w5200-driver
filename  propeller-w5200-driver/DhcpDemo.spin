@@ -40,6 +40,7 @@ CON
   DOMAIN_NAME_SERVER  = 06
   HOST_NAME           = 12
   REQUEST_IP          = 50
+  IP_LEASE_TIME       = 51
   MESSAGE_TYPE        = 53
   DHCP_SERVER_IP      = 54
   PARAM_REQUEST       = 55
@@ -51,22 +52,39 @@ CON
   DHCP_DECLINE        = 4       
   DHCP_ACK            = 5       
   DHCP_NAK            = 6       
-  DHCP_RELEASE        = 7      
+  DHCP_RELEASE        = 7
+
+  {{ Packet Types }}
+  #0, SUCCESS, DISCOVER_ERROR, OFFER_ERROR, REQUEST_ERROR, ACK_ERROR, DUNNO_ERROR
+
+  HOST_PORT           = 68
+  REMOTE_PORT         = 67
+
+  ATTEMPTS            = 5       
                         
        
 VAR
 DAT
+  noErr           byte  "Success", 0
+  errDis          byte  "Discover Error", 0
+  errOff          byte  "Offer Error", 0
+  errReq          byte  "Request Error", 0
+  errAck          byte  "Ack Error", 0
+  errDunno        byte  "Unidentified Error", $0
+  requestIp       byte  00, 00, 00, 00
+  errorCode       byte  $00
   magicCookie     byte  $63, $82, $53, $63
   paramReq        byte  $01, $03, $06, $2A ' Paramter Request; mask, router, domain name server, network time
-  hostName        byte  "PropNet5200", $0 
-  workspace       byte  $0[BUFFER_16]  
+  hostName        byte  "propnet", $0
+  leaseTime       byte  $00, $00, $00, $00
   buff            byte  $0[BUFFER_2K]
-
+  udpHeader       byte  $0[9]
   optionPtr       long  $F0
-  buffPtr         long  $00
-  transId         long  $00
-  null            long  $0
-
+  buffPtr         long  $00_00_00_00
+  transId         long  $00_00_00_00
+  null            long  $00_00_00_00
+  errors          long  @noErr, @errDis, @erroff, @errReq, @errAck, @errDunno
+  t1              long  $00
    
 OBJ
   pst           : "Parallax Serial Terminal"
@@ -96,10 +114,33 @@ PUB Init | ptr, i
   sock.RemoteIp(255, 255, 255, 255)
   sock.RemotePort(67)
 
-  pst.str(string("Remote IP: "))
-  PrintIp(wiz.GetRemoteIP(0))
-  pst.char(CR)
+  'pst.str(string("Remote IP: "))
+  'PrintIp(wiz.GetRemoteIP(0))
+  'pst.char(CR)
 
+
+  REPEAT
+    t1 := 0
+    repeat until DoDhcp
+      if(++t1 > ATTEMPTS)
+        quit
+    if(t1 > ATTEMPTS)
+      pst.char(CR) 
+      pst.str(string(CR, "DHCP Attempts: "))
+      pst.dec(t1)
+      pst.str(string(CR, "Error Code: "))
+      pst.dec(GetErrorCode)
+      pst.char(CR)
+      pst.str(GetErrorMessage)
+      pst.char(CR)
+      return
+    else
+      pst.str(string("Assigned IP........"))
+      PrintIp(GetIp)
+      pst.char(CR)
+    'pause(2000)
+    
+  {  
   'DHCP Process
   repeat until DoDhcp
     CreateTransactionId 
@@ -107,53 +148,92 @@ PUB Init | ptr, i
     pst.str(string(CR, "Retry DHCP: "))
     pst.dec(i++)
     pst.char(CR)
-
+  }
   sock.Close
 
-PUB DoDhcp | ptr
+PUB GetErrorCode
+  return errorCode
 
-  pst.str(string(CR, "Send Discover", CR))
+PUB GetErrorMessage
+  if(errorCode > 1 OR errorCode < DUNNO_ERROR)
+    return @@errors[errorCode]
+  else
+    return @@errors[DUNNO_ERROR]
+
+PUB GetLeaseTime | lease
+  lease := byte[@leaseTime][0] << 24 | byte[@leaseTime][1]  << 16 | byte[@leaseTime][2] << 8 | byte[@leaseTime][3]
+  return lease
+  'return byte[@leaseTime][2]
+
+PUB GetIp
+  return wiz.GetCommonRegister(Wiz#SOURCE_IP0)  
+
+PUB SetRequestIp(octet3, octet2, octet1, octet0)
+  requestIp[0] := octet3 
+  requestIp[1] := octet2
+  requestIp[2] := octet1
+  requestIp[3] := octet0
+
+PRI IsRequestIp
+   return requestIp[0] | requestIp[1] | requestIp[2] | requestIp[3]
+
+PUB GetRequestIP
+  return @requestIp
+ 
+PUB DoDhcp 
+  errorCode := 0
+  CreateTransactionId
+
+  ifnot(DiscoverOffer)
+    sock.Close
+    return false
+
+  ifnot(RequestAck) 
+    sock.Close
+    return false
+ 
+  sock.Close 
+  return true
+
+PRI DiscoverOffer | ptr
+
+  InitRequest
+  
   ptr := Discover
   if(ptr == @null)
-    pst.str(string(CR, "Error: Discover", CR))
-      return false
-
-  pst.str(string(CR, "Receive Offer", CR))       
-  Offer
-
-  pst.str(string(CR, "Send Request", CR))  
-  ptr := Request
-  if(ptr == @null)
-    pst.str(string(CR, "Error: Request", CR))
-      return false
-
-  pst.str(string(CR, "Receive Ack", CR))
-  if(Ack)
-    pst.str(string("IP Assigned......."))
-  else
-    pst.str(string("DHCP Failed", CR))
-  PrintIp(wiz.GetIp)
-  
-  pst.char(CR)
-  pst.char(CR)
-  pst.str(string(CR, "DNS..............."))
-  PrintIp(wiz.GetDns)
-
-  pst.str(string(CR, "DHCP Server......."))
-  printIp(wiz.GetDhcpServerIp)
-
-  pst.str(string(CR, "Router IP........."))
-  printIp(wiz.GetRouter)
-
-  pst.str(string(CR, "Gateway IP........"))
-  printIp(wiz.GetGatewayIp)
-  
-  pst.char(CR)
+    errorCode := DISCOVER_ERROR
+    return false
+        
+  ifnot(Offer)
+    errorCode := ACK_ERROR
+    return false
 
   return true
 
+  
+PRI RequestAck  | ptr
 
-PUB Discover | len
+  InitRequest
+  
+  ptr := Request
+  if(ptr == @null)
+    errorCode := REQUEST_ERROR
+    return false
+    
+  ifnot(Ack)
+    errorCode := ACK_ERROR
+    return false
+
+  return true 
+
+ 
+PRI InitRequest
+  bytefill(buffPtr, 0, DHCP_MAGIC_COOKIE+ 4*16)
+  sock.RemoteIp(255, 255, 255, 255)   
+  sock.RemotePort(REMOTE_PORT)
+
+  
+PRI Discover | len
   'optionPtr is a global pointer used in the
   'WriteDhcpOption and ReadDhcpOption methods
   optionPtr := DHCP_OPTIONS + buffPtr
@@ -164,112 +244,125 @@ PUB Discover | len
   FillMac
   FillMagicCookie
   WriteDhcpOption(MESSAGE_TYPE, 1, DHCP_DISCOVER)
-  WriteDhcpOption(REQUEST_IP, 4, wiz.GetCommonRegister(wiz#SOURCE_IP0))
+  if(IsRequestIp)
+    WriteDhcpOption(REQUEST_IP, 4, @requestIp)
   WriteDhcpOption(PARAM_REQUEST, 4, @paramReq)
   WriteDhcpOption(HOST_NAME, strsize(@hostName), @hostName)
   len := EndDhcpOptions
-  DisplayMemory(buffPtr, len, true)
   return SendReceive(buffPtr, len)
 
   
-PUB Offer | len', hasGateway
+PRI Offer | len
   optionPtr := DHCP_OPTIONS + buffPtr
-  
-  buffPtr += UPD_HEADER_LEN
-  
-  GetIp
-  len := ReadDhcpOption(DOMAIN_NAME_SERVER)
-  
-  Wiz.copyDns(optionPtr, len)
-  
-  'hasGateway := GetGateway
 
+  'Move the pointer 8 bytes to the right
+  'On receive the first 8 bytes in the UDP packet are IP:Port and len
+  buffPtr += UPD_HEADER_LEN
+
+  'Set the IP
+  GetSetIp
+  
+  ' Set DNS server IP
+  len := ReadDhcpOption(DOMAIN_NAME_SERVER)
+  Wiz.copyDns(optionPtr, len)
+
+  'Set the Gateway IP
+  'GetSetGateway
+
+  'Set the ubnet mask
   len := ReadDhcpOption(SUBNET_MASK)
   wiz.CopySubnet(optionPtr, len)
 
+  'Set the router IP to the Gateway
+  'Mike G 10/16/2012
+  'From research and asking network guys the router IP (option 3)
+  'should also be the gateway.
   len := ReadDhcpOption(ROUTER)
   wiz.CopyRouter(optionPtr, len)
-  
-  'ifnot(hasGateway)
   Wiz.CopyGateway(optionPtr, len)
 
+  'Set the DHCP server IP
   len := ReadDhcpOption(DHCP_SERVER_IP)
   wiz.CopyDhcpServer(optionPtr, len) 
+
+  len := ReadDhcpOption(MESSAGE_TYPE)
   
+  'Reset the pointer
   buffPtr -= UPD_HEADER_LEN
 
-PUB Request | len
-  optionPtr := DHCP_OPTIONS + buffPtr
+  return byte[optionPtr] & $FF == OFFER_ERROR
 
-  bytefill(@buff, 0, BUFFER_2K)
+PRI Request | len
+  optionPtr := DHCP_OPTIONS + buffPtr
+  
+  bytefill(buffPtr, 0, BUFFER_2K)
   FillOpHtypeHlenHops($01, $01, $06, $00)
   FillTransactionID
   FillMac
   FillServerIp
   FillMagicCookie
   WriteDhcpOption(MESSAGE_TYPE, 1, DHCP_REQUEST)
-  WriteDhcpOption(REQUEST_IP, 4, wiz.GetCommonRegister(wiz#SOURCE_IP0))
+  IsRequestIp
+    WriteDhcpOption(REQUEST_IP, 4, @requestIp)
   WriteDhcpOption(DHCP_SERVER_IP, 4, wiz.GetDhcpServerIp)
   WriteDhcpOption(HOST_NAME, strsize(@hostName), @hostName)
   len := EndDhcpOptions
-  DisplayMemory(buffPtr, len, true)
   return SendReceive(buffPtr, len)
 
-PUB Ack | len
-  optionPtr := DHCP_OPTIONS + buffPtr
-  
+PRI Ack | len
+
   buffPtr += UPD_HEADER_LEN
-  len := ReadDhcpOption(MESSAGE_TYPE)
-  buffPtr -= UPD_HEADER_LEN
-  return byte[optionPtr] == DHCP_ACK   
 
-PUB GetIp | ptr
+  optionPtr := DHCP_OPTIONS + buffPtr
+
+  ReadDhcpOption(IP_LEASE_TIME)
+  FillLeaseTime(optionPtr)
+
+  len := ReadDhcpOption(MESSAGE_TYPE) 
+  
+  buffPtr -= UPD_HEADER_LEN
+  
+  return byte[optionPtr] & $FF == DHCP_ACK   
+
+PRI GetSetIp | ptr
   ptr := buffPtr + DHCP_YIADDR
-  pst.str(string("Assigned IP......."))
-  PrintIP(ptr)
-  pst.char(CR)
   Wiz.SetIp(byte[ptr][0], byte[ptr][1], byte[ptr][2], byte[ptr][3])
+  requestIp[0] := byte[ptr][0]
+  requestIp[1] := byte[ptr][1]
+  requestIp[2] := byte[ptr][2]
+  requestIp[3] := byte[ptr][3] 
   
 
-PUB GetGateway | ptr
-  ptr := buffPtr + DHCP_SIADDR
-  if( byte[ptr][0] == null AND byte[ptr][1] == null AND  byte[ptr][2] == null AND byte[ptr][3] == null)
-    pst.str(string("Gateway IP:.......Not assigned or 0.0.0.0"))
-    return false
-  else
-    pst.str(string("Gateway IP:......."))
-    PrintIP(ptr)
-    pst.char(CR) 
-    Wiz.SetGateway(byte[ptr][0], byte[ptr][1], byte[ptr][2], byte[ptr][3])
-    return true 
-
-
-PUB FillOpHTypeHlenHops(op, htype, hlen, hops)
+PRI FillOpHTypeHlenHops(op, htype, hlen, hops)
   byte[buffPtr][DHCP_OP] := op
   byte[buffPtr][DHCP_HTYPE] := htype
   byte[buffPtr][DHCP_HLEN] := hlen
   byte[buffPtr][DHCP_HOPS] := hops  
 
 
-PUB CreateTransactionId
+PRI CreateTransactionId
   transId := CNT
   ?transId
-  
-PUB FillTransactionID
-  long[buffPtr+DHCP_XID] := transId
 
-PUB FillMac
+PRI FillLeaseTime(ptr)
+  'leaseTime :=  ptr[0] << 24 |  ptr[1] << 16 | ptr[2] << 8 | ptr[3]
+  bytemove(@leaseTime, ptr, 4)
+  
+PRI FillTransactionID
+  bytemove(buffPtr+DHCP_XID, @transId, 4)
+
+PRI FillMac
   bytemove(buffPtr+DHCP_CHADDR, wiz.GetCommonRegister(wiz#MAC0), HARDWARE_ADDR_LEN)    
 
-PUB FillServerIp
+PRI FillServerIp
   bytemove(buffPtr+DHCP_SIADDR, wiz.GetDhcpServerIp, 4)
 
   
-PUB FillMagicCookie
+PRI FillMagicCookie
   bytemove(buffPtr+DHCP_MAGIC_COOKIE, @magicCookie, MAGIC_COOKIE_LEN)
 
 
-PUB WriteDhcpOption(option, len, data)
+PRI WriteDhcpOption(option, len, data)
   byte[optionPtr++] := option
   byte[optionPtr++] := len
   
@@ -280,7 +373,8 @@ PUB WriteDhcpOption(option, len, data)
     
   optionPtr += len
 
-PUB ReadDhcpOption(option) | len
+  
+PRI ReadDhcpOption(option) | len
   'Init pointer to options
   optionPtr := DHCP_OPTIONS + buffPtr
 
@@ -289,7 +383,8 @@ PUB ReadDhcpOption(option) | len
 
     if(byte[optionPtr] == DHCP_END)
       return -2
-  
+
+    ' [option, len, value]
     if(byte[optionPtr++] == option)
       'return len and set the pointer to the data (hub) address
       return byte[optionPtr++]
@@ -300,51 +395,76 @@ PUB ReadDhcpOption(option) | len
   return -1 
       
   
-PUB EndDhcpOptions | len
+PRI EndDhcpOptions | len
   byte[optionPtr] := DHCP_END
   return DHCP_PACKET_LEN
-  
-PUB SendReceive(buffer, len) | bytesToRead, ptr 
+
+ 
+PRI SendReceive(buffer, len) | bytesToRead, ptr, tryagain 
   
   bytesToRead := 0
-
-  pst.str(string("Send Bytes......."))
-  pst.dec(len)             
-  pst.char(CR)
-
+  tryagain := false
+  'Open socket and Send Message 
   sock.Open
   sock.Send(buffer, len)
 
-  bytesToRead := sock.Available
-  pst.str(string("Bytes to Read...."))
-  pst.dec(bytesToRead)
-  pst.char(13)
-  pst.char(13)
-   
-  'Check for a timeout
-  if(bytesToRead =< 0 )
-    bytesToRead~
-    return @null
+  repeat
+     bytesToRead += sock.Available
+      
+     'Check for a timeout
+     if(bytesToRead =< 0 )
+       bytesToRead~
+       return @null
+     
+     
+    'Get the Rx buffer
+     
+      'TODO: handle UDP header. 
+     if(bytesToRead > 0)
+       ifnot(tryagain) 
+         ptr := sock.Receive(buffer, bytesToRead)
+         PrintDebug(buffer,bytesToRead)
+       else
+         sock.Receive(buffer, bytesToRead)  
+       
+       ifnot(UpdRxLen(ptr-8) == bytesToRead-8)
+       
+         pst.str(string("UDP Len: "))
+         pst.dec(UpdRxLen(buffer))
+         pst.char(CR)
+         pst.str(string("Read: "))
+         pst.dec(bytesToRead)
+         pst.char(CR)
+         
+         buffer += bytesToRead
+         tryagain := true
+         'return @null
+       else
+         quit
 
-  if(bytesToRead > 0) 
-    'Get the Rx buffer  
-    ptr := sock.Receive(buffer, bytesToRead)
-    PrintDebug(buffer,bytesToRead)
-
+    
   sock.Disconnect
+  
   return ptr
 
+PUB UpdRxLen(buffer)
+  return DeserializeWord(buffer + 6)
+  
 PUB PrintDebug(buffer,bytesToRead)
   pst.char(CR)
-  pst.str(string(CR, "Message from: "))
+  pst.str(string(CR, "Message from......."))
   PrintIp(buffer)
   pst.char(":")
   pst.dec(DeserializeWord(buffer + 4))
   pst.str(string(" ("))
   pst.dec(DeserializeWord(buffer + 6))
   pst.str(string(")", CR))
-   
-  DisplayMemory(buffer+8, bytesToRead-8, true)
+
+  pst.str(string("Bytes to Read......"))
+  pst.dec( bytesToRead )
+  pst.char(CR)
+  'DisplayMemory(buffer+8, bytesToRead-8, true)
+  DisplayMemory(buffer, 352, true)
   
 PUB DisplayMemory(addr, len, isHex) | j
   pst.str(string(13,"-----------------------------------------------------",13))

@@ -54,7 +54,7 @@ CON
   DHCP_RELEASE        = 7
 
   {{ Packet Types }}
-  #0, SUCCESS, DISCOVER_ERROR, OFFER_ERROR, REQUEST_ERROR, ACK_ERROR
+  #0, SUCCESS, DISCOVER_ERROR, OFFER_ERROR, REQUEST_ERROR, ACK_ERROR, DUNNO_ERROR 
 
   HOST_PORT           = 68
   REMOTE_PORT         = 67
@@ -69,6 +69,7 @@ DAT
   errOff          byte  "Offer Error", 0
   errReq          byte  "Request Error", 0
   errAck          byte  "Ack Error", 0
+  errDunno        byte  "Unidentified Error", $0 
   requestIp       byte  00, 00, 00, 00
   errorCode       byte  $00
   magicCookie     byte  $63, $82, $53, $63
@@ -79,7 +80,7 @@ DAT
   buffPtr         long  $00_00_00_00
   transId         long  $00_00_00_00
   null            long  $00_00_00_00
-  errors          long  @noErr, @errDis, @erroff, @errReq, @errAck
+  errors          long  @noErr, @errDis, @erroff, @errReq, @errAck, @errDunno 
   
 
    
@@ -99,7 +100,10 @@ PUB GetErrorCode
   return errorCode
 
 PUB GetErrorMessage
-  return @@errors[errorCode]
+  if(errorCode > -1 OR errorCode < DUNNO_ERROR)
+    return @@errors[errorCode]
+  else
+    return @@errors[DUNNO_ERROR]
 
 PUB GetLeaseTime | lease
   lease := byte[@leaseTime][0] << 24 | byte[@leaseTime][1]  << 16 | byte[@leaseTime][2] << 8 | byte[@leaseTime][3]
@@ -107,7 +111,7 @@ PUB GetLeaseTime | lease
   'return byte[@leaseTime][2]
 
 PUB GetIp
-  return wiz.GetCommonRegister(Wiz#SOURCE_IP0)  
+  return wiz.GetIp  
 
 PUB SetRequestIp(octet3, octet2, octet1, octet0)
   requestIp[0] := octet3 
@@ -145,7 +149,9 @@ PRI DiscoverOffer | ptr
     errorCode := DISCOVER_ERROR
     return false
         
-  Offer
+  ifnot(Offer)
+    errorCode := OFFER_ERROR
+    return false
 
   return true
 
@@ -224,8 +230,13 @@ PRI Offer | len
   len := ReadDhcpOption(DHCP_SERVER_IP)
   wiz.CopyDhcpServer(optionPtr, len) 
 
+  'Verify offer packet
+  len := ReadDhcpOption(MESSAGE_TYPE)
+  
   'Reset the pointer
   buffPtr -= UPD_HEADER_LEN
+
+  return (byte[optionPtr] & $FF) == OFFER_ERROR
 
 PRI Request | len
   optionPtr := DHCP_OPTIONS + buffPtr
@@ -334,28 +345,38 @@ PRI EndDhcpOptions | len
   return DHCP_PACKET_LEN
 
  
-PRI SendReceive(buffer, len) | bytesToRead, ptr 
+PRI SendReceive(buffer, len) | bytesToRead, ptr, tryagain 
   
   bytesToRead := 0
-
+  tryagain := false
   'Open socket and Send Message 
   sock.Open
   sock.Send(buffer, len)
 
-  bytesToRead := sock.Available
-   
-  'Check for a timeout
-  if(bytesToRead == -1 )
-    return @null
-
-  'Check for data received
-  if(bytesToRead == 0 )
-    return 0
-    
-   'Get the Rx buffer 
-  if(bytesToRead > 0) 
-    ptr := sock.Receive(buffer, bytesToRead)
+  repeat
+     bytesToRead += sock.Available
+      
+     'Check for a timeout
+     if(bytesToRead =< 0 )
+       bytesToRead~
+       return @null
+ 
+     if(bytesToRead > 0)
+       'Get the Rx buffer    
+       ifnot(tryagain) 
+         ptr := sock.Receive(buffer, bytesToRead)
+       else
+         sock.Receive(buffer, bytesToRead)
+       'Retry if we did not receive all expected
+       'bytes as read from the UDP header  
+       ifnot(UpdRxLen(ptr-8) == bytesToRead-8)         
+         buffer += bytesToRead
+         tryagain := true
+       else
+         quit
 
   sock.Disconnect
-  
   return ptr
+
+PUB UpdRxLen(buffer)
+  return sock.DeserializeWord(buffer + 6)

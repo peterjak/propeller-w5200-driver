@@ -38,6 +38,7 @@ DAT
 
   t1            long  $0
   null          long  $00
+  site          byte  "finance.google.com", $0
 
 OBJ
   pst           : "Parallax Serial Terminal"
@@ -47,12 +48,14 @@ OBJ
   dns           : "Dns"
    
 
-PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, totalBytes, i
+PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, totalBytes, i, dnsInit
 
   receiving := true
   bytesToRead := 0
 
-  if ina[USB_Rx] == 0       '' Check to see if USB port is powered
+  dnsInit := 0
+
+  if(ina[USB_Rx] == 0)      '' Check to see if USB port is powered
     outa[USB_Tx] := 0       '' Force Propeller Tx line LOW if USB not connected
   else                      '' Initialize normal serial communication to the PC here                              
     pst.Start(115_200)      '' http://forums.parallax.com/showthread.php?135067-Serial-Quirk&p=1043169&viewfull=1#post1043169
@@ -68,16 +71,16 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
     if(i++ > ATTEMPTS*5)
       pst.str(string(CR, "W5200 SPI communication failed!", CR))
       return
-  wiz.HardReset(RESET_PIN)
+  'wiz.HardReset(RESET_PIN)
   
   wiz.SetMac($00, $08, $DC, $16, $F8, $01)
 
   pst.str(string("Getting network paramters", CR))
   dhcp.Init(@buff, 7)
   'dhcp.SetRequestIp(192, 168, 1, 110)
-  pst.str(string("Requesting IP....."))
+  'pst.str(string("Requesting IP....."))
 
-  {
+  {    } 
   REPEAT
     pst.str(string("Requesting IP....."))
     t1 := 0
@@ -96,10 +99,11 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
       return
     else
       PrintIp(dhcp.GetIp)
-    pause(2000)
-  }
- 
-  {  } 
+    'pause(2000)
+
+
+
+  {     
   repeat until dhcp.DoDhcp
     if(++t1 > ATTEMPTS)
       quit
@@ -116,7 +120,7 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
     return
   else
     PrintIp(dhcp.GetIp)
-
+    }
   pst.str(string("Lease Time........"))
   pst.dec(dhcp.GetLeaseTime)
   pst.char(CR)
@@ -128,27 +132,30 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
   pst.str(string("DHCP Server......."))
   printIp(wiz.GetDhcpServerIp)
 
-  pst.str(string("Router IP........."))
+  pst.str(string("Router............"))
   printIp(wiz.GetRouter)
 
-  pst.str(string("Gateway IP........"))                                        
+  pst.str(string("Gateway..........."))                                        
   printIp(wiz.GetGatewayIp)
   
   pst.char(CR) 
 
-  pst.str(string("Resolve domain IP.")) 
-  dns.Init(@buff, 6)
+  pst.str(string("DNS Init (bool)..."))
+  pst.dec(dns.Init(@buff, 6))
+  pst.char(CR)
+
+  pst.str(string("Resolved IP(0)....")) 
   'remoteIP := dns.ResolveDomain(string("www.agaverobotics.com"))
   remoteIP := dns.ResolveDomain(string("finance.google.com"))
   'remoteIP := dns.ResolveDomain(string("www.weather.gov"))
-
+   
   PrintIp(remoteIP)
-
+   
   pst.str(string("Resolved IPs......"))
   pst.dec(dns.GetIpCount)
   pst.char(13)
   pst.char(13)
-
+ 
    'remoteIP := dns.GetResolvedIp(1) 
 
   pst.str(string("Initialize Socket"))
@@ -158,14 +165,14 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
 
   'PrintIp(wiz.GetRemoteIP(0))
   
-  pst.str(string(CR, "Begin Client Web request", CR))
+  pst.str(string(CR, "Begin Client Web Request", CR))
   'wiz.setGateway(0,0,0,0)
   'Client
-  pst.str(string("Open", CR))
+  'pst.str(string("Open Socket", CR))
   sock.Open
-  pst.str(string("Connecting to....."))
   sock.Connect
 
+  pst.str(string("Connecting to.....")) 
   PrintIp(wiz.GetRemoteIP(0))
   pst.char(CR) 
    
@@ -173,7 +180,7 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
   repeat until sock.Connected
     pause(100)
 
-  pst.str(string("Send HTTP Header", CR)) 
+  pst.str(string("Sending HTTP Header", CR)) 
   'bytesSent := sock.Send(@request2, strsize(@request2))
   bytesSent := sock.Send(@google, strsize(@google))
   'bytesSent := sock.Send(@weather, strsize(@weather))
@@ -195,7 +202,7 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
 
     if(bytesToRead == 0)
       receiving := false
-      pst.str(string("Done", CR))
+      'pst.str(string(CR, "Done Receiving Response", CR))
       next 
 
     if(bytesToRead > 0) 
@@ -209,7 +216,7 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
   pst.dec(totalBytes)
   pst.char(13)
   
-  pst.str(string(CR, "Disconnect", CR)) 
+  pst.str(string(CR, "Disconnect", CR, CR)) 
   sock.Disconnect
 
 PUB DisplayMemory(addr, len, isHex) | j
@@ -257,12 +264,29 @@ PUB DisplayMemory(addr, len, isHex) | j
   pst.str(string(13,"-----------------------------------------------------",13,13))
       
 PUB PrintIp(addr) | i
+  pst.hex(@addr, 8)
+  pst.char(CR)
+  'ifnot (addr == 8193)
+    'pst.str(string("Ouch!"))
+    'return
+    
+  'pst.str(string("Addr: "))
+  'pst.dec(addr)
+  'pst.char(CR)
+  {
+  i := 0
   repeat i from 0 to 3
-    pst.dec(byte[addr][i])
-    if(i < 3)
-      pst.char($2E)
-    else
-      pst.char($0D)
+    'if(addr < $FFFF)
+      pst.dec(byte[addr][i] & $FF)
+      if(i < 3)
+        pst.char($2E)
+      else
+        pst.char($0D)
+  pst.char("(")
+  pst.dec(addr)
+  pst.char(")")
+  pst.char(CR)
+  }
 
 PRI pause(Duration)  
   waitcnt(((clkfreq / 1_000 * Duration - 3932) #> 381) + cnt)
