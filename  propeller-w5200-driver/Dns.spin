@@ -132,11 +132,11 @@ PUB GetIpCount
   
 PUB GetResolvedIp(idx)
 
-  'if(idx > dnsCnt-1)
-    'return @null
+  if(idx > dnsCnt-1)
+    return @null
     
-  'if(IsNullIp( @dnsIps[idx] ) )
-    'return @null
+  if(IsNullIp( @dnsIps[idx] ) )
+    return @null
     
   return @@dnsIps[idx]
 
@@ -150,11 +150,11 @@ PUB ResolveDomain(url) | ptr, dnsPtr
   bytemove(@urlBuff, url, strsize(url))
   byte[strsize(url)] := 0
   
-  {    
+  {   }  
   dnsPtr := wiz.GetDns
   sock.RemoteIp(byte[dnsPtr][0], byte[dnsPtr][1], byte[dnsPtr][2], byte[dnsPtr][3])
   sock.RemotePort(DNS_PORT)
-  }
+  
      
   CreateTransactionId($FFFF)
   FillTransactionID
