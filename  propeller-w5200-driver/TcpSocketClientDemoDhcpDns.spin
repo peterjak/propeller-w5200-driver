@@ -80,7 +80,7 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
   'dhcp.SetRequestIp(192, 168, 1, 110)
   'pst.str(string("Requesting IP....."))
 
-  {    } 
+  { Stress test   
   REPEAT
     pst.str(string("Requesting IP....."))
     t1 := 0
@@ -100,10 +100,9 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
     else
       PrintIp(dhcp.GetIp)
     'pause(2000)
+   } 
 
-
-
-  {     
+  {  }     
   repeat until dhcp.DoDhcp
     if(++t1 > ATTEMPTS)
       quit
@@ -120,7 +119,7 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
     return
   else
     PrintIp(dhcp.GetIp)
-    }
+    
   pst.str(string("Lease Time........"))
   pst.dec(dhcp.GetLeaseTime)
   pst.char(CR)
@@ -262,31 +261,16 @@ PUB DisplayMemory(addr, len, isHex) | j
   pst.str(string(" Len: "))
   pst.dec(len)
   pst.str(string(13,"-----------------------------------------------------",13,13))
-      
+  
 PUB PrintIp(addr) | i
-  pst.hex(@addr, 8)
-  pst.char(CR)
-  'ifnot (addr == 8193)
-    'pst.str(string("Ouch!"))
-    'return
-    
-  'pst.str(string("Addr: "))
-  'pst.dec(addr)
-  'pst.char(CR)
-  {
   i := 0
   repeat i from 0 to 3
-    'if(addr < $FFFF)
-      pst.dec(byte[addr][i] & $FF)
-      if(i < 3)
-        pst.char($2E)
-      else
-        pst.char($0D)
-  pst.char("(")
-  pst.dec(addr)
-  pst.char(")")
-  pst.char(CR)
-  }
+    pst.dec(byte[addr][i] & $FF)
+    if(i < 3)
+      pst.char($2E)
+    else
+      pst.char($0D)
+
 
 PRI pause(Duration)  
   waitcnt(((clkfreq / 1_000 * Duration - 3932) #> 381) + cnt)
