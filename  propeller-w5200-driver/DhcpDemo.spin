@@ -249,6 +249,9 @@ PRI Discover | len
   WriteDhcpOption(PARAM_REQUEST, 4, @paramReq)
   WriteDhcpOption(HOST_NAME, strsize(@hostName), @hostName)
   len := EndDhcpOptions
+
+  
+  
   return SendReceive(buffPtr, len)
 
   
@@ -408,6 +411,8 @@ PRI SendReceive(buffer, len) | bytesToRead, ptr, tryagain
   sock.Open
   sock.Send(buffer, len)
 
+  DisplayMemory(buffer, len, true)
+  
   repeat
      bytesToRead += sock.Available
       
