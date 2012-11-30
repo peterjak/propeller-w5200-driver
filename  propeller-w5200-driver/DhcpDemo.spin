@@ -60,7 +60,13 @@ CON
   HOST_PORT           = 68
   REMOTE_PORT         = 67
 
-  ATTEMPTS            = 5       
+  ATTEMPTS            = 5
+
+  RESET_PIN     = 26 '4
+  USB_Rx        = 31
+  USB_Tx        = 30
+
+  PWDN          = 24       
                         
        
 VAR
@@ -104,7 +110,8 @@ PUB Init | ptr, i
   CreateTransactionId
 
   'Wiz Mac and Ip
-  wiz.Start(3, 0, 1, 2) 
+  'wiz.Start(3, 0, 1, 2)
+  wiz.Start(15, 12, 14, 13) 
   wiz.SetMac($00, $08, $DC, $16, $F8, $01)
   
   'DHCP Port, Mac and Ip 
@@ -117,11 +124,20 @@ PUB Init | ptr, i
   'pst.str(string("Remote IP: "))
   'PrintIp(wiz.GetRemoteIP(0))
   'pst.char(CR)
+      
+ 
+  'DHCP Process
+  repeat until DoDhcp
+    CreateTransactionId 
+    pause(1000)
+    pst.str(string(CR, "Retry DHCP: "))
+    pst.dec(i++)
+    pst.char(CR)
 
 
   REPEAT
     t1 := 0
-    repeat until DoDhcp
+    repeat until RenewDhcp
       if(++t1 > ATTEMPTS)
         quit
     if(t1 > ATTEMPTS)
@@ -139,16 +155,7 @@ PUB Init | ptr, i
       PrintIp(GetIp)
       pst.char(CR)
     'pause(2000)
-    
-  {  
-  'DHCP Process
-  repeat until DoDhcp
-    CreateTransactionId 
-    pause(1000)
-    pst.str(string(CR, "Retry DHCP: "))
-    pst.dec(i++)
-    pst.char(CR)
-  }
+
   sock.Close
 
 PUB GetErrorCode
@@ -195,15 +202,29 @@ PUB DoDhcp
   sock.Close 
   return true
 
+  
+PUB RenewDhcp
+  errorCode := 0
+  CreateTransactionId
+
+  ifnot(RequestAck) 
+    sock.Close
+    return false
+ 
+  sock.Close 
+  return true
+  
+
 PRI DiscoverOffer | ptr
 
   InitRequest
-  
+
+  pst.str(string(CR, "*** DISCOVER ***", CR))
   ptr := Discover
   if(ptr == @null)
     errorCode := DISCOVER_ERROR
     return false
-        
+     
   ifnot(Offer)
     errorCode := ACK_ERROR
     return false
@@ -214,12 +235,13 @@ PRI DiscoverOffer | ptr
 PRI RequestAck  | ptr
 
   InitRequest
-  
+
+  pst.str(string(CR, "*** REQUEST ***", CR))
   ptr := Request
   if(ptr == @null)
     errorCode := REQUEST_ERROR
     return false
-    
+  
   ifnot(Ack)
     errorCode := ACK_ERROR
     return false

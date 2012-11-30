@@ -139,7 +139,18 @@ PUB DoDhcp
  
   sock.Close 
   return true
+  
+PUB RenewDhcp
+  errorCode := 0
+  CreateTransactionId
 
+  ifnot(RequestAck) 
+    sock.Close
+    return false
+ 
+  sock.Close 
+  return true
+  
 PRI DiscoverOffer | ptr
 
   InitRequest
@@ -257,9 +268,14 @@ PRI Request | len
 
 PRI Ack | len
 
+  optionPtr := DHCP_OPTIONS + buffPtr
+
+  'Move the pointer 8 bytes to the right
+  'On receive the first 8 bytes in the UDP packet are IP:Port and len
   buffPtr += UPD_HEADER_LEN
 
-  optionPtr := DHCP_OPTIONS + buffPtr
+  'Set the IP
+  GetSetIp
 
   ReadDhcpOption(IP_LEASE_TIME)
   FillLeaseTime(optionPtr)
