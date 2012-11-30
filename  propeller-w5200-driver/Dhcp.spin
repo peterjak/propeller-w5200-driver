@@ -125,9 +125,13 @@ PRI IsRequestIp
 PUB GetRequestIP
   return @requestIp
  
-PUB DoDhcp 
+PUB DoDhcp(resetIp)
+ 
   errorCode := 0
   CreateTransactionId
+
+  if(resetIp)
+    wiz.SetIp(0,0,0,0)
 
   ifnot(DiscoverOffer)
     sock.Close

@@ -127,7 +127,7 @@ PUB Init | ptr, i
       
  
   'DHCP Process
-  repeat until DoDhcp
+  repeat until DoDhcp(true)
     CreateTransactionId 
     pause(1000)
     pst.str(string(CR, "Retry DHCP: "))
@@ -135,7 +135,7 @@ PUB Init | ptr, i
     pst.char(CR)
 
 
-  REPEAT
+  repeat
     t1 := 0
     repeat until RenewDhcp
       if(++t1 > ATTEMPTS)
@@ -154,7 +154,7 @@ PUB Init | ptr, i
       pst.str(string("Assigned IP........"))
       PrintIp(GetIp)
       pst.char(CR)
-    'pause(2000)
+    pause(2000)
 
   sock.Close
 
@@ -187,10 +187,14 @@ PRI IsRequestIp
 PUB GetRequestIP
   return @requestIp
  
-PUB DoDhcp 
+PUB DoDhcp(resetIp)
+ 
   errorCode := 0
   CreateTransactionId
 
+  if(resetIp)
+    wiz.SetIp(0,0,0,0)  
+  
   ifnot(DiscoverOffer)
     sock.Close
     return false
