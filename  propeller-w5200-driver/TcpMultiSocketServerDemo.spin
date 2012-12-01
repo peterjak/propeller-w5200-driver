@@ -9,11 +9,12 @@ CON
   SOCKETS       = 4
 
   ' W5200 I/O
-  SPI_MOSI      = 1 ' SPI master out serial in to slave
-  SPI_SCK       = 0 ' SPI clock from master to all slaves
-  SPI_CS        = 3 ' SPI chip select (active low)
-  SPI_MISO      = 2 ' SPI master in serial out from slave
-  RESET_PIN     = 4 ' Reset
+  SPI_MOSI      = 14 ' SPI master out serial in to slave
+  SPI_SCK       = 12 ' SPI clock from master to all slaves
+  SPI_CS        = 15 ' SPI chip select (active low)
+  SPI_MISO      = 13 ' SPI master in serial out from slave
+  RESET_PIN     = 26 ' Reset
+  PWDN          = 24 
   
   #0, CLOSED, TCP, UDP, IPRAW, MACRAW, PPPOE
     
@@ -44,7 +45,7 @@ PUB Main | i
   wiz.SetCommonnMode(0)
   wiz.SetGateway(192, 168, 1, 1)
   wiz.SetSubnetMask(255, 255, 255, 0)
-  wiz.SetIp(192, 168, 1, 104)
+  wiz.SetIp(192, 168, 1, 105)
   wiz.SetMac($00, $08, $DC, $16, $F8, $01)
   
   pst.str(string("Initialize Sockets",CR))
@@ -72,29 +73,32 @@ PUB StartListners | i
       pst.str(string("Listener failed ",CR))
     pst.dec(i)
     pst.char(CR)
-
+    
+{
 PUB CloseWait | i
   repeat i from 0 to SOCKETS-1  
     if(sock[i].IsCloseWait)
       sock[i].Disconnect
       sock[i].Open
       sock[i].Listen
+}
 
+PUB CloseWait | i
+  repeat i from 0 to SOCKETS-1
+    if(sock[i].IsCloseWait) 
+      sock[i].Disconnect
+      sock[i].Close
+      
+    if(sock[i].IsClosed)  
+      sock[i].Open
+      sock[i].Listen
+      
 PUB MultiSocketServer | bytesToRead, i
   bytesToRead := i := 0
   repeat
     pst.str(string("TCP Service", CR))
     CloseWait
     
-   {
-    repeat j from 0 to SOCKETS-1
-      pst.str(string("Socket "))
-      pst.dec(j)
-      pst.str(string(" = "))
-      pst.hex(wiz.GetSocketStatus(j), 2)
-      pst.char(13)
-    } 
-
     repeat until sock[i].Connected
       i := ++i // SOCKETS
 
@@ -103,14 +107,16 @@ PUB MultiSocketServer | bytesToRead, i
     pst.char(CR)
     
     'Data in the buffer?
-    repeat until NULL < bytesToRead := sock[i].Available
+    repeat until bytesToRead := sock[i].Available
 
     'Check for a timeout
     if(bytesToRead < 0)
       pst.str(string("Timeout",CR))
-      sock[i].Disconnect
-      sock[i].Open
-      sock[i].Listen
+      CloseWait
+      'sock[i].Disconnect
+      'sock[i].Close
+      'sock[i].Open
+      'sock[i].Listen
       bytesToRead~
       next
       
