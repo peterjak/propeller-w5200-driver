@@ -6,12 +6,22 @@ CON
   
   CR            = $0D
   LF            = $0A
-  RESET_PIN     = 4
+  RESET_PIN     = 4 '26
   SOCKETS       = 7
   
   #0, CLOSED, TCP, UDP, IPRAW, MACRAW, PPPOE
 
-  DHCP_ATTEMPTS = 10  
+  DHCP_ATTEMPTS = 10
+
+
+  PWDN          = 24
+  USB_Rx          = 31
+  USB_Tx          = 30
+  
+  { DHCP Lease Counter }
+  CNT_PIN         = 7
+  NCO_FREQ        = 610         '($8000)(80x10^6)/2^32 = 610.3516Hz                           
+  FREQ_610        = $8000       ' AN001-P8X32ACounters-v2.0_2.pdf (page 6)  
     
 VAR
   long  seed
@@ -40,7 +50,7 @@ DAT
 }             "});}", CR, LF, {
 }             "</script>", CR, LF, {
 }             "<script type='text/javascript'>", CR, LF, {
-}             "setInterval(", $22, "getRequest('xmltemp', 'placeholder')", $22, ", 1);", CR, LF, {
+}             "setInterval(", $22, "getRequest('xmltemp', 'placeholder')", $22, ", 2000);", CR, LF, {
 }             "</script>", CR, LF, {
 }             "</head>", CR, LF, {
 }             "<body>", CR, LF, {
@@ -60,6 +70,7 @@ DAT
   buff          byte  $0[BUFFER_2K] 
   resPtr        long $0[25]
   null          long  $00
+  dhcpLease     long  $00
   
 OBJ
   pst             : "Parallax Serial Terminal"
@@ -73,12 +84,16 @@ PUB Main | i, page, dnsServer
   
   pst.Start(115_200)
   pause(500)
+
+
   
   pst.str(string("Initialize W5200", CR))
+  'Start(m_cs, m_clk, m_mosi, m_miso)
   wiz.Start(3, 0, 1, 2)
+  'wiz.Start(15, 12, 14, 13)
 
   wiz.HardReset(RESET_PIN)
- 
+
   wiz.SetMac($00, $08, $DC, $16, $F8, $01)
 
   pst.str(string("Getting network paramters", CR))
@@ -98,11 +113,17 @@ PUB Main | i, page, dnsServer
     pst.char(CR)
     pst.str(dhcp.GetErrorMessage)
     pst.char(CR)
-    Toggle(19, 1)
-    Toggle(20, 1)
     return
   else
     PrintIp(dhcp.GetIp)
+    'Setup a 610 Hz square wave on pin 7
+    ctrb := %00100_000 << 23 + 1 << 9 + CNT_PIN 
+    frqb := FREQ_610 
+    dira[CNT_PIN] := 1
+     
+    'Positive edge counter on pin 7
+    ctra := %01010 << 26 + CNT_PIN
+    frqa := 1
 
   pst.str(string("DNS..............."))
   dnsServer := wiz.GetDns
@@ -157,7 +178,17 @@ PUB CloseWait | i
 PUB MultiSocketServer | bytesToRead, i, page, j, x , bytesSent, ptr
   bytesToRead := bytesSent := i := j := x := 0
   repeat
-    pst.str(string("TCP Service", CR))
+
+    if(dhcpLease - phsa/NCO_FREQ <  dhcpLease-10)
+      pst.str(string(CR, "Renew DHCP Lease", CR))
+      pst.str(string("Requesting IP....."))
+      if(dhcp.DoDhcp)
+        PrintIp(dhcp.GetIp)
+        dhcpLease := dhcp.GetLeaseTime
+        phsa := 1
+        pause(1500)
+
+    pst.str(string(CR, "TCP Service", CR))
     CloseWait
 
     {
@@ -201,8 +232,8 @@ PUB MultiSocketServer | bytesToRead, i, page, j, x , bytesSent, ptr
     pst.str(string("Send Response",CR))
     page :=  ParseResource(@buff)
     
-    pst.str(page)
-    pst.char(CR)
+    'pst.str(page)
+    'pst.char(CR)
     pst.str(string("Byte to send "))
     pst.dec(strsize(page))
     pst.char(CR)
@@ -249,13 +280,14 @@ PUB ParseResource(header) | ptr, value, i, done, j
       return @index
 
   resPtr[0] := header
+  {
   repeat j from 0 to i-1
     pst.str(string("ID"))
     pst.dec(j)
     pst.char($20)
     pst.str(resPtr[j])
     pst.char(CR)
-
+  }
   repeat j from 0 to i-1
     if(strcomp(resPtr[j], string("HTTP")))
       return @index
