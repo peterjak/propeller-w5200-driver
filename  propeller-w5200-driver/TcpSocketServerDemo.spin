@@ -9,91 +9,133 @@ CON
   NULL          = $00
   
   #0, CLOSED, TCP, UDP, IPRAW, MACRAW, PPPOE
+
+  ' W5200 I/O
+  SPI_MOSI      = 14 ' SPI master out serial in to slave
+  SPI_SCK       = 12 ' SPI clock from master to all slaves
+  SPI_CS        = 15 ' SPI chip select (active low)
+  SPI_MISO      = 13 ' SPI master in serial out from slave
+  RESET_PIN     = 26 ' Reset
+  PWDN          = 24 
     
 VAR
 
 DAT
-  index         byte  "HTTP/1.1 200 OK", CR, LF, {
+  header        byte  "HTTP/1.1 200 OK", CR, LF, {
 }                     "Content-Type: text/html", CR, LF, CR, LF, {
 }                     "Hello World!", CR, LF, $0
 
-  buff            byte  $0[BUFFER_2K] 
+
+  buff            byte  $0[BUFFER_2K]
+  fileErrorHandle long  $0
+  approot               byte    "\", 0 
 
 OBJ
   pst           : "Parallax Serial Terminal"
   wiz           : "W5200" 
   sock          : "Socket"
+  'SDCard        : "S35390A_SD-MMC_FATEngineWrapper"
  
-PUB Main | bytesToRead
+PUB Main | bytesToRead, offset, tail
 
   bytesToRead := 0
   pst.Start(115_200)
   pause(500)
 
+  'SDCard.Start
+  pause(500)
+  'Mount the SD card
+  'pst.str(string("Mount SD Card - ")) 
+  'SDCard.mount(fileErrorHandle)
+  'pst.str(string("OK",13))
+  
+  wiz.HardReset(RESET_PIN)
+  
   'Set network parameters
-  wiz.Init
+  wiz.Start(SPI_CS, SPI_SCK, SPI_MOSI, SPI_MISO)  
   wiz.SetCommonnMode(0)
   wiz.SetGateway(192, 168, 1, 1)
   wiz.SetSubnetMask(255, 255, 255, 0)
-  wiz.SetIp(192, 168, 1, 104)
+  wiz.SetIp(192, 168, 1, 105)
   wiz.SetMac($00, $08, $DC, $16, $F8, $01)
   
   pst.str(string("Initialize Socket",CR))
   sock.Init(0, TCP, 8080)
 
   pst.str(string("Start Socket server",CR))
+  
   repeat
   
-    pst.str(string("Status "))  
-    pst.dec(wiz.SocketStatus(0))
-    pst.char(CR)
-    
-    pst.str(string(CR, "---------------------------",CR))
-    pst.str(string("Open",CR))
     sock.Open
-
-    pst.str(string("Status "))  
-    pst.hex(wiz.SocketStatus(0), 2)
-    pst.char(CR)
-
-    
-    if(sock.Listen)
-      pst.str(string("Listen",CR))
-    else
-      pst.str(string("Listener failed!",CR))  
+    sock.Listen
 
     'Connection?
     repeat until sock.Connected
-      pause(100)
-
-    pst.str(string("Connected",CR))
     
     'Data in the buufer?
-    repeat until bytesToRead := sock.Available
+    repeat until NULL < bytesToRead := sock.Available
 
     'Check for a timeout
     if(bytesToRead < 0)
+      sock.Disconnect
       bytesToRead~
       next
-
-    pst.str(string("Copy Rx Data",CR))
   
     'Get the Rx buffer  
     sock.Receive(@buff, bytesToRead)
 
     {{ Process the Rx data}}
     pst.char(CR)
-    pst.str(string("Request:",CR))
     pst.str(@buff)
 
-    pst.str(string("Send Response",CR))
-    sock.Send(@index, strsize(@index))
 
-    pst.str(string("Disconnect",CR))
+    'offset := BufferHeader(@buff, @header)
+    
+    'tail := BufferIndex(@buff, offset)
+    'pst.dec(tail)
+    
+    'sock.Send(@buff, strsize(@buff))
+    'sock.Send(@buff, tail - @buff)
+
+    sock.Send(@header, strsize(@header))
+
     sock.Disconnect
     
     bytesToRead~
-     
+
+{
+PUB BufferHeader(buffer, source)
+  result := strsize(source)
+  bytemove(buffer, source, result)
+
+
+PUB BufferIndex(buffer, offset) | fileSize
+  pst.str(string("Open", CR))
+  
+  sdcard.listEntry(string("index.htm")) 
+  pst.str(SDCard.openFile(string("index.htm"), "r"))
+  
+  fileSize := SDCard.getFileSize
+  pst.str(string(" ("))
+  pst.dec(fileSize)
+  pst.str(string(")", CR))
+
+  result := buffer+offset
+
+  SDCard.readFromFile(result, fileSize)
+  result += fileSize
+  byte[result] := 0
+
+  'NOTE: add a pause if pst.str is removed
+  'else we'll have a problem closing the file
+  pst.str(buffer)
+  'pause(500)
+  pst.str(string(CR, "closeFile", CR))
+  SDCard.closeFile
+
+  'pst.str(string("done", CR))
+
+}     
 PUB PrintIp(addr) | i
   repeat i from 0 to 3
     pst.dec(byte[addr][i])

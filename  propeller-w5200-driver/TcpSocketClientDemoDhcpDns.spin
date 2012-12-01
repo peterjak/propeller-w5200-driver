@@ -2,19 +2,27 @@ CON
   _clkmode = xtal1 + pll16x     
   _xinfreq = 5_000_000
 
-  BUFFER_2K     = $800
+  { Protocol }
+  #0, CLOSED, TCP, UDP, IPRAW, MACRAW, PPPOE
   
+  { PST Display }
   CR            = $0D
   LF            = $0A
   
-  #0, CLOSED, TCP, UDP, IPRAW, MACRAW, PPPOE
+  BUFFER_2K     = $800
 
   ATTEMPTS      = 5
-  RESET_PIN     = 4
+ 
+  { Serial IO PINs } 
   USB_Rx        = 31
   USB_Tx        = 30
   
-       
+  { Run time DHCP and DNS socket paramters }
+  DHCP_SOCKET   = 7
+  DNS_SOCKET    = 6
+
+      
+ 
 VAR
 
 DAT
@@ -24,7 +32,6 @@ DAT
   request2      byte  "GET /default.aspx HTTP/1.1", CR, LF, {
 }               byte  "Host: agaverobotics.com", CR, LF, {
 }               byte  "User-Agent: Wiz5200", CR, LF, CR, LF, $0
-
 
   google        byte  "GET /finance/historical?q=FB&output=csv HTTP/1.1", CR, LF, {
 }               byte  "Host: finance.google.com", CR, LF, {
@@ -49,7 +56,7 @@ OBJ
    
 
 PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, totalBytes, i, dnsInit
-
+ 
   receiving := true
   bytesToRead := 0
 
@@ -61,30 +68,61 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
     pst.Start(115_200)      '' http://forums.parallax.com/showthread.php?135067-Serial-Quirk&p=1043169&viewfull=1#post1043169
     pause(500)
 
-  pst.str(string("Initialize W5200", CR))
-  wiz.Start(3, 0, 1, 2)
+  pst.str(string("Initialize W5200", CR)) 
+
+  wiz.QS_Init
+  
+  'wiz.HardReset(WIZ#WIZ_RESET)
+  'wiz.Start(WIZ#SPI_CS, WIZ#SPI_SCK, WIZ#SPI_MOSI, WIZ#SPI_MISO)
+
 
   'Loop until we get the W5200 version
-  'This let us know that the W5200 is ready to go
+  'This lets us know if the W5200 is ready to go 
+  i := 0
   repeat until wiz.GetVersion > 0
     pause(250)
     if(i++ > ATTEMPTS*5)
-      pst.str(string(CR, "W5200 SPI communication failed!", CR))
-      return
-  'wiz.HardReset(RESET_PIN)
-  
+      pst.str(string(CR, "SPI communication failed!", CR))
+      return   
+  pst.str(string("WizNet 5200 Ver: ") )
+  pst.dec(wiz.GetVersion)
+  pst.char(CR)
+
   wiz.SetMac($00, $08, $DC, $16, $F8, $01)
 
   pst.str(string("Getting network paramters", CR))
-  dhcp.Init(@buff, 7)
-  'dhcp.SetRequestIp(192, 168, 1, 110)
-  'pst.str(string("Requesting IP....."))
+  dhcp.Init(@buff, DHCP_SOCKET)
+
+  pst.str(string("--------------------------------------------------", CR))
+
+  'SetRequestIp allows us to request a specific IP - No guarentee 
+  'dhcp.SetRequestIp(192, 168, 1, 110)                    
+ 
+  {  }
+  pst.str(string("Requesting IP....."))      
+  repeat until dhcp.DoDhcp(true)
+    if(++t1 > ATTEMPTS)
+      quit
+   
+  if(t1 > ATTEMPTS)
+    pst.char(CR) 
+    pst.str(string(CR, "DHCP Attempts: "))
+    pst.dec(t1)
+    pst.str(string(CR, "Error Code: "))
+    pst.dec(dhcp.GetErrorCode)
+    pst.char(CR)
+    pst.str(dhcp.GetErrorMessage)
+    pst.char(CR)
+    return
+  else
+    PrintIp(dhcp.GetIp)
 
   { Stress test   
-  REPEAT
+  repeat
     pst.str(string("Requesting IP....."))
     t1 := 0
-    repeat until dhcp.DoDhcp
+    'wiz.SetIp(0,0,0,0)
+    repeat until dhcp.RenewDhcp
       if(++t1 > ATTEMPTS)
         quit
     if(t1 > ATTEMPTS)
@@ -101,25 +139,7 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
       PrintIp(dhcp.GetIp)
     'pause(2000)
    } 
-
-  {  }     
-  repeat until dhcp.DoDhcp
-    if(++t1 > ATTEMPTS)
-      quit
-   
-  if(t1 > ATTEMPTS)
-    pst.char(CR) 
-    pst.str(string(CR, "DHCP Attempts: "))
-    pst.dec(t1)
-    pst.str(string(CR, "Error Code: "))
-    pst.dec(dhcp.GetErrorCode)
-    pst.char(CR)
-    pst.str(dhcp.GetErrorMessage)
-    pst.char(CR)
-    return
-  else
-    PrintIp(dhcp.GetIp)
-    
+  
   pst.str(string("Lease Time........"))
   pst.dec(dhcp.GetLeaseTime)
   pst.char(CR)
@@ -129,10 +149,10 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
   PrintIp(wiz.GetDns)
 
   pst.str(string("DHCP Server......."))
-  printIp(wiz.GetDhcpServerIp)
+  printIp(dhcp.GetDhcpServer)
 
   pst.str(string("Router............"))
-  printIp(wiz.GetRouter)
+  printIp(dhcp.GetRouter)
 
   pst.str(string("Gateway..........."))                                        
   printIp(wiz.GetGatewayIp)
@@ -140,7 +160,7 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
   pst.char(CR) 
 
   pst.str(string("DNS Init (bool)..."))
-  pst.dec(dns.Init(@buff, 6))
+  pst.dec(dns.Init(@buff, DNS_SOCKET))
   pst.char(CR)
 
   pst.str(string("Resolved IP(0)....")) 
@@ -179,7 +199,7 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
   repeat until sock.Connected
     pause(100)
 
-  pst.str(string("Sending HTTP Header", CR)) 
+  pst.str(string("Sending HTTP Request", CR)) 
   'bytesSent := sock.Send(@request2, strsize(@request2))
   bytesSent := sock.Send(@google, strsize(@google))
   'bytesSent := sock.Send(@weather, strsize(@weather))
@@ -211,11 +231,11 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
       
     bytesToRead~
 
-  pst.str(string("Bytes received...."))
+  pst.str(string("Bytes Received...."))
   pst.dec(totalBytes)
-  pst.char(13)
+  pst.char(CR)
   
-  pst.str(string(CR, "Disconnect", CR, CR)) 
+  pst.str(string("Disconnect", CR, CR)) 
   sock.Disconnect
 
 PUB DisplayMemory(addr, len, isHex) | j
