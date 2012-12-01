@@ -25,6 +25,8 @@ PUB Init(p_cs, p_sck, p_mosi, p_miso)
 
 PUB Start(p_cs, p_sck, p_mosi, p_miso)
 
+  Stop
+
   'Init Parameters
   _cmd    :=  0
   
