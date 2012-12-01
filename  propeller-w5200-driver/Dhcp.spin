@@ -33,7 +33,7 @@ CON
 
   {{ DHCP Options Enum}}
   SUBNET_MASK         = 01
-  ROUTER              = 03
+  ROUTER_IP           = 03
   DOMAIN_NAME_SERVER  = 06
   HOST_NAME           = 12
   REQUEST_IP          = 50
@@ -80,7 +80,10 @@ DAT
   buffPtr         long  $00_00_00_00
   transId         long  $00_00_00_00
   null            long  $00_00_00_00
-  errors          long  @noErr, @errDis, @erroff, @errReq, @errAck, @errDunno 
+  errors          long  @noErr, @errDis, @erroff, @errReq, @errAck, @errDunno
+
+  _dhcpServer      byte  $00, $00, $00, $00
+  _router          byte  $00, $00, $00, $00 
   
 
    
@@ -237,13 +240,13 @@ PRI Offer | len
   'Mike G 10/16/2012
   'From research and asking network guys the router IP (option 3)
   'should also be the gateway.
-  len := ReadDhcpOption(ROUTER)
-  wiz.CopyRouter(optionPtr, len)
+  len := ReadDhcpOption(ROUTER_IP)
+  SetRouter(optionPtr)
   Wiz.CopyGateway(optionPtr, len)
 
   'Set the DHCP server IP
   len := ReadDhcpOption(DHCP_SERVER_IP)
-  wiz.CopyDhcpServer(optionPtr, len) 
+  SetDhcpServer(optionPtr) 
 
   'Verify offer packet
   len := ReadDhcpOption(MESSAGE_TYPE)
@@ -265,7 +268,7 @@ PRI Request | len
   WriteDhcpOption(MESSAGE_TYPE, 1, DHCP_REQUEST)
   IsRequestIp
     WriteDhcpOption(REQUEST_IP, 4, @requestIp)
-  WriteDhcpOption(DHCP_SERVER_IP, 4, wiz.GetDhcpServerIp)
+  WriteDhcpOption(DHCP_SERVER_IP, 4, GetDhcpServer)
   WriteDhcpOption(HOST_NAME, strsize(@hostName), @hostName)
   len := EndDhcpOptions
   return SendReceive(buffPtr, len)
@@ -318,10 +321,10 @@ PRI FillTransactionID
   bytemove(buffPtr+DHCP_XID, @transId, 4)
 
 PRI FillMac
-  bytemove(buffPtr+DHCP_CHADDR, wiz.GetCommonRegister(wiz#MAC0), HARDWARE_ADDR_LEN)    
+  bytemove(buffPtr+DHCP_CHADDR, wiz.GetMac, HARDWARE_ADDR_LEN)    
 
 PRI FillServerIp
-  bytemove(buffPtr+DHCP_SIADDR, wiz.GetDhcpServerIp, 4)
+  bytemove(buffPtr+DHCP_SIADDR, GetDhcpServer, 4)
 
   
 PRI FillMagicCookie
@@ -339,8 +342,8 @@ PRI WriteDhcpOption(option, len, data)
     
   optionPtr += len
 
-  
-PRI ReadDhcpOption(option) | len
+{ }   
+PRI ReadDhcpOption(option) | len, ptr
   'Init pointer to options
   optionPtr := DHCP_OPTIONS + buffPtr
 
@@ -357,14 +360,48 @@ PRI ReadDhcpOption(option) | len
     'point to the next option code 
     optionPtr += byte[optionPtr] + 1
 
-  return -1 
-      
+  return -1
+
+{
+PRI ReadDhcpOption(option) | ptr
+  'Init pointer to options
+  ptr := DHCP_OPTIONS + buffPtr
+
+  'Repeat until we reach the end of the UPD packet
+  repeat MAX_DHCP_OPTIONS
+
+    if(byte[ptr] == DHCP_END)
+      result -2
+  
+    if(byte[ptr++] == option)
+      'return a pointer to the length byte
+      return ptr
+
+    'point to the next option code 
+    ptr += byte[ptr] + 1
+
+  return -1  
+}     
   
 PRI EndDhcpOptions | len
   byte[optionPtr] := DHCP_END
   return DHCP_PACKET_LEN
 
- 
+
+
+PUB SetRouter(source)
+  bytemove(@_router, source, 4)
+  
+PUB GetRouter
+  return @_router
+
+
+PUB SetDhcpServer(source)
+  bytemove(@_dhcpServer, source, 4)
+
+PUB GetDhcpServer
+  return  @_dhcpServer
+  
 PRI SendReceive(buffer, len) | bytesToRead, ptr, tryagain 
   
   bytesToRead := 0
