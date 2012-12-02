@@ -95,7 +95,10 @@ PUB Init | ptr, url, ansRRS, i
   pause(500)
 
   pst.str(string("Initialize", CR))
-  wiz.Start(3, 0, 1, 2) 
+  
+   'wiz.QS_Init
+  wiz.HardReset(WIZ#WIZ_RESET)
+  wiz.Start(WIZ#SPI_CS, WIZ#SPI_SCK, WIZ#SPI_MOSI, WIZ#SPI_MISO) 
 
   'Loop until we get the W5200 version
   'This let us know that the W5200 is ready to go

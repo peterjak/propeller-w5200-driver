@@ -66,10 +66,10 @@ PUB Main | bytesToRead
   pst.str(@base64auth)
   pst.char(CR)
 
-  wiz.Start(3, 0, 1, 2)
-  wiz.HardReset(RESET_PIN)
+  wiz.HardReset(WIZ#WIZ_RESET)
+  wiz.Start(WIZ#SPI_CS, WIZ#SPI_SCK, WIZ#SPI_MOSI, WIZ#SPI_MISO)
   
-  wiz.SetIp(192, 168, 1, 104)
+  wiz.SetIp(192, 168, 1, 105)
   wiz.SetMac($00, $08, $DC, $16, $F8, $01)
   
   pst.str(string("Initialize Socket",CR))

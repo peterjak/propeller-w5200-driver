@@ -36,13 +36,8 @@ OBJ
   pst           : "Parallax Serial Terminal"
   wiz           : "W5200"
   sock          : "Socket"
-  dhcp          : "Dhcp"
   dns           : "Dns"
-   
 
-
-
- 
 PUB Main | bytesToRead, buffer, bytesSent, receiving, ipaddr, ptr, totalBytes
 
   receiving := true
@@ -51,20 +46,22 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, ipaddr, ptr, totalBytes
   pause(500)
 
   pst.str(string("Initialize W5200", CR))
-  'Set network parameters
-  wiz.Start(3, 0, 1, 2)
-  wiz.HardReset(RESET_PIN)
   
+  'wiz.QS_Init
+  wiz.HardReset(WIZ#WIZ_RESET)
+  wiz.Start(WIZ#SPI_CS, WIZ#SPI_SCK, WIZ#SPI_MOSI, WIZ#SPI_MISO)
+  
+  'Set network parameters
   wiz.SetCommonnMode(0)
   wiz.SetGateway(192, 168, 1, 1)
   wiz.SetSubnetMask(255, 255, 255, 0)
-  wiz.SetIp(192, 168, 1, 104)
+  wiz.SetIp(192, 168, 1, 105)
   wiz.SetMac($00, $08, $DC, $16, $F8, $01)
 
   pst.str(string("Resolve domain IP", CR))
 
   ifnot(dns.Init(@buff, 6))
-    dns.SetDnsServerIp(68, 105, 28, 12)   '68, 105, 28, 12   '192, 168, 1, 1
+    dns.SetDnsServerIp(192, 168, 1, 1)   '68, 105, 28, 12   '192, 168, 1, 1
     
   'ptr := dns.ResolveDomain(string("www.agaverobotics.com"))
   ptr := dns.ResolveDomain(string("finance.google.com"))

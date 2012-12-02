@@ -89,8 +89,12 @@ PUB Main | i, page, dnsServer
   
   pst.str(string("Initialize W5200", CR))
   'Start(m_cs, m_clk, m_mosi, m_miso)
-  wiz.Start(3, 0, 1, 2)
+  'wiz.Start(3, 0, 1, 2)
   'wiz.Start(15, 12, 14, 13)
+
+  'wiz.QS_Init
+  wiz.HardReset(WIZ#WIZ_RESET)
+  wiz.Start(WIZ#SPI_CS, WIZ#SPI_SCK, WIZ#SPI_MOSI, WIZ#SPI_MISO)
 
   wiz.HardReset(RESET_PIN)
 
@@ -100,7 +104,7 @@ PUB Main | i, page, dnsServer
   dhcp.Init(@buff, 7)
   pst.str(string("Requesting IP....."))
 
-  repeat until dhcp.DoDhcp
+  repeat until dhcp.DoDhcp(false)
     if(++i > DHCP_ATTEMPTS)
       quit
 
@@ -130,10 +134,10 @@ PUB Main | i, page, dnsServer
   PrintIp(wiz.GetDns)
 
   pst.str(string("DHCP Server......."))
-  printIp(wiz.GetDhcpServerIp)
+  printIp(dhcp.GetDhcpServer)
 
   pst.str(string("Router IP........."))
-  printIp(wiz.GetRouter)
+  printIp(dhcp.GetRouter)
   pst.char(CR)
 
   repeat
@@ -182,7 +186,7 @@ PUB MultiSocketServer | bytesToRead, i, page, j, x , bytesSent, ptr
     if(dhcpLease - phsa/NCO_FREQ <  dhcpLease-10)
       pst.str(string(CR, "Renew DHCP Lease", CR))
       pst.str(string("Requesting IP....."))
-      if(dhcp.DoDhcp)
+      if(dhcp.DoDhcp(false))
         PrintIp(dhcp.GetIp)
         dhcpLease := dhcp.GetLeaseTime
         phsa := 1

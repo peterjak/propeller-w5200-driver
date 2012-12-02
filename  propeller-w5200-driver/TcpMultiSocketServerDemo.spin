@@ -38,9 +38,8 @@ PUB Main | i
   pst.Start(115_200)
   pause(500)
 
-   'Set network parameters
-  wiz.Start(SPI_CS, SPI_SCK, SPI_MOSI, SPI_MISO)
-  wiz.HardReset(RESET_PIN)
+  wiz.HardReset(WIZ#WIZ_RESET)
+  wiz.Start(WIZ#SPI_CS, WIZ#SPI_SCK, WIZ#SPI_MOSI, WIZ#SPI_MISO)
   
   wiz.SetCommonnMode(0)
   wiz.SetGateway(192, 168, 1, 1)
@@ -73,15 +72,6 @@ PUB StartListners | i
       pst.str(string("Listener failed ",CR))
     pst.dec(i)
     pst.char(CR)
-    
-{
-PUB CloseWait | i
-  repeat i from 0 to SOCKETS-1  
-    if(sock[i].IsCloseWait)
-      sock[i].Disconnect
-      sock[i].Open
-      sock[i].Listen
-}
 
 PUB CloseWait | i
   repeat i from 0 to SOCKETS-1
@@ -113,10 +103,6 @@ PUB MultiSocketServer | bytesToRead, i
     if(bytesToRead < 0)
       pst.str(string("Timeout",CR))
       CloseWait
-      'sock[i].Disconnect
-      'sock[i].Close
-      'sock[i].Open
-      'sock[i].Listen
       bytesToRead~
       next
       

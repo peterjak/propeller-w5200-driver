@@ -49,10 +49,10 @@ PUB Main | bytesToRead, offset, tail
   'SDCard.mount(fileErrorHandle)
   'pst.str(string("OK",13))
   
-  wiz.HardReset(RESET_PIN)
-  
-  'Set network parameters
-  wiz.Start(SPI_CS, SPI_SCK, SPI_MOSI, SPI_MISO)  
+  'wiz.QS_Init
+  wiz.HardReset(WIZ#WIZ_RESET)
+  wiz.Start(WIZ#SPI_CS, WIZ#SPI_SCK, WIZ#SPI_MOSI, WIZ#SPI_MISO)
+    
   wiz.SetCommonnMode(0)
   wiz.SetGateway(192, 168, 1, 1)
   wiz.SetSubnetMask(255, 255, 255, 0)

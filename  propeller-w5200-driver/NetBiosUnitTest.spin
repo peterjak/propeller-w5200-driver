@@ -128,6 +128,7 @@ DAT
   buff            byte  $0[BUFFER_2K]
   group           byte  "WORKGROUP", $00 
   nbName          byte  "PROPNET", $00
+  'nbName          byte  "WORKSTATION", $00
   
   encName         byte  $0[33], $00
   nbNameReg       byte  $68, $C8, $29, $10,             { %0_0101_001000_1_0000
@@ -135,9 +136,9 @@ DAT
 }                       $00, $00, $00, $00,             {
 }                       $20, $0[32], $00,               { Question Name
 }                       $00, $20, $00, $01,             { NB IN
-}                       $C0, $0E, $00, $00,             { PR_NAME
+}                       $C0, $0C,                       { PR_NAME
 }                       $00, $20, $00, $01,             { NB IN
-}                       $00, $04, $90, $E0,             { TTL = 10 minutes 
+}                       $00, $00, $00, $00,             { TTL = 10 minutes 
 }                       $00, $06, $00, $00              { NB_FLAGS %0_00_00000_00000000}
   ipReg           byte  $C0, $A8, $01, $68              { NB address (IP) }
   enbNameReg      byte  0
@@ -207,11 +208,11 @@ PUB Main | ptr, bytesToRead
   FillTransactionID
   
   'Set network parameters
-  wiz.Init
+  wiz.QS_Init
   wiz.SetCommonnMode(0)
   wiz.SetGateway(192, 168, 1, 1)
   wiz.SetSubnetMask(255, 255, 255, 0)
-  wiz.SetIp(192, 168, 1, 104)
+  wiz.SetIp(192, 168, 1, 105)
   wiz.SetMac($00, $08, $DC, $16, $F8, $01)
   bytemove(@nbMac, wiz.GetMac, 6)
 
@@ -221,16 +222,17 @@ PUB Main | ptr, bytesToRead
 
   'Broadcast NetBIOS on port 137
   sock.Init(0, UDP, 137)
-  sock.RemoteIp(192, 168, 1, 255)
+  'sock.RemoteIp(192, 168, 1, 255)
+  sock.RemoteIp(255, 255, 255, 255)
   sock.RemotePort(137)
   pause(500)
 
   'Send the name registration request 6 times
   'If we do not get a response then the name "PROPNET" is available
   {   } 
-  repeat 6
+  repeat 5
     ptr := Register
-    pause(500)
+    'pause(100)
     ifnot(ptr == @null)
       pst.str(string(CR, "Not NULL", CR))
       if(IsError(ptr))

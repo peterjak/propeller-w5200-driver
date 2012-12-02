@@ -45,12 +45,15 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, totalBytes
   pause(500)
 
 
+  'wiz.QS_Init
+  wiz.HardReset(WIZ#WIZ_RESET)
+  wiz.Start(WIZ#SPI_CS, WIZ#SPI_SCK, WIZ#SPI_MOSI, WIZ#SPI_MISO)
+  
   'Set network parameters
-  wiz.Start(3, 0, 1, 2) 
   wiz.SetCommonnMode(0)
   wiz.SetGateway(192, 168, 1, 1)
   wiz.SetSubnetMask(255, 255, 255, 0)
-  wiz.SetIp(192, 168, 1, 104)
+  wiz.SetIp(192, 168, 1, 105)
   wiz.SetMac($00, $08, $DC, $16, $F8, $01)
 
 
@@ -58,11 +61,6 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, totalBytes
   'Initialize Socket 0 port 8080
   buffer := sock.Init(0, TCP, -1)
 
-
-
-  'Remote Ip 1 and port
-  'sock.RemoteIp(192, 168, 1, 120)
-  'sock.RemotePort(5000)
 
   'www.agaverobotics.com
   sock.RemoteIp(65, 98, 8, 151)

@@ -70,10 +70,9 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
 
   pst.str(string("Initialize W5200", CR)) 
 
-  wiz.QS_Init
-  
-  'wiz.HardReset(WIZ#WIZ_RESET)
-  'wiz.Start(WIZ#SPI_CS, WIZ#SPI_SCK, WIZ#SPI_MOSI, WIZ#SPI_MISO)
+  'wiz.QS_Init
+  wiz.HardReset(WIZ#WIZ_RESET)
+  wiz.Start(WIZ#SPI_CS, WIZ#SPI_SCK, WIZ#SPI_MOSI, WIZ#SPI_MISO)
 
 
   'Loop until we get the W5200 version
@@ -98,7 +97,6 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
   'SetRequestIp allows us to request a specific IP - No guarentee 
   'dhcp.SetRequestIp(192, 168, 1, 110)                    
  
-  {  }
   pst.str(string("Requesting IP....."))      
   repeat until dhcp.DoDhcp(true)
     if(++t1 > ATTEMPTS)
@@ -117,7 +115,7 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
   else
     PrintIp(dhcp.GetIp)
 
-  { Stress test   
+  { Stress test      
   repeat
     pst.str(string("Requesting IP....."))
     t1 := 0
@@ -138,7 +136,7 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
     else
       PrintIp(dhcp.GetIp)
     'pause(2000)
-   } 
+   }
   
   pst.str(string("Lease Time........"))
   pst.dec(dhcp.GetLeaseTime)
@@ -178,7 +176,7 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
    'remoteIP := dns.GetResolvedIp(1) 
 
   pst.str(string("Initialize Socket"))
-  buffer := sock.Init(0, TCP, 8080)
+  sock.Init(0, TCP, 8080)
   sock.RemoteIp(byte[remoteIP][0], byte[remoteIP][1], byte[remoteIP][2], byte[remoteIP][3])  
   sock.RemotePort(80) 
 
