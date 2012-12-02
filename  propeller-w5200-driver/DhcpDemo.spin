@@ -111,19 +111,9 @@ PUB Init | ptr, i
 
   pst.str(string("Initialize", CR))
   CreateTransactionId
-  {
-  'wiz.HardReset(RESET_PIN)
-  'Wiz Mac and Ip
-  'wiz.Start(3, 0, 1, 2)
-  'wiz.Start(15, 12, 14, 13)
-  'wiz.Start(2, 3, 1, 0)
- }
+
   wiz.QS_Init
   wiz.SetMac($00, $08, $DC, $16, $F8, $01)
-
-  'wiz.SetSubnetMask(255,255,255,0)
-  'wiz.SetGateway(192,168,1,1)
-
 
   pst.str(string("IP................"))                                        
   printIp(wiz.GetIp)
@@ -311,49 +301,7 @@ PRI Discover | len
   
   
   return SendReceive(buffPtr, len)
-
-PRI Offer | len
-  optionPtr := DHCP_OPTIONS + buffPtr
-
-  'Move the pointer 8 bytes to the right
-  'On receive the first 8 bytes in the UDP packet are IP:Port and len
-  buffPtr += UPD_HEADER_LEN
-
-  'Set the IP
-  GetSetIp
   
-  ' Set DNS server IP
-  len := ReadDhcpOption(DOMAIN_NAME_SERVER)
-  Wiz.copyDns(optionPtr, len)
-
-  'Set the Gateway IP
-  'GetSetGateway
-
-  'Set the ubnet mask
-  len := ReadDhcpOption(SUBNET_MASK)
-  wiz.CopySubnet(optionPtr, len)
-
-  'Set the router IP to the Gateway
-  'Mike G 10/16/2012
-  'From research and asking network guys the router IP (option 3)
-  'should also be the gateway.
-  len := ReadDhcpOption(ROUTER_IP)
-  SetRouter(optionPtr)
-  Wiz.CopyGateway(optionPtr, len)
-
-  'Set the DHCP server IP
-  len := ReadDhcpOption(DHCP_SERVER_IP)
-  SetDhcpServer(optionPtr) 
-
-  'Verify offer packet
-  len := ReadDhcpOption(MESSAGE_TYPE)
-  
-  'Reset the pointer
-  buffPtr -= UPD_HEADER_LEN
-
-  return (byte[optionPtr] & $FF) == OFFER_ERROR
-  
-{  
 PRI Offer | ptr
   optionPtr := DHCP_OPTIONS + buffPtr
 
@@ -379,7 +327,7 @@ PRI Offer | ptr
   'Mike G 10/16/2012
   'From research and asking network guys the router IP (option 3)
   'should also be the gateway.
-  ptr := ReadDhcpOption(ROUTER)
+  ptr := ReadDhcpOption(ROUTER_IP)
   SetRouter(ptr+1)
   Wiz.CopyGateway(ptr+1, byte[ptr])
 
@@ -393,7 +341,7 @@ PRI Offer | ptr
   buffPtr -= UPD_HEADER_LEN
 
   return byte[ptr][1] & $FF == OFFER_ERROR
- }
+ 
 PRI Request | len
   optionPtr := DHCP_OPTIONS + buffPtr
   
@@ -410,27 +358,7 @@ PRI Request | len
   WriteDhcpOption(HOST_NAME, strsize(@hostName), @hostName)
   len := EndDhcpOptions
   return SendReceive(buffPtr, len)
-
-PRI Ack | len
-
-  optionPtr := DHCP_OPTIONS + buffPtr
-
-  'Move the pointer 8 bytes to the right
-  'On receive the first 8 bytes in the UDP packet are IP:Port and len
-  buffPtr += UPD_HEADER_LEN
-
-  'Set the IP
-  GetSetIp
-
-  ReadDhcpOption(IP_LEASE_TIME)
-  FillLeaseTime(optionPtr)
-
-  len := ReadDhcpOption(MESSAGE_TYPE) 
-  
-  buffPtr -= UPD_HEADER_LEN
-  
-  return byte[optionPtr] == DHCP_ACK
-{
+ 
 PRI Ack | ptr
 
   buffPtr += UPD_HEADER_LEN
@@ -445,7 +373,7 @@ PRI Ack | ptr
   buffPtr -= UPD_HEADER_LEN
   
   return byte[ptr][1] & $FF == DHCP_ACK   
- }
+
 PRI GetSetIp | ptr
   ptr := buffPtr + DHCP_YIADDR
   Wiz.SetIp(byte[ptr][0], byte[ptr][1], byte[ptr][2], byte[ptr][3])
@@ -494,28 +422,8 @@ PRI WriteDhcpOption(option, len, data)
     bytemove(optionPtr, data, len)
     
   optionPtr += len
- 
-PRI ReadDhcpOption(option) | len
-  'Init pointer to options
-  optionPtr := DHCP_OPTIONS + buffPtr
 
-  'Repeat until we reach the end of the UPD packet
-  repeat MAX_DHCP_OPTIONS
 
-    if(byte[optionPtr] == DHCP_END)
-      return -2
-
-    ' [option, len, value]
-    if(byte[optionPtr++] == option)
-      'return len and set the pointer to the data (hub) address
-      return byte[optionPtr++]
-
-    'point to the next option code 
-    optionPtr += byte[optionPtr] + 1
-
-  return -1 
-
-{ 
 PRI ReadDhcpOption(option) | ptr
   'Init pointer to options
   ptr := DHCP_OPTIONS + buffPtr
@@ -534,7 +442,7 @@ PRI ReadDhcpOption(option) | ptr
     ptr += byte[ptr] + 1
 
   return -1       
-}  
+ 
 PRI EndDhcpOptions | len
   byte[optionPtr] := DHCP_END
   return DHCP_PACKET_LEN
