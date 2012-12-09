@@ -13,7 +13,8 @@ CON
 VAR
 
 DAT
-  sectionTokens   byte  $0[HEADER_SECTIONS_LEN]
+  index           byte  "index.htm", $0
+  sectionTokenCnt byte  $0[HEADER_SECTIONS_LEN]
   tokens          byte  $0 
   null            long  $0
   headerSections  long  $0[HEADER_SECTIONS_LEN]
@@ -23,34 +24,42 @@ DAT
   t1              long  $0
 
 PUB Get(key) | i
-  repeat i from 0 to sectionTokens[STATUS_LINE]-1
+  repeat i from 0 to sectionTokenCnt[STATUS_LINE]-1
     if(strcomp(key, tokenPtr[i]))
       return tokenPtr[i+1]
   return @null
 
 PUB Header(key) | i
-  repeat i from sectionTokens[STATUS_LINE] to sectionTokens[HEADER_LINES]
+  repeat i from sectionTokenCnt[STATUS_LINE] to sectionTokenCnt[HEADER_LINES]
     if(strcomp(key, tokenPtr[i]))
         return tokenPtr[i+1]
   return @null
 
 PUB Post(key) | i
-  repeat i from sectionTokens[HEADER_LINES] to sectionTokens[BODY]
+  repeat i from sectionTokenCnt[HEADER_LINES] to sectionTokenCnt[BODY]
     if(strcomp(key, tokenPtr[i]))
         return tokenPtr[i+1]
   return @null
  
 PUB Request(key) | i
-  repeat i from 0 to sectionTokens[BODY]-1
+  repeat i from 0 to sectionTokenCnt[BODY]-1
     if(strcomp(key, tokenPtr[i]))
       return tokenPtr[i+1]
   return @null
 
 PUB UrlContains(value) | i
-  repeat i from 1 to sectionTokens[STATUS_LINE]-3
+  repeat i from 1 to sectionTokenCnt[STATUS_LINE]-3
     if(strcomp(value, tokenPtr[i]))
       return true
-  return false  
+  return false
+
+PUB GetFileName | i, j
+  repeat i from 1 to sectionTokenCnt[STATUS_LINE]-2
+    t1 := tokenPtr[i]
+    repeat j from 0 to strsize(t1)-1
+      if(byte[t1][j] == ".")
+        return tokenPtr[i]
+  return @index   
 
 PUB Decode(value)
   DecodeString(value)
@@ -90,7 +99,7 @@ PUB TokenizeHeader(buff, len)
     byte[ptr++] := 0
 
   'Mark the start of the header lines
-  sectionTokens[STATUS_LINE] := tokens 
+  sectionTokenCnt[STATUS_LINE] := tokens 
   headerSections[HEADER_LINES] := ptr
   tokenPtr[tokens++] := ptr
 
@@ -110,7 +119,7 @@ PUB TokenizeHeader(buff, len)
       else        
         ptr++
 
-  sectionTokens[HEADER_LINES] := tokens
+  sectionTokenCnt[HEADER_LINES] := tokens
   
   'Skip the two end of line chars
   repeat until NOT IsEndOfLine(byte[ptr])
@@ -120,12 +129,12 @@ PUB TokenizeHeader(buff, len)
   headerSections[BODY] := ptr
 
   'Decode the url
-  repeat t1 from 1 to sectionTokens[STATUS_LINE]-3
+  repeat t1 from 1 to sectionTokenCnt[STATUS_LINE]-3
     DecodeString(tokenPtr[t1])
 
   'Return if body does not contain data
   if(ptr == (buff + len))
-    sectionTokens[BODY] := sectionTokens[HEADER_LINES] 
+    sectionTokenCnt[BODY] := sectionTokenCnt[HEADER_LINES] 
     return
 
   'Decode POST data
@@ -147,7 +156,7 @@ PUB TokenizeHeader(buff, len)
       else        
         ptr++
         
-  sectionTokens[BODY] := tokens
+  sectionTokenCnt[BODY] := tokens
 
 
 
@@ -212,10 +221,10 @@ PUB GetBody
   return headerSections[BODY]
 
 PUB GetStatusLineTokenCount
-  return sectionTokens[STATUS_LINE]
+  return sectionTokenCnt[STATUS_LINE]
 
 PUB GetHeaderLinesTokenCount
-  return sectionTokens[HEADER_LINES]  - sectionTokens[STATUS_LINE]
+  return sectionTokenCnt[HEADER_LINES]  - sectionTokenCnt[STATUS_LINE]
 
 PUB GetBodyTokenCount
-  return  sectionTokens[BODY] - sectionTokens[HEADER_LINES]
+  return  sectionTokenCnt[BODY] - sectionTokenCnt[HEADER_LINES]
