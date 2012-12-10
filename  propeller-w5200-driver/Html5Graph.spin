@@ -50,7 +50,7 @@ DAT
 }             "});}", CR, LF, {
 }             "</script>", CR, LF, {
 }             "<script type='text/javascript'>", CR, LF, {
-}             "setInterval(", $22, "getRequest('xmltemp', 'placeholder')", $22, ", 2000);", CR, LF, {
+}             "setInterval(", $22, "getRequest('xmltemp', 'placeholder')", $22, ", 500);", CR, LF, {
 }             "</script>", CR, LF, {
 }             "</head>", CR, LF, {
 }             "<body>", CR, LF, {
