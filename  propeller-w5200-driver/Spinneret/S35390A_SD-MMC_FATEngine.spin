@@ -23,6 +23,7 @@
 // v1.8 - Fixed a very minor error with deleting and updated documentation - 3/4/2011.
 // v1.9 - Removed all hacks from the block driver and made it faster. The block driver now follows the SD/MMC card protocol
 //        exactly. Also, updated file system methods to reflect changes in the block driver - 3/10/2011.
+// v1.9.1 - Added get last error so aborts are easier to deal with; Mike Gebhard 12/8/2012
 //
 // For each included copy of this object only one spin interpreter should access it at a time.
 //
@@ -193,11 +194,42 @@ VAR long dataStructureAddress[0]
   byte sectorsPerCluster, numberOfFATs, mediaType, activeFAT
   byte OEMName[9], fileSystemTypeString[9], unformattedNameBuffer[13], formattedNameBuffer[12]
   byte volumeLabel[12], directoryEntryCache[32], dataBlock[512], CIDRegisterCopy[16]
+  long exception
 
 
 'PUB fileTime
   'return readClock
+
+PUB IsAbort(ex)
+{{
+DESCRIPTION: Verify an abort occured.
+
+PARMS: ex   - Exception address
   
+RETURNS: Pointer to a string description of the IO error; otherwise a null string. 
+  
+}}
+  if(ex > @errorString1-2 AND ex < @errorString18+2)
+    exception := ex
+    return exception
+  else
+    exception := @null
+    return false
+    
+PUB LastAbort
+{{
+DESCRIPTION: Get the last known exception; otherwise return a null string.
+
+PARMS: None
+  
+RETURNS: A string
+  
+}}
+  if(exception == @null)
+    return @null
+    
+  return @@errorStringAddresses[exception]
+ 
 PUB readByte '' 35 Stack Longs
 
 '' ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2933,6 +2965,7 @@ errorString15           byte "Directory Link Missing", 0
 errorString16           byte "Directory Not Empty", 0
 errorString17           byte "Not A Directory", 0
 errorString18           byte "Not A File", 0
+null                    long $0 
 
 ' /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

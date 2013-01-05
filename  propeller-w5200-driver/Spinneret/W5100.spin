@@ -785,6 +785,9 @@ RETURNS:
 PRI SetSocketPort(socket, port)
   SocketWriteWord(socket, S_PORT0, port)
 
+PUB GetSocketPort(socket)
+  return ReadSocketWord(socket, S_PORT0)
+
 PRI SetSocketCommandRegister(socket, value)
   SocketWriteByte(socket, S_CR, value)
 
