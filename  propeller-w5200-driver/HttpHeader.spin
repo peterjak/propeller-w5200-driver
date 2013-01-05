@@ -7,6 +7,7 @@ CON
   
   TOKEN_PTR_LEN       = $FF
   HEADER_SECTIONS_LEN = 3
+  FILE_EXTENSION_LEN  = 3
 
   #0, STATUS_LINE, HEADER_LINES, BODY
 
@@ -59,7 +60,15 @@ PUB GetFileName | i, j
     repeat j from 0 to strsize(t1)-1
       if(byte[t1][j] == ".")
         return tokenPtr[i]
-  return @index   
+  return @index
+
+PUB GetFileNameExtension | i, j
+  repeat i from 1 to sectionTokenCnt[STATUS_LINE]-2
+    t1 := tokenPtr[i]
+    repeat j from 0 to strsize(t1)-1
+      if(byte[t1][j] == ".")
+        return tokenPtr[i]+j+1
+  return @index + strsize(@index)-FILE_EXTENSION_LEN   
 
 PUB Decode(value)
   DecodeString(value)
