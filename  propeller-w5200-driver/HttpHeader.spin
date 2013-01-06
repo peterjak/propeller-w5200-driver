@@ -15,6 +15,7 @@ VAR
 
 DAT
   index           byte  "index.htm", $0
+  ext             byte  $0[3], $0
   sectionTokenCnt byte  $0[HEADER_SECTIONS_LEN]
   tokens          byte  $0 
   null            long  $0
@@ -62,7 +63,10 @@ PUB GetFileName | i, j
         return tokenPtr[i]
   return @index
 
-PUB GetFileNameExtension | i, j
+PUB GetFileNameExtension
+  return @ext
+
+PRI _GetFileNameExtension | i, j
   repeat i from 1 to sectionTokenCnt[STATUS_LINE]-2
     t1 := tokenPtr[i]
     repeat j from 0 to strsize(t1)-1
@@ -106,6 +110,9 @@ PUB TokenizeHeader(buff, len)
   isToken := false 
   repeat until NOT IsEndOfLine(byte[ptr])
     byte[ptr++] := 0
+
+  'Save the file type
+  bytemove(@ext, _GetFileNameExtension, 3)
 
   'Mark the start of the header lines
   sectionTokenCnt[STATUS_LINE] := tokens 
@@ -166,7 +173,6 @@ PUB TokenizeHeader(buff, len)
         ptr++
         
   sectionTokenCnt[BODY] := tokens
-
 
 
 PRI FindBody(value, len)
