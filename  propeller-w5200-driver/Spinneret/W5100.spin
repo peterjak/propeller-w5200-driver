@@ -330,8 +330,8 @@ RETURNS:
   'Exit if the the bytes to write are larger than the available Tx socket size
   'This should not happen as the socket object handles buffer overflow but the
   'implementer might decide to byapss the socket object
-  if(GetFreeTxSize(socket) < length)
-    return -2
+  'if(GetFreeTxSize(socket) < length)
+    'return -2
 
   'Calculate the physical socket(n) Tx address
   ptr := GetTxWritePointer(socket)

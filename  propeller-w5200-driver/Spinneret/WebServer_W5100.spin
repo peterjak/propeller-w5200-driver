@@ -4,7 +4,7 @@ CON
 
   BUFFER_2K     = $800
   BUFFER_WS     = $20
-  SD_BUFFER     = $400 
+  SD_BUFFER     = $800 
   
   CR            = $0D
   LF            = $0A
@@ -213,7 +213,7 @@ PRI RenderFile(id) | fs, bytes
       bytes := SD_BUFFER
       
     sd.readFromFile(@buff, bytes)
-    pause(10)
+    pause(2)
     fs -= sock[id].Send(@buff, bytes)
   
   sd.closeFile
