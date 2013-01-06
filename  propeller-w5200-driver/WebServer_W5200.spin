@@ -7,7 +7,7 @@ CON
   'SD_BUFFER     = BUFFER_2K-$200
   'SD_BUFFER     = 1500         'Ethernet
   'SD_BUFFER     = 1492          'IEEE 802.3/802.2
-  SD_BUFFER     = $400          
+  SD_BUFFER     = $800          
   
   CR            = $0D
   LF            = $0A
