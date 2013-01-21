@@ -21,6 +21,25 @@ CON
   DHCP_SOCKET   = 7
   DNS_SOCKET    = 6
 
+  {{ Dev Board PIN IO }}
+  {
+  SPI_MISO          = 2 ' SPI master in serial out from slave 
+  SPI_MOSI          = 1 ' SPI master out serial in to slave
+  SPI_CS            = 3 ' SPI chip select (active low)
+  SPI_SCK           = 0  ' SPI clock from master to all slaves
+  WIZ_INT           = 13
+  WIZ_RESET         = 4
+  WIZ_SPI_MODE      = 15
+  }
+  {{ WizNet W5200 for QuickStart PIN IO }} 
+  SPI_SCK           = 12 ' SPI clock from master to all slaves
+  SPI_MISO          = 13 ' SPI master in serial out from slave
+  SPI_MOSI          = 14 ' SPI master out serial in to slave
+  SPI_CS            = 15 ' SPI chip select (active low)
+  WIZ_POWER_DOWN    = 24 ' Power down (active high)       
+  WIZ_INT           = 25 ' Interupt (active low)
+  WIZ_RESET         = 26 ' Reset (active low)
+
       
  
 VAR
@@ -35,6 +54,10 @@ DAT
 
   google        byte  "GET /finance/historical?q=FB&output=csv HTTP/1.1", CR, LF, {
 }               byte  "Host: finance.google.com", CR, LF, {
+}               byte  "User-Agent: Wiz5200", CR, LF, CR, LF, $0
+
+  s_google      byte  "GET / HTTP/1.1", CR, LF, {
+}               byte  "Host: google.com", CR, LF, {
 }               byte  "User-Agent: Wiz5200", CR, LF, CR, LF, $0
 
   weather       byte  "GET / HTTP/1.1", CR, LF, {
@@ -71,8 +94,8 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
   pst.str(string("Initialize W5200", CR)) 
 
   'wiz.QS_Init
-  wiz.HardReset(WIZ#WIZ_RESET)
-  wiz.Start(WIZ#SPI_CS, WIZ#SPI_SCK, WIZ#SPI_MOSI, WIZ#SPI_MISO)
+  wiz.HardReset(WIZ_RESET)
+  wiz.Start(SPI_CS, SPI_SCK, SPI_MOSI, SPI_MISO)
 
 
   'Loop until we get the W5200 version
@@ -158,12 +181,16 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
   pst.char(CR) 
 
   pst.str(string("DNS Init (bool)..."))
-  pst.dec(dns.Init(@buff, DNS_SOCKET))
+  if(dns.Init(@buff, DNS_SOCKET))
+    pst.str(string("True"))
+  else
+    pst.str(string("False"))
   pst.char(CR)
 
   pst.str(string("Resolved IP(0)....")) 
   'remoteIP := dns.ResolveDomain(string("www.agaverobotics.com"))
-  remoteIP := dns.ResolveDomain(string("finance.google.com"))
+  'remoteIP := dns.ResolveDomain(string("finance.google.com"))
+  remoteIP := dns.ResolveDomain(string("google.com"))
   'remoteIP := dns.ResolveDomain(string("www.weather.gov"))
    
   PrintIp(remoteIP)
@@ -178,18 +205,18 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
   pst.str(string("Initialize Socket"))
   sock.Init(0, TCP, 8080)
   sock.RemoteIp(byte[remoteIP][0], byte[remoteIP][1], byte[remoteIP][2], byte[remoteIP][3])  
-  sock.RemotePort(80) 
+  sock.RemotePort(80)
+  'sock.RemotePort(443) 
 
   'PrintIp(wiz.GetRemoteIP(0))
+
   
   pst.str(string(CR, "Begin Client Web Request", CR))
-  'wiz.setGateway(0,0,0,0)
-  'Client
-  'pst.str(string("Open Socket", CR))
+repeat
   sock.Open
   sock.Connect
 
-  pst.str(string("Connecting to.....")) 
+  pst.str(string(CR, "Connecting to.....")) 
   PrintIp(wiz.GetRemoteIP(0))
   pst.char(CR) 
    
@@ -199,13 +226,15 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
 
   pst.str(string("Sending HTTP Request", CR)) 
   'bytesSent := sock.Send(@request2, strsize(@request2))
-  bytesSent := sock.Send(@google, strsize(@google))
+  'bytesSent := sock.Send(@google, strsize(@google))
+  bytesSent := sock.Send(@s_google, strsize(@s_google))
   'bytesSent := sock.Send(@weather, strsize(@weather))
   pst.str(string("Bytes Sent........"))
   pst.dec(bytesSent)
   pst.char(13)
 
   totalBytes := 0
+  receiving := true
   repeat while receiving 
     'Data in the buffer?
     bytesToRead := sock.Available
@@ -219,7 +248,6 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
 
     if(bytesToRead == 0)
       receiving := false
-      'pst.str(string(CR, "Done Receiving Response", CR))
       next 
 
     if(bytesToRead > 0) 
@@ -235,6 +263,21 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
   
   pst.str(string("Disconnect", CR, CR)) 
   sock.Disconnect
+
+  'Power down for x seconds
+  pst.str(string("Power Down", CR))
+  wiz.PowerDown(WIZ#WIZ_POWER_DOWN)
+  pause(10_000)
+
+  'Power Up
+  'The pause is required 
+  'min pause is around 1/2 sec found from experimentation
+  pst.str(string("Power Up", CR))
+  wiz.PowerUp(WIZ#WIZ_POWER_DOWN)
+  'wiz.PowerDown(WIZ#WIZ_POWER_DOWN)
+  'wiz.PowerUp(WIZ#WIZ_POWER_DOWN)
+  pause(500)
+
 
 PUB DisplayMemory(addr, len, isHex) | j
   pst.str(string(13,"-----------------------------------------------------",13))

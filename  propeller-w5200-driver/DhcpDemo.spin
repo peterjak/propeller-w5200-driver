@@ -106,27 +106,17 @@ PUB Init | ptr, i
   i := 0
   buffPtr := @buff
 
+  'wiz.Hardreset(WIZ#WIZ_RESET)
   pst.Start(115_200)
-  pause(500)
+  pause(1000)
+
 
   pst.str(string("Initialize", CR))
   CreateTransactionId
 
-  wiz.QS_Init
+  wiz.QS_Init 
   wiz.SetMac($00, $08, $DC, $16, $F8, $01)
 
-  pst.str(string("IP................"))                                        
-  printIp(wiz.GetIp)
-  pst.char(CR)
-  
-  pst.str(string("Gateway..........."))                                        
-  printIp(wiz.GetGatewayIp)
-  pst.char(CR)
-
-  pst.str(string("Subnet............"))                                        
-  printIp(wiz.GetSubnetMask)
-  pst.char(CR)
-  
   'DHCP Port, Mac and Ip 
   sock.Init(0, UDP, 68)
 
@@ -134,10 +124,7 @@ PUB Init | ptr, i
   sock.RemoteIp(255, 255, 255, 255)
   sock.RemotePort(67)
 
-  'pst.str(string("Remote IP: "))
-  'PrintIp(wiz.GetRemoteIP(0))
-  'pst.char(CR)
-      
+  PrintNetworkParms    
  
   'DHCP Process
   repeat until DoDhcp(false)
@@ -145,17 +132,17 @@ PUB Init | ptr, i
     pst.dec(++i)
     pst.char(CR)
     pst.char(CR) 
-    pst.str(string(CR, "DHCP Attempts: "))
-    pst.dec(t1)
     pst.str(string(CR, "Error Code: "))
     pst.dec(GetErrorCode)
     pst.char(CR)
     pst.str(GetErrorMessage)
     pst.char(CR)
+    PrintNetworkParms
     pause(1000)
 
-  PrintIp(GetIp)
-
+  PrintNetworkParms
+  'wiz.SoftReset
+  'PrintNetworkParms 
   {
   repeat
     t1 := 0
@@ -179,6 +166,20 @@ PUB Init | ptr, i
     pause(2000)
  }
   sock.Close
+
+PUB PrintNetworkParms
+  pst.str(string(CR, "IP................"))                                        
+  printIp(wiz.GetIp)
+  
+  pst.str(string(CR, "Gateway..........."))                                        
+  printIp(wiz.GetGatewayIp)
+
+  pst.str(string(CR, "Subnet............"))                                        
+  printIp(wiz.GetSubnetMask)
+  
+  pst.str(string(CR, "Remote IP........."))
+  printIp(sock.GetRemoteIP)
+  pst.char(CR)
 
 PUB GetErrorCode
   return errorCode
@@ -460,7 +461,31 @@ PUB SetDhcpServer(source)
 
 PUB GetDhcpServer
   return  @_dhcpServer
+
+
+PUB SendReceive(buffer, len) | bytesToRead, ptr 
+  
+  bytesToRead := 0
+
+  'Open socket and Send Message 
+  sock.Open
+  sock.Send(buffer, len)
+
+  bytesToRead := sock.Available
    
+  'Check for a timeout
+  if(bytesToRead =< 0 )
+    bytesToRead~
+    return @null
+
+  if(bytesToRead > 0) 
+    'Get the Rx buffer  
+    ptr := sock.Receive(buffer, bytesToRead)
+
+  sock.Disconnect
+  return ptr
+  
+ {    
 PRI SendReceive(buffer, len) | bytesToRead, ptr, tryagain 
   
   bytesToRead := 0
@@ -524,7 +549,7 @@ PRI SendReceive(buffer, len) | bytesToRead, ptr, tryagain
   sock.Disconnect
   
   return ptr
-
+  }
 PUB UpdRxLen(buffer)
   return DeserializeWord(buffer + 6)
   

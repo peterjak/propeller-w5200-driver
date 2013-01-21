@@ -21,6 +21,9 @@ DAT
 }               byte  "Host: agaverobotics.com", CR, LF, {
 }               byte  "User-Agent: Wiz5200", CR, LF, CR, LF, $0
 
+  localhost     byte  "GET /hello/index.htm HTTP/1.1", CR, LF, {
+}               byte  "Host: 192.168.1.102", CR, LF, {
+}               byte  "User-Agent: Wiz5200", CR, LF, CR, LF, $0
 
   google        byte  "GET /finance/historical?q=FB&output=csv HTTP/1.1", CR, LF, {
 }               byte  "Host: finance.google.com", CR, LF, {
@@ -63,8 +66,9 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, totalBytes
 
 
   'www.agaverobotics.com
-  sock.RemoteIp(65, 98, 8, 151)
-  'sock.RemoteIp(74,125,224,194) 
+  'sock.RemoteIp(65, 98, 8, 151)
+  'sock.RemoteIp(74,125,224,194)
+  sock.RemoteIp(192,168,1,102) 
   sock.RemotePort(80)
 
   pst.str(string(CR, "Begin Client Web request", CR))
@@ -72,15 +76,20 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, totalBytes
   'Client
   pst.str(string("Open", CR))
   sock.Open
+
+  pause(200)
+  
   pst.str(string("Connect", CR))
   sock.Connect
+
+  pause(500)
    
   'Connection?
   repeat until sock.Connected
-    pause(100)
+    pause(10)
 
   pst.str(string("Send HTTP Header", CR)) 
-  bytesSent := sock.Send(@request2, strsize(@request2))
+  bytesSent := sock.Send(@localhost, strsize(@localhost))
   pst.str(string("Bytes Sent: "))
   pst.dec(bytesSent)
   pst.char(13)
@@ -114,6 +123,7 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, totalBytes
   
   pst.str(string(CR, "Disconnect", CR)) 
   sock.Disconnect
+  sock.Close
    
 
 

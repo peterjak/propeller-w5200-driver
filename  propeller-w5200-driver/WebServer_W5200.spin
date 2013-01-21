@@ -2,12 +2,14 @@ CON
   _clkmode = xtal1 + pll16x     
   _xinfreq = 5_000_000
 
+  TCP_MTU       = 1460
   BUFFER_2K     = $800
   BUFFER_WS     = $20
   'SD_BUFFER     = BUFFER_2K-$200
   'SD_BUFFER     = 1500         'Ethernet
   'SD_BUFFER     = 1492          'IEEE 802.3/802.2
-  SD_BUFFER     = $800          
+  'SD_BUFFER     = $800
+  SD_BUFFER     = 1460          'IEEE 802.3/802.2          
   
   CR            = $0D
   LF            = $0A
@@ -63,6 +65,7 @@ DAT
 
   _gray         byte  "#666666", $0
   _blue         byte  "#0000FF", $0
+  _red          byte  "#FF0000", $0
 
   
   _h200         byte  "HTTP/1.1 200 OK", CR, LF, $0
@@ -77,15 +80,16 @@ DAT
   _png          byte  "Content-Type: image/png",CR, LF, $0 
   _txt          byte  "Content-Type: text/plain; charset=utf-8",CR, LF, $0  
   _xml          byte  "Content-Type: text/xml",CR, LF, $0
-  _zip          byte  "Content-Type: application/zip",CR, LF, $0  
+  _zip          byte  "Content-Type: application/zip",CR, LF, $0
+  _contLen      byte  "Content-Length: ", $0   
   _newline      byte  CR, LF, $0
   _ext          byte  $00
   workSpace     byte  $0[BUFFER_WS]
-
   wizver        byte  $00
   buff          byte  $0[BUFFER_2K+1]
   null          long  $00
   contentType   long  @_css, @_gif, @_html, @_ico, @_jpg, @_js, @_pdf, @_png, @_txt, @_xml, @_zip, $0
+  mtuBuff      long  TCP_MTU
    
 
 OBJ
@@ -105,8 +109,14 @@ PUB Init | i
     pst.Start(115_200)      '' http://forums.parallax.com/showthread.php?135067-Serial-Quirk&p=1043169&viewfull=1#post1043169
     pause(500)
 
+  'pst.str(string("Value: "))
+  'pst.str(Dec(1234567890))
+   'pst.str(string(CR,"Done")) 
+  'return
+  
   'Start up the quick start touch buttons LED demo on a new COG
   cognew(ButtonProcess, @buttonStack)
+
   
   pst.str(string("Starting QuickStart Web Server v"))
   pst.str(@version)
@@ -224,7 +234,7 @@ PRI BuildAndSendHeader(id) | dest, src
   sock[id].send(@_newline, strsize(@_newline))
 }
 {  } 
-PRI BuildAndSendHeader(id) | dest, src
+PRI BuildAndSendHeader(id, contentLength) | dest, src
   dest := @buff
   bytemove(dest, @_h200, strsize(@_h200))
   dest += strsize(@_h200)
@@ -233,6 +243,17 @@ PRI BuildAndSendHeader(id) | dest, src
   bytemove(dest, src, strsize(src))
   dest += strsize(src)
 
+  'Add content-length : value CR, LF
+  if(contentLength > 0)
+    bytemove(dest, @_contLen, strsize(@_contLen))
+    dest += strsize(@_contLen)
+    src := Dec(contentLength)
+    bytemove(dest, src, strsize(src))
+    dest += strsize(src)
+    bytemove(dest, @_newline, strsize(@_newline))
+    dest += strsize(@_newline)
+
+  'End the header with a new line
   bytemove(dest, @_newline, strsize(@_newline))
   dest += strsize(@_newline)
   byte[dest] := 0
@@ -244,7 +265,7 @@ PRI RenderDynamic(id)
   if(  strcomp(req.GetFileName, string("touch.xml")) )
     'Read touch QS touch pads and update xml
     BuildXml
-    BuildAndSendHeader(id)
+    BuildAndSendHeader(id, -1)
     sock[id].Send(@touch, strsize(@touch))
     {
     'Print xml sent
@@ -273,34 +294,41 @@ PRI RenderFile(id, fn) | fs, bytes
 {{
   Render a static file from the SD Card
 }}
+  mtuBuff := sock[id].GetMtu
 
   OpenFile(fn)
-  BuildAndSendHeader(id)
-  
-  fs := sd.getFileSize
+  fs := sd.getFileSize 
+  BuildAndSendHeader(id, fs)
+
   pst.str(string(cr,"Render File",cr))
   repeat until fs =< 0
     Writeline(string("Bytes Left"), fs)
 
-    if(fs < SD_BUFFER)
+    if(fs < mtuBuff)
       bytes := fs
     else
-      bytes := SD_BUFFER
+      bytes := mtuBuff
 
     sd.readFromFile(@buff, bytes)
-    'pause(10)
     fs -= sock[id].Send(@buff, bytes)
-    'pause(20)
 
-    'WriteLine(string("Status"), wiz.TxStatus)
-    'WriteLine(string("Len Tx"), wiz.LenTx)
-    'WriteLine(string("Free Tx"), wiz.FreeTx)
-    'WriteLine(string("P1"), wiz.P1)
+    WriteLine(string("Len Tx"), wiz.LenTx)
+    WriteLine(string("Status"), wiz.TxStatus)
+    WriteLine(string("Free Tx"), wiz.FreeTx)
+    'WriteLine(string("P1"), wiz.P1) 
     'WriteLine(string("DTS_MASK"), wiz.DstMask)
     'WriteLine(string("DTS_PTR"), wiz.Dstptr)
     'WriteLine(string("P2"), wiz.P2)
-    'WriteLine(string("Diff"), wiz.Diff)
-    'pst.char(13)
+    
+    WriteLine(string("TxSent"), wiz.TxSent)
+    WriteLine(string("Txrd1"), wiz.Txrd1)
+    WriteLine(string("Txrd2"), wiz.Txrd2)
+    WriteLine(string("Diff"), wiz.Diff)
+    WriteLine(string("Socket Status"), sock[id].GetStatus)
+    if(wiz.Diff == 0)
+       return
+
+    pst.char(13)
   
   sd.closeFile
   return
@@ -458,6 +486,10 @@ PRI StartListners | i
     pst.dec(i)
     pst.str(string(" Port....."))
     pst.dec(sock[i].GetPort)
+    pst.str(string("; MTU="))
+    pst.dec(sock[i].GetMtu)
+    pst.str(string("; TTL="))
+    pst.dec(sock[i].GetTtl)
     pst.char(CR)
 
 PRI CloseWait | i
@@ -510,7 +542,34 @@ PRI PrintTokens | i, tcnt
   repeat i from 0 to tcnt-1
     pst.str(req.EnumerateHeader(i))
     pst.char(CR)
-      
+
+PUB Dec(value) | i, x, j
+{{Send value as decimal characters.
+  Parameter:
+    value - byte, word, or long value to send as decimal characters.}}
+
+  j := 0
+  x := value == NEGX                                                            'Check for max negative
+  if value < 0
+    value := ||(value+x)                                                        'If negative, make positive; adjust for max negative
+    'Char("-")                                                                   'and output sign
+
+  i := 1_000_000_000                                                            'Initialize divisor
+
+  repeat 10                                                                     'Loop for 10 digits
+    if value => i
+      workspace[j++] := value / i + "0" + x*(i == 1)                                                               
+      'Char(value / i + "0" + x*(i == 1))                                        'If non-zero digit, output digit; adjust for max negative
+      value //= i                                                               'and digit from value
+      result~~                                                                  'flag non-zero found
+    elseif result or i == 1
+      workspace[j++] := "0"
+      'Char("0")                                                                 'If zero digit (or only digit) output it
+    i /= 10
+    
+  workspace[j] := 0
+  return @workspace
+         
 PRI pause(Duration)  
   waitcnt(((clkfreq / 1_000 * Duration - 3932) #> 381) + cnt)
   return

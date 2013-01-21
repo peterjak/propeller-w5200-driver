@@ -53,21 +53,43 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving
   
   'sock.RemoteIp(0, 0, 0, 0)
   sock.RemoteIp(68, 6, 19, 4)
-  sock.RemotePort(25)
+  'sock.RemoteIp(71,74,56,22)
+  'sock.RemotePort(25)
+  sock.RemotePort(587)
 
   pst.str(string(CR, "Begin SMTP Conversation", CR))
 
   'Client
   pst.str(string("Open", CR))
   sock.Open
+  pst.str(string("Status (open)....."))
+  pst.hex(wiz.GetSocketStatus(0), 2)
+  pst.char(13)
+  
   pst.str(string("Connect", CR))
   sock.Connect
+  pause(500)
+  pst.str(string("Status (Connect).."))
+  pst.hex(wiz.GetSocketStatus(0), 2)
+  pst.char(13)
+
+
+  pause(500)
+  pst.str(string("Connecting...",CR))
+  'pst.hex(wiz.GetSocketStatus(0), 2)
+  'pst.char(13)
+   
    
   'Connection?
   repeat until sock.Connected
-    pause(100)
+    pst.str(string("Status.........."))
+    pst.hex(wiz.GetSocketStatus(0), 2)
+    pst.char(13)
+    pause(500)
 
-  pst.str(string("Connected", CR))
+  pst.str(string("Connected.........", CR))
+  pst.hex(wiz.GetSocketStatus(0), 2)
+  pst.char(13)
   
   repeat until NULL < bytesToRead := sock.Available 
   buffer := sock.Receive(@buff, bytesToRead)

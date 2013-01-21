@@ -40,7 +40,7 @@ PUB Main | i
 
   wiz.HardReset(WIZ#WIZ_RESET)
   wiz.Start(WIZ#SPI_CS, WIZ#SPI_SCK, WIZ#SPI_MOSI, WIZ#SPI_MISO)
-  
+  {  } 
   wiz.SetCommonnMode(0)
   wiz.SetGateway(192, 168, 1, 1)
   wiz.SetSubnetMask(255, 255, 255, 0)
@@ -49,7 +49,7 @@ PUB Main | i
   
   pst.str(string("Initialize Sockets",CR))
   repeat i from 0 to SOCKETS-1
-    sock[i].Init(i, TCP, 8080)
+    sock[i].Init(i, TCP, 80)
 
   OpenListeners
   StartListners

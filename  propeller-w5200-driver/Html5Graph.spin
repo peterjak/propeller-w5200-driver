@@ -6,20 +6,26 @@ CON
   
   CR            = $0D
   LF            = $0A
-  RESET_PIN     = 4 '26
-  SOCKETS       = 7
+  
+  { Web Server Configuration }
+  SOCKETS       = 3
+  HTTP_PORT     = 8080
+  DHCP_SOCK     = 3
+  ATTEMPTS      = 5
+  DISK_PARTION  = 0
+
   
   #0, CLOSED, TCP, UDP, IPRAW, MACRAW, PPPOE
 
   DHCP_ATTEMPTS = 10
 
 
-  PWDN          = 24
+  PWDN            = 24
   USB_Rx          = 31
   USB_Tx          = 30
   
   { DHCP Lease Counter }
-  CNT_PIN         = 7
+  CNT_PIN         = 17
   NCO_FREQ        = 610         '($8000)(80x10^6)/2^32 = 610.3516Hz                           
   FREQ_610        = $8000       ' AN001-P8X32ACounters-v2.0_2.pdf (page 6)  
     
@@ -82,91 +88,118 @@ PUB Main | i, page, dnsServer
 
   i := 0
   
-  pst.Start(115_200)
-  pause(500)
+  if(ina[USB_Rx] == 0)      '' Check to see if USB port is powered
+    outa[USB_Tx] := 0       '' Force Propeller Tx line LOW if USB not connected
+  else                      '' Initialize normal serial communication to the PC here                              
+    pst.Start(115_200)      '' http://forums.parallax.com/showthread.php?135067-Serial-Quirk&p=1043169&viewfull=1#post1043169
+    pause(500)
 
-
-  
   pst.str(string("Initialize W5200", CR))
-  'Start(m_cs, m_clk, m_mosi, m_miso)
-  'wiz.Start(3, 0, 1, 2)
-  'wiz.Start(15, 12, 14, 13)
 
-  'wiz.QS_Init
-  wiz.HardReset(WIZ#WIZ_RESET)
-  wiz.Start(WIZ#SPI_CS, WIZ#SPI_SCK, WIZ#SPI_MOSI, WIZ#SPI_MISO)
-
-  wiz.HardReset(RESET_PIN)
-
+  wiz.QS_Init
   wiz.SetMac($00, $08, $DC, $16, $F8, $01)
+  
+  'wiz.HardReset(WIZ#WIZ_RESET)
+  'wiz.Start(WIZ#SPI_CS, WIZ#SPI_SCK, WIZ#SPI_MOSI, WIZ#SPI_MISO)
+  '
 
-  pst.str(string("Getting network paramters", CR))
-  dhcp.Init(@buff, 7)
-  pst.str(string("Requesting IP....."))
-
-  repeat until dhcp.DoDhcp(false)
-    if(++i > DHCP_ATTEMPTS)
-      quit
-
-  if(dhcp.GetErrorCode > 0 OR i > DHCP_ATTEMPTS)
-    pst.char(CR) 
-    pst.str(string(CR, "DHCP Attempts: "))
-    pst.dec(i)
-    pst.str(string(CR, "Error Code: "))
-    pst.dec(dhcp.GetErrorCode)
-    pst.char(CR)
-    pst.str(dhcp.GetErrorMessage)
-    pst.char(CR)
-    return
+  'Invoke DHCP to retrived network parameters
+  'This assumes the WizNet 5200 is connected 
+  'to a router with DHCP support
+  pst.str(string(CR,"Retrieving Network Parameters...Please Wait"))
+  pst.str(@divider)
+  if(InitNetworkParameters)
+    PrintNetworkParams
   else
-    PrintIp(dhcp.GetIp)
-    'Setup a 610 Hz square wave on pin 7
-    ctrb := %00100_000 << 23 + 1 << 9 + CNT_PIN 
-    frqb := FREQ_610 
-    dira[CNT_PIN] := 1
-     
-    'Positive edge counter on pin 7
-    ctra := %01010 << 26 + CNT_PIN
-    frqa := 1
+    PrintDhcpError
+    return 
 
-  pst.str(string("DNS..............."))
-  dnsServer := wiz.GetDns
-  PrintIp(wiz.GetDns)
-
-  pst.str(string("DHCP Server......."))
-  printIp(dhcp.GetDhcpServer)
-
-  pst.str(string("Router IP........."))
-  printIp(dhcp.GetRouter)
-  pst.char(CR)
+  'Setup a 610 Hz square wave on pin 7
+  ctrb := %00100_000 << 23 + 1 << 9 + CNT_PIN 
+  frqb := FREQ_610 
+  dira[CNT_PIN] := 1
+   
+  'Positive edge counter on pin 7
+  ctra := %01010 << 26 + CNT_PIN
+  frqa := 1
 
   repeat
-    pst.str(string("Initialize Sockets",CR))
+    pst.str(string(CR,"Initialize Sockets"))
+    pst.str(@divider)
     repeat i from 0 to SOCKETS-1
       sock[i].Init(i, TCP, 8080)
            
     OpenListeners
     StartListners
     
-    pst.str(string("Start Socket server",CR))
+     pst.str(string(CR, "Start Socket Services", CR))
     \MultiSocketServer
     pst.str(string("I blew up!"))
     pause(5000)
 
+    
+PUB MultiSocketServer | bytesToRead, i, page, j, x , bytesSent, ptr
+  bytesToRead := bytesSent := i := j := x := 0
+  repeat
 
+    if(dhcpLease - phsa/NCO_FREQ <  dhcpLease/2)
+      pst.str(string(CR, "Renew DHCP Lease", CR))
+      pst.str(string("Requesting IP....."))
+      if(dhcp.DoDhcp(false))
+        PrintIp(dhcp.GetIp)
+        dhcpLease := dhcp.GetLeaseTime
+        phsa := 1
+        pause(1500)
+
+    bytesToRead~ 
+    CloseWait
+
+    repeat until sock[i].Connected
+      i := ++i // SOCKETS
+
+    'Data in the buffer?
+    repeat until bytesToRead := sock[i].Available
+    
+    'Check for a timeout error
+    if(bytesToRead < 0)
+      pst.str(string(CR, "Timeout",CR))
+      'PrintStatus(i)
+      'PrintAllStatuses 
+      next
+
+    'Get the Rx buffer  
+    sock[i].Receive(@buff, bytesToRead)
+
+    page :=  ParseResource(@buff)
+
+    'pst.dec(strsize(page))
+    'pst.char(CR)
+
+    bytesSent := 0
+    ptr := page
+    repeat until bytesSent == strsize(page)
+      bytesSent += sock[i].Send(ptr, strsize(ptr))
+      ptr := page + bytesSent
+
+    sock[i].Disconnect
+    sock[i].SetSocketIR($FF)
+    
+    i := ++i // SOCKETS
+    
   
 PUB OpenListeners | i
-  pst.str(string("Open",CR))
   repeat i from 0 to SOCKETS-1  
     sock[i].Open
       
-PUB StartListners | i
+PRI StartListners | i
   repeat i from 0 to SOCKETS-1
     if(sock[i].Listen)
-      pst.str(string("Listen "))
+      pst.str(string("Socket "))
     else
       pst.str(string("Listener failed ",CR))
     pst.dec(i)
+    pst.str(string(" Port....."))
+    pst.dec(sock[i].GetPort)
     pst.char(CR)
 
 PUB CloseWait | i
@@ -179,93 +212,23 @@ PUB CloseWait | i
       sock[i].Open
       sock[i].Listen
 
-PUB MultiSocketServer | bytesToRead, i, page, j, x , bytesSent, ptr
-  bytesToRead := bytesSent := i := j := x := 0
-  repeat
+PRI PrintStatus(id)
+  pst.str(string("Status ("))
+  pst.dec(id)
+  pst.str(string(")......."))
+  pst.hex(wiz.GetSocketStatus(id), 2)
+  pst.char(13)
 
-    if(dhcpLease - phsa/NCO_FREQ <  dhcpLease-10)
-      pst.str(string(CR, "Renew DHCP Lease", CR))
-      pst.str(string("Requesting IP....."))
-      if(dhcp.DoDhcp(false))
-        PrintIp(dhcp.GetIp)
-        dhcpLease := dhcp.GetLeaseTime
-        phsa := 1
-        pause(1500)
-
-    pst.str(string(CR, "TCP Service", CR))
-    CloseWait
-
-    {
-    repeat j from 0 to SOCKETS-1
-      pst.str(string("Socket "))
-      pst.dec(j)
-      pst.str(string(" = "))
-      pst.hex(wiz.GetSocketStatus(j), 2)
-      pst.char(13)
-    } 
-    repeat until sock[i].Connected
-      i := ++i // SOCKETS
-    {
-    pst.str(string("Connected Socket "))
+PRI PrintAllStatuses | i
+  pst.str(string(CR, "Socket Status", CR))
+  repeat i from 0 to SOCKETS-1
     pst.dec(i)
-    pst.char(CR)
-    }
-    'Data in the buffer?
-    repeat until bytesToRead := sock[i].Available
-    
-    'Check for a timeout
-    if(bytesToRead < 0)
-      pst.str(string("Timeout",CR))
-      sock[i].Disconnect
-      sock[i].Open
-      sock[i].Listen
-      bytesToRead~
-      next
-
-    'pst.str(string("Copy Rx Data",CR))
-  
-    'Get the Rx buffer  
-    sock[i].Receive(@buff, bytesToRead)
-
-    {{ Process the Rx data}}
-    {
-    pst.char(CR)
-    pst.str(string("Request:",CR))
-    pst.str(@buff)
-    }
-    pst.str(string("Send Response",CR))
-    page :=  ParseResource(@buff)
-    
-    'pst.str(page)
-    'pst.char(CR)
-    pst.str(string("Byte to send "))
-    pst.dec(strsize(page))
-    pst.char(CR)
-
-    bytesSent := 0
-    ptr := page
-    repeat until bytesSent == strsize(page)
-      bytesSent += sock[i].Send(ptr, strsize(ptr))
-      ptr := page + bytesSent
-
-    pst.str(string("Bytes Sent "))
-    pst.dec(bytesSent)
-    pst.char(CR)
-    {
-    pst.str(string("Disconnect socket "))
-    pst.dec(i)
-    pst.char(CR)
-    }
-    if(sock[i].Disconnect)
-      pst.str(string("Disconnected", CR))
-    else
-      pst.str(string("Force Close", CR))
-    sock[i].Open
-    sock[i].Listen
-    sock[i].SetSocketIR($FF)
-    
-    i := ++i // SOCKETS
-    bytesToRead~
+    pst.str(string("  "))
+  pst.char(CR)
+  repeat i from 0 to SOCKETS-1
+    pst.hex(wiz.GetSocketStatus(i), 2)
+    pst.char($20)
+  pst.char(CR)
 
 PUB ParseResource(header) | ptr, value, i, done, j
   ptr := header
@@ -284,14 +247,6 @@ PUB ParseResource(header) | ptr, value, i, done, j
       return @index
 
   resPtr[0] := header
-  {
-  repeat j from 0 to i-1
-    pst.str(string("ID"))
-    pst.dec(j)
-    pst.char($20)
-    pst.str(resPtr[j])
-    pst.char(CR)
-  }
   repeat j from 0 to i-1
     if(strcomp(resPtr[j], string("HTTP")))
       return @index
@@ -306,28 +261,59 @@ PUB ParseResource(header) | ptr, value, i, done, j
   if(strcomp(resPtr[j], string("halo")))
     'do something
 
+PRI InitNetworkParameters | i
+   
+  'Initialize the DHCP object
+  dhcp.Init(@buff, DHCP_SOCK)
+
+  'Request an IP. The requested IP
+  'might not be assigned by DHCP
+  'dhcp.SetRequestIp(192,168,1,130)
+
+  'Invoke the SHCP process
+  i := 1
+  repeat until dhcp.DoDhcp(true)
+    if(++i > ATTEMPTS)
+      return false
+  return true
+
+PRI PrintNetworkParams
+
+  pst.str(string("Assigned IP......."))
+  PrintIp(dhcp.GetIp)
+  
+  pst.str(string("Lease Time........"))
+  pst.dec(dhcp.GetLeaseTime)
+  pst.str(string(" (seconds)"))
+  pst.char(CR)
+ 
+  pst.str(string("DNS Server........"))
+  PrintIp(wiz.GetDns)
+
+  pst.str(string("DHCP Server......."))
+  printIp(dhcp.GetDhcpServer)
+
+  pst.str(string("Router............"))
+  printIp(dhcp.GetRouter)
+
+  pst.str(string("Gateway..........."))                                        
+  printIp(wiz.GetGatewayIp)
+
+
+PRI PrintDhcpError
+  if(dhcp.GetErrorCode > 0)
+    pst.str(string(CR, "Error Code: "))
+    pst.dec(dhcp.GetErrorCode)
+    pst.char(CR)
+    pst.str(dhcp.GetErrorMessage)
+    pst.char(CR)
+
+        
 PUB IsToken(value)
   return lookdown(value: "/", "?", "=", " ")
 
 PUB IsEndOfLine(value)
   return lookdown(value: CR, LF)    
-
-      
-{    
-PUB ParseResource(header) | ptr, value
-  ptr := header
-  repeat until byte[ptr++] == $2F '/ forward slash
-  if(byte[ptr] == $20) ' space
-    return @index
-  else
-    value := GetTemp
-    WriteNode(@temperature, value)
-    value := GetHumidity
-    WriteNode(@humidity, value) 
-    return @xml
- }
-
-
 
 PUB GetTemp
   seed := CNT 
@@ -373,3 +359,6 @@ PUB PrintIp(addr) | i
 PRI pause(Duration)  
   waitcnt(((clkfreq / 1_000 * Duration - 3932) #> 381) + cnt)
   return
+
+DAT
+  divider   byte  CR, "-----------------------------------------------", CR, $0
