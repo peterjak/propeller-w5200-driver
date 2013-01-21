@@ -5,11 +5,7 @@ CON
   TCP_MTU       = 1460
   BUFFER_2K     = $800
   BUFFER_WS     = $20
-  'SD_BUFFER     = BUFFER_2K-$200
-  'SD_BUFFER     = 1500         'Ethernet
-  'SD_BUFFER     = 1492          'IEEE 802.3/802.2
-  'SD_BUFFER     = $800
-  SD_BUFFER     = 1460          'IEEE 802.3/802.2          
+  'SD_BUFFER     = 1460          'IEEE 802.3/802.2          
   
   CR            = $0D
   LF            = $0A
@@ -108,11 +104,6 @@ PUB Init | i
   else                      '' Initialize normal serial communication to the PC here                              
     pst.Start(115_200)      '' http://forums.parallax.com/showthread.php?135067-Serial-Quirk&p=1043169&viewfull=1#post1043169
     pause(500)
-
-  'pst.str(string("Value: "))
-  'pst.str(Dec(1234567890))
-   'pst.str(string(CR,"Done")) 
-  'return
   
   'Start up the quick start touch buttons LED demo on a new COG
   cognew(ButtonProcess, @buttonStack)
@@ -222,18 +213,7 @@ PRI ButtonProcess
   dira[23..16]~~                      ' Set the LEDs as outputs
   repeat
     outa[23..16] := Buttons.State     ' Light the LEDs when touching the corresponding buttons
-{  
-PRI BuildAndSendHeader(id) | dest, src
-
-  'HTTP/1.1 200 OK
-  sock[id].send(@_h200, strsize(@_h200))
-  'Content-Type
-  src := GetContentType(req.GetFileNameExtension)
-  sock[id].send(src, strsize(src))
-  'New line
-  sock[id].send(@_newline, strsize(@_newline))
-}
-{  } 
+ 
 PRI BuildAndSendHeader(id, contentLength) | dest, src
   dest := @buff
   bytemove(dest, @_h200, strsize(@_h200))
@@ -267,22 +247,12 @@ PRI RenderDynamic(id)
     BuildXml
     BuildAndSendHeader(id, -1)
     sock[id].Send(@touch, strsize(@touch))
-    {
-    'Print xml sent
-    pst.str(@touch)
-    pst.char(CR)
-    }
     return true
 
   return false   
 
 PRI BuildXml | i, state
   state := Buttons.State
-  {
-  pst.str(string("Button state: "))
-  pst.bin(state, 8)
-  pst.char(CR)
-  }
   repeat i from 0 to 7
     if( state & (1 << i) )
       bytemove(@@touchcolor[i], @_blue, strsize(@_blue))
@@ -300,9 +270,9 @@ PRI RenderFile(id, fn) | fs, bytes
   fs := sd.getFileSize 
   BuildAndSendHeader(id, fs)
 
-  pst.str(string(cr,"Render File",cr))
+  'pst.str(string(cr,"Render File",cr))
   repeat until fs =< 0
-    Writeline(string("Bytes Left"), fs)
+   ' Writeline(string("Bytes Left"), fs)
 
     if(fs < mtuBuff)
       bytes := fs
@@ -311,24 +281,6 @@ PRI RenderFile(id, fn) | fs, bytes
 
     sd.readFromFile(@buff, bytes)
     fs -= sock[id].Send(@buff, bytes)
-
-    WriteLine(string("Len Tx"), wiz.LenTx)
-    WriteLine(string("Status"), wiz.TxStatus)
-    WriteLine(string("Free Tx"), wiz.FreeTx)
-    'WriteLine(string("P1"), wiz.P1) 
-    'WriteLine(string("DTS_MASK"), wiz.DstMask)
-    'WriteLine(string("DTS_PTR"), wiz.Dstptr)
-    'WriteLine(string("P2"), wiz.P2)
-    
-    WriteLine(string("TxSent"), wiz.TxSent)
-    WriteLine(string("Txrd1"), wiz.Txrd1)
-    WriteLine(string("Txrd2"), wiz.Txrd2)
-    WriteLine(string("Diff"), wiz.Diff)
-    WriteLine(string("Socket Status"), sock[id].GetStatus)
-    if(wiz.Diff == 0)
-       return
-
-    pst.char(13)
   
   sd.closeFile
   return
@@ -367,10 +319,6 @@ PRI GetContentType(ext)
 {{
   Determine the content-type 
 }}
-  'pst.str(string("content-type: "))
-  'pst.str(ext)
-  'pst.char(CR)
-  
   if(strcomp(ext, string("css")) OR strcomp(ext, string("CSS")))
     return @@contentType[CSS]
     
@@ -438,8 +386,6 @@ PRI InitNetworkParameters | i
 PRI PrintDhcpError
   if(dhcp.GetErrorCode > 0)
     pst.char(CR) 
-    'pst.str(string(CR, "DHCP Attempts: "))
-    'pst.dec(t1)
     pst.str(string(CR, "Error Code: "))
     pst.dec(dhcp.GetErrorCode)
     pst.char(CR)
@@ -546,25 +492,25 @@ PRI PrintTokens | i, tcnt
 PUB Dec(value) | i, x, j
 {{Send value as decimal characters.
   Parameter:
-    value - byte, word, or long value to send as decimal characters.}}
+    value - byte, word, or long value to send as decimal characters.
+
+Note: This source came from the Parallax Serial Termianl library
+}}
 
   j := 0
   x := value == NEGX                                                            'Check for max negative
   if value < 0
-    value := ||(value+x)                                                        'If negative, make positive; adjust for max negative
-    'Char("-")                                                                   'and output sign
+    value := ||(value+x)                                                        'If negative, make positive; adjust for max negative                                                                  'and output sign
 
   i := 1_000_000_000                                                            'Initialize divisor
 
   repeat 10                                                                     'Loop for 10 digits
     if value => i
-      workspace[j++] := value / i + "0" + x*(i == 1)                                                               
-      'Char(value / i + "0" + x*(i == 1))                                        'If non-zero digit, output digit; adjust for max negative
+      workspace[j++] := value / i + "0" + x*(i == 1)                                      'If non-zero digit, output digit; adjust for max negative
       value //= i                                                               'and digit from value
       result~~                                                                  'flag non-zero found
     elseif result or i == 1
-      workspace[j++] := "0"
-      'Char("0")                                                                 'If zero digit (or only digit) output it
+      workspace[j++] := "0"                                                                'If zero digit (or only digit) output it
     i /= 10
     
   workspace[j] := 0
@@ -576,19 +522,3 @@ PRI pause(Duration)
 
 DAT
   divider   byte  CR, "-----------------------------------------------", CR, $0
-
-{{
-    index         byte  "HTTP/1.1 200 OK", CR, LF,                                {
-}                     "Content-Type: text/html", CR, LF, CR, LF,                {
-}                     "<html>",                                                 {
-}                     "<head>",                                                 {
-}                     "<title>Web Server</title><head>",                        {
-}                     "<body>",                                                 {
-}                     "Web Server WizNet 5200 for the Quick Start Demo",        {                                                                                                       
-}                     "</body>",                                                {
-}                     "</html>", CR, LF, $0
-
-
-
-
-}}
