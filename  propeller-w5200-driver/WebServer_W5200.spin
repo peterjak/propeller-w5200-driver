@@ -5,7 +5,6 @@ CON
   TCP_MTU       = 1460
   BUFFER_2K     = $800
   BUFFER_WS     = $20
-  'SD_BUFFER     = 1460          'IEEE 802.3/802.2          
   
   CR            = $0D
   LF            = $0A
@@ -99,6 +98,8 @@ OBJ
  
 PUB Init | i
 
+  wiz.HardReset(WIZ#WIZ_RESET)
+  
   if(ina[USB_Rx] == 0)      '' Check to see if USB port is powered
     outa[USB_Tx] := 0       '' Force Propeller Tx line LOW if USB not connected
   else                      '' Initialize normal serial communication to the PC here                              
@@ -121,7 +122,6 @@ PUB Init | i
   pst.str(sd.mount(DISK_PARTION))
 
   'Issue a hardware reset and initialize the WizNet 5200 SPI bus
-  wiz.HardReset(WIZ#WIZ_RESET)
   wiz.Start(WIZ#SPI_CS, WIZ#SPI_SCK, WIZ#SPI_MOSI, WIZ#SPI_MISO)
  
   'Verify SPI connectivity by reading the WizNet 5200 version register 
