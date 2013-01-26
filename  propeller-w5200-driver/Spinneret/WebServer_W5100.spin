@@ -2,9 +2,9 @@ CON
   _clkmode = xtal1 + pll16x     
   _xinfreq = 5_000_000
 
+  TCP_MTU       = 1460
   BUFFER_2K     = $800
   BUFFER_WS     = $20
-  SD_BUFFER     = $800 
   
   CR            = $0D
   LF            = $0A
@@ -68,7 +68,8 @@ DAT
   _png          byte  "Content-Type: image/png",CR, LF, $0 
   _txt          byte  "Content-Type: text/plain; charset=utf-8",CR, LF, $0  
   _xml          byte  "Content-Type: text/xml",CR, LF, $0
-  _zip          byte  "Content-Type: application/zip",CR, LF, $0  
+  _zip          byte  "Content-Type: application/zip",CR, LF, $0
+  _contLen      byte  "Content-Length: ", $0   
   _newline      byte  CR, LF, $0
   workSpace     byte  $0[BUFFER_WS]
 
@@ -76,6 +77,7 @@ DAT
   buff          byte  $0[BUFFER_2K]
   null          long  $00
   contentType   long  @_css, @_gif, @_html, @_ico, @_jpg, @_js, @_pdf, @_png, @_txt, @_xml, @_zip, $0
+  mtuBuff      long  TCP_MTU
    
 
 OBJ
@@ -88,13 +90,16 @@ OBJ
  
 PUB Init | i
 
+  'wiz.HardReset(WIZ#WIZ_RESET)
+
   if(ina[USB_Rx] == 0)      '' Check to see if USB port is powered
     outa[USB_Tx] := 0       '' Force Propeller Tx line LOW if USB not connected
   else                      '' Initialize normal serial communication to the PC here                              
     pst.Start(115_200)      '' http://forums.parallax.com/showthread.php?135067-Serial-Quirk&p=1043169&viewfull=1#post1043169
     pause(500)
 
-  pst.str(string("Starting QuickStart Web Server v"))
+  
+  pst.str(string("Starting Spinneret Web Server v"))
   pst.str(@version)
 
   ifnot(sd.Start)
@@ -106,13 +111,13 @@ PUB Init | i
   pst.str(sd.mount(DISK_PARTION))
 
   'Issue a hardware reset and initialize the WizNet 5200 SPI bus
-  wiz.HardReset(WIZ#WIZ_RESET)
+  '
   wiz.Start(WIZ#SPI_CS, WIZ#SPI_SCK, WIZ#SPI_MOSI, WIZ#SPI_MISO) 
   pst.str(@divider)
 
   'MAC (Source Hardware Address) must be unique
   'on the local network
-  wiz.SetMac($00, $08, $DC, $16, $F8, $01)
+  wiz.SetMac($00, $08, $DC, $16, $F8, $02)
 
   'Invoke DHCP to retrived network parameters
   'This assumes the WizNet 5100 is connected 
@@ -138,134 +143,147 @@ PUB Init | i
   pause(5000)
 
   
-PRI MultiSocketService | bytesToRead, i, fn
-  bytesToRead := i := 0
+PRI MultiSocketService | bytesToRead, sockId, fn
+  bytesToRead := sockId := 0
   repeat
     bytesToRead~ 
     CloseWait
     
     'Cycle through the sockets one at a time
     'looking for a connections
-    repeat until sock[i].Connected
-      i := ++i // SOCKETS
+    repeat until sock[sockId].Connected
+      sockId := ++sockId // SOCKETS
 
     'Repeat until we have data in the buffer
-    repeat until bytesToRead := sock[i].Available
+    repeat until bytesToRead := sock[sockId].Available
 
     'PrintAllStatuses
     
     'Check for a timeout error
     if(bytesToRead < 0)
       pst.str(string(CR, "Timeout",CR))
-      PrintStatus(i)
+      PrintStatus(sockId)
       PrintAllStatuses 
       next
       
     'Move the Rx buffer into HUB memory
-    sock[i].Receive(@buff, bytesToRead)
+    sock[sockId].Receive(@buff, bytesToRead)
 
     'Display the request header
-    pst.str(@buff)
+    'pst.str(@buff)
 
     'Tokenize and index the header
     req.TokenizeHeader(@buff, bytesToRead)
  
     fn := req.GetFileName
     if(FileExists(fn))
-      RenderFile(i)
+      RenderFile(sockId, fn)
     else
-      ifnot(RenderDynamic(i))
-        sock[i].Send(@_404, strsize(@_404))
+      ifnot(RenderDynamic(sockId))
+        sock[sockId].Send(@_404, strsize(@_404))
 
     'Close the socket and reset the
     'interupt register
-    sock[i].Disconnect
-    sock[i].SetSocketIR($FF)
+    sock[sockId].Disconnect
+    sock[sockId].SetSocketIR($FF)
 
-    i := ++i // SOCKETS
-   
-PRI BuildAndSendHeader(id) | dest, src
+    sockId := ++sockId // SOCKETS
+ 
+PRI BuildAndSendHeader(id, contentLength) | dest, src
+  dest := @buff
+  bytemove(dest, @_h200, strsize(@_h200))
+  dest += strsize(@_h200)
 
-  'HTTP/1.1 200 OK
-  sock[id].send(@_h200, strsize(@_h200))
-  'Content-Type
-  src := GetContentType
-  sock[id].send(src, strsize(src))
-  'New line
-  sock[id].send(@_newline, strsize(@_newline))
+  src := GetContentType(req.GetFileNameExtension)
+  bytemove(dest, src, strsize(src))
+  dest += strsize(src)
 
-  
-  
-PRI RenderFile(id) | fs, bytes
+  'Add content-length : value CR, LF
+  if(contentLength > 0)
+    bytemove(dest, @_contLen, strsize(@_contLen))
+    dest += strsize(@_contLen)
+    src := Dec(contentLength)
+    bytemove(dest, src, strsize(src))
+    dest += strsize(src)
+    bytemove(dest, @_newline, strsize(@_newline))
+    dest += strsize(@_newline)
+
+  'End the header with a new line
+  bytemove(dest, @_newline, strsize(@_newline))
+  dest += strsize(@_newline)
+  byte[dest] := 0
+
+  sock[id].send(@buff, strsize(@buff))  
+
+
+PRI RenderDynamic(id)
+  'Do something
+  return true   
+
+PRI BuildXml | i, state
+  'do something
+   return   
+    
+
+PRI RenderFile(id, fn) | fs, bytes
 {{
   Render a static file from the SD Card
 }}
+  mtuBuff := sock[id].GetMtu
 
-  BuildAndSendHeader(id)
-  
-  fs := sd.getFileSize
-  pst.str(string(cr,"Render File",cr))
+  OpenFile(fn)
+  fs := sd.getFileSize 
+  BuildAndSendHeader(id, fs)
+
+  'pst.str(string(cr,"Render File",cr))
   repeat until fs =< 0
-    Writeline(string("Bytes Left"), fs)
-    if(fs < SD_BUFFER)
+   ' Writeline(string("Bytes Left"), fs)
+
+    if(fs < mtuBuff)
       bytes := fs
     else
-      bytes := SD_BUFFER
-      
+      bytes := mtuBuff
+
     sd.readFromFile(@buff, bytes)
-    pause(2)
     fs -= sock[id].Send(@buff, bytes)
   
   sd.closeFile
   return
-
-PRI RenderDynamic(id)
-  'Placeholder dynamic xml filter
-  return false
-
-PRI BuildXml | i, state
-  'Placeholder for building custom xml response
-
-PRI FileLogic(fn)
-  'Filter by led.htm
-  if(strcomp(fn, string("led.htm")))
-    led
-    return
-
-PRI Led
-  if(strcomp(req.Get(string("led")), string("on")))
-    PinState(23, 1)  
-  if(strcomp(req.Get(string("led")), string("off")))
-    PinState(23, 1)    
-
-PRI PinState(pin, state)
-  dira[pin]~~
-  outa[pin] := state
-  return
-               
+    
 PRI Writeline(label, value)
   pst.str(label)
   repeat 25 - strsize(label)
     pst.char(".")
   pst.dec(value)
   pst.char(CR)
-  
-PRI FileExists(filename)
+
+PRI OpenFile(filename) | rc
 {{
   Verify if the file exists
 }}
-  t1 := sd.listEntry(filename)
-  if(t1 == IO_OK)
-    t1 := sd.openFile(filename, IO_READ)
-      if(t1 == SUCCESS)
+  rc := sd.listEntry(filename)
+  if(rc == IO_OK)
+    rc := sd.openFile(filename, IO_READ)
+      if(rc == SUCCESS)
+        return true
+  return false
+
+PRI FileExists(filename) | rc
+{{
+  Verify if the file exists
+}}
+  rc := sd.listEntry(filename)
+  if(rc == IO_OK)
+    rc := sd.openFile(filename, IO_READ)
+      if(rc == SUCCESS)
+        sd.closeFile
         return true
   return false  
 
-PRI GetContentType | ext
+PRI GetContentType(ext)
 {{
   Determine the content-type 
 }}
-  ext := req.GetFileNameExtension
   if(strcomp(ext, string("css")) OR strcomp(ext, string("CSS")))
     return @@contentType[CSS]
     
@@ -304,17 +322,18 @@ PRI GetContentType | ext
 
   
 
-PRI GetVersion
-  t1 := 0
+PRI GetVersion | i
+  i := 0
   result := 0
   repeat until result > 0
     result := wiz.GetVersion
-    if(t1++ > ATTEMPTS*5)
+    if(i++ > ATTEMPTS*5)
       return 0
     pause(250)
 
-PRI InitNetworkParameters
-   
+PRI InitNetworkParameters | i
+
+  i := 0 
   'Initialize the DHCP object
   dhcp.Init(@buff, DHCP_SOCK)
 
@@ -323,8 +342,8 @@ PRI InitNetworkParameters
   'dhcp.SetRequestIp(192,168,1,130)
 
   'Invoke the SHCP process
-  repeat until dhcp.DoDhcp(true)
-    if(++t1 > ATTEMPTS)
+  repeat until dhcp.DoDhcp(false)
+    if(++i > ATTEMPTS)
       return false
   return true
 
@@ -332,8 +351,6 @@ PRI InitNetworkParameters
 PRI PrintDhcpError
   if(dhcp.GetErrorCode > 0)
     pst.char(CR) 
-    pst.str(string(CR, "DHCP Attempts: "))
-    pst.dec(t1)
     pst.str(string(CR, "Error Code: "))
     pst.dec(dhcp.GetErrorCode)
     pst.char(CR)
@@ -380,6 +397,10 @@ PRI StartListners | i
     pst.dec(i)
     pst.str(string(" Port....."))
     pst.dec(sock[i].GetPort)
+    pst.str(string("; MTU="))
+    pst.dec(sock[i].GetMtu)
+    pst.str(string("; TTL="))
+    pst.dec(sock[i].GetTtl)
     pst.char(CR)
 
 PRI CloseWait | i
@@ -426,13 +447,40 @@ PRI PrintRequestedFileName
   pst.str(req.GetFileName)
   pst.char(CR)  
     
-PRI PrintTokens | i   
+PRI PrintTokens | i, tcnt   
   't1 := req.GetTokens
-  t1 := req.GetStatusLineTokenCount
-  repeat i from 0 to t1-1
+  tcnt := req.GetStatusLineTokenCount
+  repeat i from 0 to tcnt-1
     pst.str(req.EnumerateHeader(i))
     pst.char(CR)
-      
+
+PUB Dec(value) | i, x, j
+{{Send value as decimal characters.
+  Parameter:
+    value - byte, word, or long value to send as decimal characters.
+
+Note: This source came from the Parallax Serial Termianl library
+}}
+
+  j := 0
+  x := value == NEGX                                                            'Check for max negative
+  if value < 0
+    value := ||(value+x)                                                        'If negative, make positive; adjust for max negative                                                                  'and output sign
+
+  i := 1_000_000_000                                                            'Initialize divisor
+
+  repeat 10                                                                     'Loop for 10 digits
+    if value => i
+      workspace[j++] := value / i + "0" + x*(i == 1)                                      'If non-zero digit, output digit; adjust for max negative
+      value //= i                                                               'and digit from value
+      result~~                                                                  'flag non-zero found
+    elseif result or i == 1
+      workspace[j++] := "0"                                                                'If zero digit (or only digit) output it
+    i /= 10
+    
+  workspace[j] := 0
+  return @workspace
+         
 PRI pause(Duration)  
   waitcnt(((clkfreq / 1_000 * Duration - 3932) #> 381) + cnt)
   return

@@ -375,7 +375,8 @@ PUB SetDhcpServer(source)
 
 PUB GetDhcpServer
   return  @_dhcpServer
-  
+
+{  
 PRI SendReceive(buffer, len) | bytesToRead, ptr, tryagain 
   
   bytesToRead := 0
@@ -408,6 +409,28 @@ PRI SendReceive(buffer, len) | bytesToRead, ptr, tryagain
 
   sock.Disconnect
   return ptr
+}
+PUB SendReceive(buffer, len) | bytesToRead, ptr 
+  
+  bytesToRead := 0
 
+  'Open socket and Send Message 
+  sock.Open
+  sock.Send(buffer, len)
+
+  bytesToRead := sock.Available
+   
+  'Check for a timeout
+  if(bytesToRead =< 0 )
+    bytesToRead~
+    return @null
+
+  if(bytesToRead > 0) 
+    'Get the Rx buffer  
+    ptr := sock.Receive(buffer, bytesToRead)
+
+  sock.Disconnect
+  return ptr
+  
 PUB UpdRxLen(buffer)
   return sock.DeserializeWord(buffer + 6)

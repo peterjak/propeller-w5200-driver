@@ -105,13 +105,14 @@ OBJ
 PUB Init | ptr, i
   i := 0
   buffPtr := @buff
-
+  wiz.HardReset(WIZ_RESET)
+  
   pst.Start(115_200)
-  pause(500)
+  pause(1000)
 
   pst.str(string("Initialize", CR))
   CreateTransactionId
-  wiz.HardReset(WIZ_RESET)
+  
 
   wiz.Start(SPI_CS, SPI_SCK, SPI_MOSI, SPI_MISO) 
   wiz.SetMac($00, $08, $DC, $16, $F8, $01)
@@ -318,6 +319,7 @@ PRI Offer | len
 
   return byte[optionPtr] & $FF == OFFER_ERROR
 
+  
 PRI Request | len
   optionPtr := DHCP_OPTIONS + buffPtr
   
@@ -434,6 +436,10 @@ PRI SendReceive(buffer, len) | bytesToRead, ptr, tryagain
   sock.Open
   sock.Send(buffer, len)
 
+
+
+
+  
   DisplayMemory(buffer, len, true)
   
   repeat

@@ -178,11 +178,7 @@ RETURNS:
 }}
   'Init the SPI bus
   spi.Init( m_cs, c_clk, m_mosi, m_miso )
-
   SetCommonDefaults
-
-  ' Set Interrupt mask register
-  'SetIMR2($FF)
 
 PUB Init
 {{
@@ -201,16 +197,8 @@ PARMS:
 RETURNS:
   Nothing
 }}
-  'Init workspace buffer
-  'bytefill(@workSpace, 0, BUFFER_16) 
-
-  'Internal Rx and Tx Base buffer addresses
-  'sockRxBase[0] := INTERNAL_RX_BUFFER_ADDRESS
-  'sockTxBase[0] := INTERNAL_TX_BUFFER_ADDRESS
-
   'Init the SPI bus
   spi.Init( SPI_CS, SPI_SCK, SPI_MOSI, SPI_MISO )
-
 
   SetCommonDefaults
 
@@ -311,6 +299,7 @@ RETURNS:
 '----------------------------------------------------
 ' Transmit data
 '----------------------------------------------------
+{
 PUB Tx(socket, buffer, length) | dst_mask, dst_ptr, upper_size, left_size, ptr
 {{
 DESCRIPTION:
@@ -350,12 +339,87 @@ RETURNS:
 
   'Set Tx pointers for the next Tx
   SetTxWritePointer(socket, length+ptr)
+ }
+PUB Tx(socket, buffer, length) | dst_mask, dst_ptr, upper_size, left_size, ptr
+{{
+DESCRIPTION:
+  Write HUB memory to the socket(n) Tx buffer.  If the Tx buffer is 100
+  bytes, we're  currently pointing to 91, and we need to transmit 20 bytes
+  the first 10 byte fill addresses 91-100. The remaining 10 bytes
+  fill addresses 0-9.
+
+PARMS:
+  socket    - Socket ID
+  buffer    - Pointer to HUB memory
+  length    - Bytes to write to the socket(n) buffer
+  
+RETURNS:
+  Nothing
+}}
+  'Calculate the physical socket(n) Tx address
+  ptr := GetTxWritePointer(socket)
+  dst_mask := ptr & sockTxMask[socket]  
+  dst_ptr :=  sockTxBase[socket] + dst_mask
+  
+  if((dst_mask + length) > (sockTxMask[socket] + 1))
+    'Wrap and write the Tx data
+    upper_size := (sockTxMask[socket] + 1) - dst_mask
+    Write(dst_ptr, buffer, upper_size)
+    buffer += upper_size
+    left_size := length - upper_size
+    Write(sockTxBase[socket], buffer, left_size)
+  else
+    Write(dst_ptr, buffer, length)
+
+  'Set Tx pointers for the next Tx
+  SetTxWritePointer(socket, length+ptr)
+
+  'Send
+  return  FlushSocketBuffer(socket, length)
 
 
+PUB FlushSocketBuffer(socket, length) | bytesSent, ptr_txrd1, ptr_txrd2 
+{{
+DESCRIPTION: Send buffered socket(n) data 
 
+PARMS:
+  socket    - Socket ID 
+  
+RETURNS: Nothing
+}}
+  bytesSent := ptr_txrd1:= ptr_txrd2 := 0
+  ptr_txrd1 := GetTxReadPointer(socket)
+   
+  FlushSocket(socket)
+    
+  ptr_txrd2 := GetTxReadPointer(socket)
+  
+  if(ptr_txrd2 => ptr_txrd1)
+    bytesSent := ptr_txrd2 - ptr_txrd1
+  else
+    bytesSent :=  $FFFF - ptr_txrd1 + ptr_txrd2 + 1
+
+  if(bytesSent < length)
+    FlushSocket(socket)  
+    ptr_txrd2 := GetTxReadPointer(socket)
+     
+    if( ptr_txrd2 => ptr_txrd1)
+      bytesSent := ptr_txrd2 - ptr_txrd1
+    else
+      bytesSent :=  $FFFF - ptr_txrd1 + ptr_txrd2 + 1
+
+  return bytesSent
+  
 '----------------------------------------------------
 ' Socket Buffer Pointer Methods
 '----------------------------------------------------
+
+PUB GetMaximumSegmentSize(socket)
+  return ReadSocketWord(socket, S_MAX_SEGM0)
+  
+PUB GetTimeToLive(socket)
+  return ReadSocketWord(socket, S_TTL)
+  
 PUB GetRxBytesToRead(socket)
 {{
 DESCRIPTION:
