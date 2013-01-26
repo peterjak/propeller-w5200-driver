@@ -3,7 +3,7 @@ CON
   _xinfreq = 5_000_000
 
 DAT
-  cog       long  $0
+  cog       byte  $0
   _cmd      long  $0
   _iobuff   long  $0
   _len      long  $0
@@ -26,15 +26,19 @@ PUB Start(p_cs, p_sck, p_mosi, p_miso)
   _miso :=  p_miso  
   _cs   :=  p_cs
 
-  Cog := cognew(@startSpi, @_cmd) + 1
+  cog := cognew(@startSpi, @_cmd) + 1
 
 PUB Stop
-
-  if Cog
-    cogstop(Cog~ -  1)
-
-    
+  if cog
+    cogstop(Cog~ - 1)
+  
+PUB ReStart
+  cog := cognew(@startSpi, @_cmd) + 1
+  
 PUB Write(addr, numberOfBytes, source)
+
+  'ifnot(cog)
+    'ReStart  
 
   ' validate
   if (numberOfBytes => 1)
@@ -60,6 +64,9 @@ PUB Write(addr, numberOfBytes, source)
 
 PUB Read(addr, numberOfBytes, dest_buffer_ptr) | _index, _data, _spi_word
 
+  'ifnot(cog)
+    'ReStart
+    
   ' test for anything to read?
   if (numberOfBytes => 1)
 

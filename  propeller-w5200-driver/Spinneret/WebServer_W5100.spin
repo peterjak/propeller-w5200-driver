@@ -97,7 +97,7 @@ PUB Init | i
   else                      '' Initialize normal serial communication to the PC here                              
     pst.Start(115_200)      '' http://forums.parallax.com/showthread.php?135067-Serial-Quirk&p=1043169&viewfull=1#post1043169
     pause(500)
-
+  
   
   pst.str(string("Starting Spinneret Web Server v"))
   pst.str(@version)
@@ -137,7 +137,7 @@ PUB Init | i
 
   OpenListeners
   StartListners
-      
+     
   pst.str(string(CR, "Start Socket Services", CR))
   MultiSocketService
   pause(5000)
