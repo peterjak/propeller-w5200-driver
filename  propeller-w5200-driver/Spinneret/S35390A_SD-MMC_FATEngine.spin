@@ -199,7 +199,9 @@ VAR long dataStructureAddress[0]
 
 'PUB fileTime
   'return readClock
-
+PUB GetCogID
+  return cardCogID - 1
+  
 PUB IsAbort(ex)
 {{
 DESCRIPTION: Verify an abort occured.

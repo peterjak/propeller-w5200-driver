@@ -33,12 +33,15 @@ PUB Stop
     cogstop(Cog~ - 1)
   
 PUB ReStart
-  cog := cognew(@startSpi, @_cmd) + 1
-  
+  ifnot(cog)
+    cog := cognew(@startSpi, @_cmd) + 1
+
+PUB GetCogId
+  return cog-1
+    
 PUB Write(addr, numberOfBytes, source)
 
-  'ifnot(cog)
-    'ReStart  
+  'ReStart  
 
   ' validate
   if (numberOfBytes => 1)
@@ -64,8 +67,7 @@ PUB Write(addr, numberOfBytes, source)
 
 PUB Read(addr, numberOfBytes, dest_buffer_ptr) | _index, _data, _spi_word
 
-  'ifnot(cog)
-    'ReStart
+  'ReStart
     
   ' test for anything to read?
   if (numberOfBytes => 1)
