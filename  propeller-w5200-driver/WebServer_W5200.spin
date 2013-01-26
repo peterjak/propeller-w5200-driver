@@ -10,7 +10,7 @@ CON
   LF            = $0A
 
   { Web Server Configuration }
-  SOCKETS       = 3       
+  SOCKETS       = 6       
   HTTP_PORT     = 80
   DHCP_SOCK     = 3
   ATTEMPTS      = 5
@@ -33,9 +33,10 @@ CON
 VAR
   'long  t1
   long  buttonStack[10]
+  long  dummyStack[10]
   
 DAT
-  version       byte  "1.0", $0
+  version       byte  "1.1", $0
   
   _404          byte  "HTTP/1.1 404 Not Found", CR, LF,                         {
 }                     "Content-Type: text/html", CR, LF, CR, LF,                {
@@ -94,10 +95,11 @@ OBJ
   sock[SOCKETS]   : "Socket"
   req             : "HttpHeader"
   sd              : "S35390A_SD-MMC_FATEngineWrapper"
-  Buttons         : "Touch Buttons"  
+  buttons         : "Touch Buttons"  
  
 PUB Init | i
 
+  i := 0
   wiz.HardReset(WIZ#WIZ_RESET)
   
   if(ina[USB_Rx] == 0)      '' Check to see if USB port is powered
@@ -105,42 +107,86 @@ PUB Init | i
   else                      '' Initialize normal serial communication to the PC here                              
     pst.Start(115_200)      '' http://forums.parallax.com/showthread.php?135067-Serial-Quirk&p=1043169&viewfull=1#post1043169
     pause(500)
-  
-  'Start up the quick start touch buttons LED demo on a new COG
-  cognew(ButtonProcess, @buttonStack)
-
-  
-  pst.str(string("Starting QuickStart Web Server v"))
+    
+  '---------------------------------------------------
+  'Main COG
+  '--------------------------------------------------- 
+  pst.str(string("COG[0]: QuickStart Web Server v"))
   pst.str(@version)
 
+  '---------------------------------------------------
+  'Start the Parallax Serial Terminal
+  '---------------------------------------------------
+  {
+  pst.str(string(CR, "COG["))
+  i := pst.GetCogId
+  pst.dec(i)
+  pst.str(string("]: Parallax Serial Terminal"))
+  }
+  pst.str(string(CR, "COG[1]: Parallax Serial Terminal"))
+  '---------------------------------------------------
+  'Start the SD Driver and Mount the SD card 
+  '--------------------------------------------------- 
   ifnot(sd.Start)
-    pst.str(string("Failed to start SD driver", CR))
-    
+    pst.str(string(CR, "Failed to start SD driver"))
+  else
+    pst.str(string(CR, "COG["))
+    i := sd.GetCogId
+    pst.dec(i)
+    pst.str(string("]: Starting SD Driver"))  
   pause(500)
-  'Mount the SD card
-  pst.str(string(CR, "Mount SD Card - "))
+
+  pst.str(string(CR,"        Mount SD Card - "))
   pst.str(sd.mount(DISK_PARTION))
 
-  'Issue a hardware reset and initialize the WizNet 5200 SPI bus
+
+  '--------------------------------------------------- 
+  'Start the WizNet SPI driver
+  '--------------------------------------------------- 
   wiz.Start(WIZ#SPI_CS, WIZ#SPI_SCK, WIZ#SPI_MOSI, WIZ#SPI_MISO)
- 
+  pst.str(string(CR, "COG["))
+  i := wiz.GetCogId
+  pst.dec(i)
+  pst.str(string("]: Started W5200 SPI Driver"))
+
   'Verify SPI connectivity by reading the WizNet 5200 version register 
   wizver := GetVersion
   if(wizver == 0)
     pst.str(string(CR, CR, "SPI communication failed!", CR, "Check connections", CR))
     return
   else
-    pst.str(string(CR,"WizNet 5200 Version: ") )
+    pst.str(string(CR, "        WizNet 5200 Firmware v") )
     pst.dec(wizver)
-  pst.str(@divider)
+  
+  '--------------------------------------------------- 
+  'Start up the quick start touch buttons
+  'LED demo in a new COG
+  '--------------------------------------------------- 
+  pst.str(string(CR, "COG["))
+  i := cognew(ButtonProcess, @buttonStack)
+  pst.dec(i) 
+  pst.str(string("]: Started Touch Demo"))
 
+  pst.str(string(CR, "COG["))
+  i := buttons.GetCogId
+  pst.dec(i)
+  pst.str(string("]: Loaded Touch Demo PASM"))
+
+  pst.str(string(CR, "COG[n]: "))
+  pst.dec(i~ +1)
+  pst.str(string(" COGs in Use"))
+
+  pst.str(@divider)
+  
   'MAC (Source Hardware Address) must be unique
   'on the local network
   wiz.SetMac($00, $08, $DC, $16, $F8, $01)
 
+  '--------------------------------------------------- 
   'Invoke DHCP to retrived network parameters
   'This assumes the WizNet 5200 is connected 
   'to a router with DHCP support
+  '--------------------------------------------------- 
   pst.str(string(CR,"Retrieving Network Parameters...Please Wait"))
   pst.str(@divider)
   if(InitNetworkParameters)
@@ -156,7 +202,21 @@ PUB Init | i
 
   OpenListeners
   StartListners
-      
+
+  '---------------------------------------------------
+  'Debug start/stop COGs
+  '---------------------------------------------------
+  {
+  pst.str(string(CR, "Stopping COG.."))
+  pst.dec(wiz.GetCogId)
+  wiz.Stop
+
+  pst.str(string(CR, "Starting COG.."))
+  wiz.ReStart
+  pst.dec(wiz.GetCogId) 
+
+  pst.char(CR)
+  } 
   pst.str(string(CR, "Start Socket Services", CR))
   MultiSocketService
   pause(5000)
@@ -208,8 +268,11 @@ PRI MultiSocketService | bytesToRead, sockId, fn
 
     sockId := ++sockId // SOCKETS
 
+PRI DummyCog
+  return true
+
 PRI ButtonProcess
- Buttons.start(clkfreq / 200)         ' Launch the touch buttons driver sampling 100 times a second
+  Buttons.start(clkfreq / 200)        ' Launch the touch buttons driver sampling 100 times a second
   dira[23..16]~~                      ' Set the LEDs as outputs
   repeat
     outa[23..16] := Buttons.State     ' Light the LEDs when touching the corresponding buttons

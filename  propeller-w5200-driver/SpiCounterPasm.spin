@@ -36,17 +36,23 @@ PUB Start(p_cs, p_sck, p_mosi, p_miso)
   _miso :=  p_miso  
   _cs   :=  p_cs
 
-  Cog := cognew(@startSpi, @_cmd) + 1
+  cog := cognew(@startSpi, @_cmd) + 1
 
 PUB Stop
-
   if Cog
     cogstop(Cog~ -  1)
 
-    
+
+PUB ReStart
+  ifnot(cog)
+    cog := cognew(@startSpi, @_cmd) + 1
+
+PUB GetCogId
+  return cog-1
+      
 PUB Write( addr, numberOfBytes, source) 
 
-  
+  ReStart
   ' Validate
   if (numberOfBytes => 1)
     'wait for the command to complete
@@ -69,6 +75,7 @@ PUB Write( addr, numberOfBytes, source)
 
 PUB Read(addr, numberOfBytes, dest_buffer_ptr) | _index, _data, _spi_word
 
+  ReStart
   ' test for anything to read?
   if (numberOfBytes => 1)
 
