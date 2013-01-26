@@ -205,13 +205,38 @@ RETURNS:
   ' Set Interrupt mask register
   SetIMR2($FF)
 
+PUB ReStart
+  spi.ReStart
+
+PUB Stop
+  spi.Stop
+
+PUB GetCogId
+  return spi.GetCogId
   
-PUB HardReset(pin)
+  
+PUB HardReset(pin) | uSec, mSec
+{{
+DESCRIPTION:
+  Reset the W5100.  This action will clear all W5100 register values  
+
+PARMS:
+  Pin     - W5100 reset pin 
+
+RETURNS:
+  Nothing
+}}
+                                                         
+  uSec := ((clkfreq / 1_000_000) * 5) #> 381
+  mSec := ((clkfreq / 1_000) * 200) #> 381 
+  
   dira[pin]~~
   outa[pin]~
-  waitcnt(((clkfreq / 1_000_000 * 3 - 3932) #> 381) + cnt)
-  outa[pin] ~~
-  waitcnt(((clkfreq / 1_000 * 300 - 3932) #> 381) + cnt)
+  waitcnt(uSec + cnt)
+  outa[pin]~~
+  waitcnt(mSec + cnt)
+  dira[pin]~
+
 
 
 PUB PowerDownActiveHigh(pin, state)
@@ -749,8 +774,9 @@ Pub SetIMR2(value)
   WriteByte(INTM2, value)
 
 PUB GetVersion
-  bytefill(@workspace, null, BUFFER_16)
-  return ReadByte(VERSION) 
+  {The W5100 does not have a version register}
+  return ReadByte(RETRY_COUNT)
+
 
 
 
