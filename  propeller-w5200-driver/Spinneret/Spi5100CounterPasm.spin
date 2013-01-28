@@ -253,7 +253,6 @@ startSpi
 :write
                     andn    outa,   sck           'Clock low
                     mov     frqa,   frqx20        '20 Mhz
-                    'mov     phsb,   cmd           'Load the command
 :writeNext
                     and     cmd,   opmask         'Clear address and data
                     mov     t1,    reg            'Set destination register
@@ -306,8 +305,6 @@ startSpi
                     add     pbuff, #1             '+1 HUB pointer
                     add     reg ,  #1             '+1 register address
                     djnz    len,   #:writeNext    'Process next byte
-                    
-                    'or      outa,  cs             'Deselect
                     or      outa,  sck            'Set the clock high
                     
 '--------------------------------------------------------------------------
@@ -316,6 +313,7 @@ startSpi
 :done               mov     t1,     par
                     mov     cmd,    #0
                     wrlong  cmd,    t1
+                    mov     phsb,   zero 'Clear phsb line
                     jmp     #:getCmd
 
 '

@@ -11,7 +11,7 @@ CON
 
   { Web Server Configuration }
   SOCKETS       = 3
-  HTTP_PORT     = 80
+  HTTP_PORT     = 8080
   DHCP_SOCK     = 3
   ATTEMPTS      = 5
   DISK_PARTION  = 0
@@ -35,7 +35,7 @@ VAR
   long  buttonStack[10]
   
 DAT
-  version       byte  "1.0", $0
+  version       byte  "1.1", $0
   _404          byte  "HTTP/1.1 404 OK", CR, LF,                                {
 }                     "Content-Type: text/html", CR, LF, CR, LF,                {
 }                     "<html>",                                                 {
@@ -67,7 +67,7 @@ DAT
   buff          byte  $0[BUFFER_2K]
   null          long  $00
   contentType   long  @_css, @_gif, @_html, @_ico, @_jpg, @_js, @_pdf, @_png, @_txt, @_xml, @_zip, $0
-  mtuBuff      long  TCP_MTU
+  mtuBuff       long  TCP_MTU
    
 
 OBJ
@@ -82,7 +82,7 @@ PUB Init | i
 
   'A hardware reset can take 1.5 seconds
   'before the Sockets are ready to Send/Receive
-  wiz.HardReset(WIZ#WIZ_RESET)
+  'wiz.HardReset(WIZ#WIZ_RESET)
                            
   pst.Start(115_200)      
   pause(500)
@@ -165,6 +165,7 @@ PUB Init | i
 
   OpenListeners
   StartListners
+  'SetTranactionTimeout(0)
      
   pst.str(string(CR, "Start Socket Services", CR))
   MultiSocketService
@@ -177,9 +178,9 @@ PUB Init | i
   
 PRI MultiSocketService | bytesToRead, sockId, fn, i
   bytesToRead := sockId := 0
-
   i := 0
   repeat
+     
     bytesToRead~ 
     CloseWait
     
@@ -188,24 +189,29 @@ PRI MultiSocketService | bytesToRead, sockId, fn, i
     repeat until sock[sockId].Connected
       sockId := ++sockId // SOCKETS
 
+    'pause(20)
+    
     'Repeat until we have data in the buffer
     repeat until bytesToRead := sock[sockId].Available
 
     'PrintAllStatuses
-    
+
     'Check for a timeout error
-    if(bytesToRead < 0)
-      pst.str(string(CR, "Timeout",CR))
-      PrintStatus(sockId)
-      PrintAllStatuses 
+    if(bytesToRead =< 0)
+      pst.str(string(CR, "Timeout: "))
+      pst.dec(bytesToRead) 
+      PrintAllStatuses
+      if(i++ == 1)
+        sock[sockId].Disconnect
+        i := 0    
       next
-      
+       
     'Move the Rx buffer into HUB memory
     sock[sockId].Receive(@buff, bytesToRead)
 
     'Display the request header
     'pst.str(@buff)
-
+    'pause(10)
     'Tokenize and index the header
     req.TokenizeHeader(@buff, bytesToRead)
  
@@ -222,6 +228,7 @@ PRI MultiSocketService | bytesToRead, sockId, fn, i
     sock[sockId].SetSocketIR($FF)
 
     sockId := ++sockId // SOCKETS
+    
  
 PRI BuildAndSendHeader(id, contentLength) | dest, src
   dest := @buff
@@ -436,6 +443,11 @@ PRI StartListners | i
     pst.str(string("; TTL="))
     pst.dec(sock[i].GetTtl)
     pst.char(CR)
+
+
+PRI SetTranactionTimeout(timeout) | i
+  repeat i from 0 to SOCKETS-1
+    sock[i].SetTransactionTimeout(timeout)
 
 PRI CloseWait | i
   repeat i from 0 to SOCKETS-1
