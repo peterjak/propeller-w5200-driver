@@ -280,6 +280,7 @@ startSpi
 :done               mov     t1,     par
                     mov     cmd,    #0
                     wrlong  cmd,    t1
+                    mov     phsb,   zero 'Clear phsb line
                     jmp     #:getCmd
 
 '

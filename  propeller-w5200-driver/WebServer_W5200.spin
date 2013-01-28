@@ -222,8 +222,8 @@ PUB Init | i
   pause(5000)
 
   
-PRI MultiSocketService | bytesToRead, sockId, fn
-  bytesToRead := sockId := 0
+PRI MultiSocketService | bytesToRead, sockId, fn, i
+  bytesToRead := sockId := i := 0
   repeat
     bytesToRead~ 
     CloseWait
@@ -239,10 +239,13 @@ PRI MultiSocketService | bytesToRead, sockId, fn
     'PrintAllStatuses
     
     'Check for a timeout error
-    if(bytesToRead < 0)
-      pst.str(string(CR, "Timeout",CR))
-      PrintStatus(sockId)
-      PrintAllStatuses 
+    if(bytesToRead =< 0)
+      pst.str(string(CR, "Timeout: "))
+      pst.dec(bytesToRead) 
+      PrintAllStatuses
+      if(i++ == 1)
+        sock[sockId].Disconnect
+        i := 0    
       next
       
     'Move the Rx buffer into HUB memory
@@ -344,6 +347,9 @@ PRI RenderFile(id, fn) | fs, bytes
 
     sd.readFromFile(@buff, bytes)
     fs -= sock[id].Send(@buff, bytes)
+
+    'Pause after issuing the send command
+    'pause(10)
   
   sd.closeFile
   return
