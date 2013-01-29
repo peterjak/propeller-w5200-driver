@@ -214,7 +214,7 @@ PRI MultiSocketService | bytesToRead, sockId, fn, i
     sock[sockId].Receive(@buff, bytesToRead)
 
     'Display the request header
-    pst.str(@buff)
+    'pst.str(@buff)
     'pause(10)
     'Tokenize and index the header
     req.TokenizeHeader(@buff, bytesToRead)
@@ -275,7 +275,12 @@ PRI RenderDynamic(id)
 PRI BuildPinStateXml(strpin, strvalue) | pin, value, state
   pin := StrToBase(strpin, 10)
   value := StrToBase(strvalue, 10)  
-
+  {
+  ifnot(ValidateParameters(pin, value))
+    bytefill(@pinNum, " ", 2)
+    bytefill(@pinState, " ", 1)
+    return 
+  }
   SetPinState(pin, value)
   state := ReadPinState(pin)
 
@@ -289,6 +294,13 @@ PRI BuildPinStateXml(strpin, strvalue) | pin, value, state
   value := Dec(ReadPinState(pin))
   bytemove(@pinState, value, 1)  
   
+PRI ValidateParameters(pin, value)
+  if(pin < 23 or pin > 27)
+    return false
+  if(value > 1 or value < -1)
+    return false
+
+  return true
  
 PRI ReadPinState(pin)
   return outa[pin]
@@ -297,7 +309,9 @@ PRI ReadPinState(pin)
 PRI SetPinState(pin, value)
   if(value == -1)
     return
-    
+  if(pin < 23 or pin > 27)
+    return
+      
   dira[pin]~~
   outa[pin] := value  
   
