@@ -46,6 +46,10 @@ DAT
 }                     "</body>",                                                {
 }                     "</html>", CR, LF, $0
 
+  xmlPinState   byte  "<root><pin>" 
+  pinNum        byte  $30, $30, "</pin><value>"
+  pinState      byte  $30, "</value></root>", 0
+
   _h200         byte  "HTTP/1.1 200 OK", CR, LF, $0
   _h404         byte  "HTTP/1.1 404 Not Found", CR, LF, $0
   _css          byte  "Content-Type: text/css",CR, LF, $0
@@ -90,7 +94,7 @@ PUB Init | i
   '---------------------------------------------------
   'Main COG
   '--------------------------------------------------- 
-  pst.str(string("COG[0]: QuickStart Web Server v"))
+  pst.str(string("COG[0]: Spinneret Web Server v"))
   pst.str(@version)
 
   '---------------------------------------------------
@@ -126,7 +130,7 @@ PUB Init | i
   pst.str(string(CR, "COG["))
   i := wiz.GetCogId
   pst.dec(i)
-  pst.str(string("]: Started W5200 SPI Driver"))
+  pst.str(string("]: Started W5100 SPI Driver"))
 
   'Verify SPI connectivity by reading the WizNet 5100 version register 
   wizver := GetVersion
@@ -210,7 +214,7 @@ PRI MultiSocketService | bytesToRead, sockId, fn, i
     sock[sockId].Receive(@buff, bytesToRead)
 
     'Display the request header
-    'pst.str(@buff)
+    pst.str(@buff)
     'pause(10)
     'Tokenize and index the header
     req.TokenizeHeader(@buff, bytesToRead)
@@ -258,13 +262,46 @@ PRI BuildAndSendHeader(id, contentLength) | dest, src
 
 
 PRI RenderDynamic(id)
-  'Do something
-  return true   
 
-PRI BuildXml | i, state
-  'do something
-   return   
+  'Process pinstate
+  if(strcomp(req.GetFileName, string("pinstate.xml")))
+    BuildPinStateXml( req.Get(string("led")), req.Get(string("value")) )
+    BuildAndSendHeader(id, -1)
+    sock[id].Send(@xmlPinState, strsize(@xmlPinState))
+    return true
+
+  return false
+
+PRI BuildPinStateXml(strpin, strvalue) | pin, value, state
+  pin := StrToBase(strpin, 10)
+  value := StrToBase(strvalue, 10)  
+
+  SetPinState(pin, value)
+  state := ReadPinState(pin)
+
+  'Write the pin number to the XML doc
+  if(strsize(strpin) > 1)
+    bytemove(@pinNum,strpin, 2)
+  else
+    bytemove(@pinNum-1,strpin, 1)
+
+  'Write the pin value
+  value := Dec(ReadPinState(pin))
+  bytemove(@pinState, value, 1)  
+  
+ 
+PRI ReadPinState(pin)
+  return outa[pin]
+
+  
+PRI SetPinState(pin, value)
+  if(value == -1)
+    return
     
+  dira[pin]~~
+  outa[pin] := value  
+  
+  
 
 PRI RenderFile(id, fn) | fs, bytes
 {{
@@ -531,7 +568,19 @@ Note: This source came from the Parallax Serial Termianl library
     
   workspace[j] := 0
   return @workspace
-         
+
+PRI StrToBase(stringptr, base) : value | chr, index
+{Converts a zero terminated string representation of a number to a value in the designated base.
+Ignores all non-digit characters (except negative (-) when base is decimal (10)).}
+
+  value := index := 0
+  repeat until ((chr := byte[stringptr][index++]) == 0)
+    chr := -15 + --chr & %11011111 + 39*(chr > 56)                              'Make "0"-"9","A"-"F","a"-"f" be 0 - 15, others out of range     
+    if (chr > -1) and (chr < base)                                              'Accumulate valid values into result; ignore others
+      value := value * base + chr                                                  
+  if (base == 10) and (byte[stringptr] == "-")                                  'If decimal, address negative sign; ignore otherwise
+    value := - value
+             
 PRI pause(Duration)  
   waitcnt(((clkfreq / 1_000 * Duration - 3932) #> 381) + cnt)
   return
