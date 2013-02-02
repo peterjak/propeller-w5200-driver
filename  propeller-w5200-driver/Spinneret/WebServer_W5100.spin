@@ -291,7 +291,7 @@ PRI BuildPinStateXml(strpin, strvalue) | pin, value, state
     bytemove(@pinNum,strpin, 2)
   else
     byte[@pinNum] := $30
-    byte[@pinNum][1] := strpin
+    byte[@pinNum][1] := byte[strpin]
 
   'Write the pin value
   value := Dec(ReadPinState(pin))
@@ -299,7 +299,7 @@ PRI BuildPinStateXml(strpin, strvalue) | pin, value, state
     bytemove(@pinState, value, 2)
   else
     byte[@pinState] := $30
-    byte[@pinState][1] := byte[value] 
+    byte[@pinState][1] := byte[value]
 
  
 PRI ReadPinState(pin)
