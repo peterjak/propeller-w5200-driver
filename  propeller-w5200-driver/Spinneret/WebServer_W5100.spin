@@ -303,7 +303,7 @@ PRI BuildPinStateXml(strpin, strvalue) | pin, value, state
 
  
 PRI ReadPinState(pin)
-  return outa[pin]
+  return outa[pin] | ina[pin]
 
   
 PRI SetPinState(pin, value)
@@ -337,7 +337,7 @@ PRI BuildPinEndcodeStateXml(strvalue) | value, state
     byte[@pinState][1] := byte[value]
   
 PRI ReadEncodedPinState
-  return outa[27..24]
+  return outa[27..24] | ina[27..24]
 
 PRI SetEncodedPinstate(value)
   dira[27..24]~~
