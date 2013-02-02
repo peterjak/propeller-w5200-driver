@@ -4,6 +4,7 @@ CON
 
   TCP_MTU       = 1460
   BUFFER_2K     = $800
+  BUFFER_LOG    = $80
   BUFFER_WS     = $20
   
   CR            = $0D
@@ -46,9 +47,9 @@ DAT
 }                     "</body>",                                                {
 }                     "</html>", CR, LF, $0
 
-  xmlPinState   byte  "<root><pin>" 
-  pinNum        byte  $30, $30, "</pin><value>"
-  pinState      byte  $30, "</value></root>", 0
+  xmlPinState   byte  "<root>", CR, LF, "  <pin>" 
+  pinNum        byte  $30, $30, "</pin>", CR, LF, "  <value>"
+  pinState      byte  $30, $30, "</value>", CR, LF, "</root>", 0
 
   _h200         byte  "HTTP/1.1 200 OK", CR, LF, $0
   _h404         byte  "HTTP/1.1 404 Not Found", CR, LF, $0
@@ -66,7 +67,7 @@ DAT
   _contLen      byte  "Content-Length: ", $0   
   _newline      byte  CR, LF, $0
   workSpace     byte  $0[BUFFER_WS]
-
+  logBuf        byte  $0[BUFFER_LOG]
   wizver        byte  $00
   buff          byte  $0[BUFFER_2K]
   null          long  $00
@@ -215,7 +216,7 @@ PRI MultiSocketService | bytesToRead, sockId, fn, i
 
     'Display the request header
     'pst.str(@buff)
-    'pause(10)
+
     'Tokenize and index the header
     req.TokenizeHeader(@buff, bytesToRead)
  
@@ -270,17 +271,18 @@ PRI RenderDynamic(id)
     sock[id].Send(@xmlPinState, strsize(@xmlPinState))
     return true
 
+  if(strcomp(req.GetFileName, string("p_encode.xml")))
+    BuildPinEndcodeStateXml( req.Get(string("value")) )
+    BuildAndSendHeader(id, -1)
+    sock[id].Send(@xmlPinState, strsize(@xmlPinState))
+    return true
+
   return false
 
 PRI BuildPinStateXml(strpin, strvalue) | pin, value, state
   pin := StrToBase(strpin, 10)
   value := StrToBase(strvalue, 10)  
-  {
-  ifnot(ValidateParameters(pin, value))
-    bytefill(@pinNum, " ", 2)
-    bytefill(@pinState, " ", 1)
-    return 
-  }
+
   SetPinState(pin, value)
   state := ReadPinState(pin)
 
@@ -288,19 +290,17 @@ PRI BuildPinStateXml(strpin, strvalue) | pin, value, state
   if(strsize(strpin) > 1)
     bytemove(@pinNum,strpin, 2)
   else
-    bytemove(@pinNum-1,strpin, 1)
+    byte[@pinNum] := $30
+    byte[@pinNum][1] := strpin
 
   'Write the pin value
   value := Dec(ReadPinState(pin))
-  bytemove(@pinState, value, 1)  
-  
-PRI ValidateParameters(pin, value)
-  if(pin < 23 or pin > 27)
-    return false
-  if(value > 1 or value < -1)
-    return false
+  if(strsize(value) > 1)
+    bytemove(@pinState, value, 2)
+  else
+    byte[@pinState] := $30
+    byte[@pinState][1] := byte[value] 
 
-  return true
  
 PRI ReadPinState(pin)
   return outa[pin]
@@ -314,9 +314,44 @@ PRI SetPinState(pin, value)
       
   dira[pin]~~
   outa[pin] := value  
-  
-  
 
+
+PRI BuildPinEndcodeStateXml(strvalue) | value, state
+  value := StrToBase(strvalue, 10)  
+
+  'pst.dec(value)
+  
+  if(value > -1)
+    SetEncodedPinstate(value)
+    state := ReadEncodedPinState
+
+  'Write the pin number to the XML doc
+  bytemove(@pinNum,string("$F"), 2)
+
+  'Write the pin value
+  value := Dec(ReadEncodedPinState)
+  if(strsize(value) > 1)
+    bytemove(@pinState, value, 2)
+  else
+    byte[@pinState] := $30
+    byte[@pinState][1] := byte[value]
+  
+PRI ReadEncodedPinState
+  return outa[27..24]
+
+PRI SetEncodedPinstate(value)
+  dira[27..24]~~
+  outa[27..24] := value   
+  
+PRI ValidateParameters(pin, value)
+  if(pin < 23 or pin > 27)
+    return false
+  if(value > 1 or value < -1)
+    return false
+
+  return true
+
+  
 PRI RenderFile(id, fn) | fs, bytes
 {{
   Render a static file from the SD Card

@@ -8,7 +8,7 @@
 }
 '*********************************************************************************************
 CON
-  {{ W5200 Common register enumeration }}
+  {{ W5100 Common register enumeration }}
   '      1              2              3              4              5              6
   '--------------------|--------------|--------------|--------------|--------------|-------------|    
   #0000,  MODE_REG,{
@@ -34,7 +34,7 @@ CON
   34}     PSTATUS,{
   36}     IMR                                                                                               
 
-  {{ W5200  Socket Register Base Addresses }}
+  {{ W5100  Socket Register Base Addresses }}
   #0000,  S_MR,{
  01     } S_CR,{
  02     } S_IR,{
