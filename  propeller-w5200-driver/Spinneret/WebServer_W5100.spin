@@ -48,9 +48,10 @@ DAT
 }                     "</html>", CR, LF, $0
 
   xmlPinState   byte  "<root>", CR, LF, "  <pin>" 
-  pinNum        byte  $30, $30, "</pin>", CR, LF, "  <dir>"
-  pinDir        byte  $30, $30, "</dir>", CR, LF, "  <value>" 
-  pinState      byte  $30, $30, "</value>", CR, LF, "</root>", 0
+  pinNum        byte  $30, $30, "</pin>", CR, LF, "  <value>"
+  pinState      byte  $30, $30, "</value>", CR, LF, "  <dir>" 
+  pinDir        byte  $30, $30, "</dir>", CR, LF,                               {
+}                     "</root>", 0
 
   _h200         byte  "HTTP/1.1 200 OK", CR, LF, $0
   _h404         byte  "HTTP/1.1 404 Not Found", CR, LF, $0
@@ -140,7 +141,7 @@ PUB Init | i
     pst.str(string(CR, CR, "SPI communication failed!", CR, "Check connections", CR))
     return
   else
-    pst.str(string(CR, "        WizNet 5100 Connected ") )
+    pst.str(string(CR, "        WizNet 5100 Connected; Reg(0x19) = ") )
     pst.dec(wizver)
 
   pst.str(string(CR, "COG[n]: "))
