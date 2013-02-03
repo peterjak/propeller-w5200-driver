@@ -48,7 +48,8 @@ DAT
 }                     "</html>", CR, LF, $0
 
   xmlPinState   byte  "<root>", CR, LF, "  <pin>" 
-  pinNum        byte  $30, $30, "</pin>", CR, LF, "  <value>"
+  pinNum        byte  $30, $30, "</pin>", CR, LF, "  <dir>"
+  pinDir        byte  $30, $30, "</dir>", CR, LF, "  <value>" 
   pinState      byte  $30, $30, "</value>", CR, LF, "</root>", 0
 
   _h200         byte  "HTTP/1.1 200 OK", CR, LF, $0
@@ -279,7 +280,7 @@ PRI RenderDynamic(id)
 
   return false
 
-PRI BuildPinStateXml(strpin, strvalue) | pin, value, state
+PRI BuildPinStateXml(strpin, strvalue) | pin, value, state, dir
   pin := StrToBase(strpin, 10)
   value := StrToBase(strvalue, 10)  
 
@@ -301,11 +302,21 @@ PRI BuildPinStateXml(strpin, strvalue) | pin, value, state
     byte[@pinState] := $30
     byte[@pinState][1] := byte[value]
 
- 
+  'Write Pin direction
+  dir := Dec(ReadDirState(pin))
+  if(strsize(dir) > 1)
+    bytemove(@pinDir, value, 2)
+  else
+    byte[@pinDir] := $30
+    byte[@pinDir][1] := byte[dir]
+
+
+PRI ReadDirState(pin)
+  return dira[pin]
+   
 PRI ReadPinState(pin)
   return outa[pin] | ina[pin]
-
-  
+ 
 PRI SetPinState(pin, value)
   if(value == -1)
     return
@@ -316,7 +327,7 @@ PRI SetPinState(pin, value)
   outa[pin] := value  
 
 
-PRI BuildPinEndcodeStateXml(strvalue) | value, state
+PRI BuildPinEndcodeStateXml(strvalue) | value, state, dir
   value := StrToBase(strvalue, 10)  
 
   'pst.dec(value)
@@ -335,11 +346,23 @@ PRI BuildPinEndcodeStateXml(strvalue) | value, state
   else
     byte[@pinState] := $30
     byte[@pinState][1] := byte[value]
-  
+
+  'Write Pin direction
+  dir := Dec(ReadEncodedDirState)
+  if(strsize(dir) > 1)
+    bytemove(@pinDir, value, 2)
+  else
+    byte[@pinDir] := $30
+    byte[@pinDir][1] := byte[dir]
+
+    
+PRI ReadEncodedDirState
+  return dira[27..24]
+   
 PRI ReadEncodedPinState
   return outa[27..24] | ina[27..24]
 
-PRI SetEncodedPinstate(value)
+PRI SetEncodedPinState(value)
   dira[27..24]~~
   outa[27..24] := value   
   
