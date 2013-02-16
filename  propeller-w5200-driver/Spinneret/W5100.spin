@@ -424,7 +424,7 @@ RETURNS: Nothing
   else
     bytesSent :=  $FFFF - ptr_txrd1 + ptr_txrd2 + 1
 
-  if(bytesSent < length)
+  if(bytesSent > 0 AND bytesSent < length)
     FlushSocket(socket)  
     ptr_txrd2 := GetTxReadPointer(socket)
      
