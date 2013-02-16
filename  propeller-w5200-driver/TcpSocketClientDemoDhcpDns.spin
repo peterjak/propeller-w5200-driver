@@ -64,6 +64,19 @@ DAT
 }               byte  "Host: www.weather.gov", CR, LF, {
 }               byte  "User-Agent: Wiz5200", CR, LF, CR, LF, $0
 
+  basicAuthReq  byte  "GET /spinneret/formtest.php HTTP/1.1", CR, LF, {
+}               byte  "Host: rcc.cfbtechnologies.com", CR, LF, {
+}               byte  "User-Agent: Wiz5200", CR, LF, {
+}               byte  "Authorization: Basic dGVzdDojYnhGeFgheWxTR3A=", CR, LF, CR, LF, $0
+
+  basicAuthPost byte  "POST /spinneret/formtest.php HTTP/1.1", CR, LF, {
+}               byte  "Host: rcc.cfbtechnologies.com", CR, LF, {
+}               byte  "User-Agent: Wiz5200", CR, LF, {
+}               byte  "Content-Type: application/x-www-form-urlencoded", CR, LF, {
+}               byte  "Content-Length: 27", CR, LF, {
+}               byte  "Authorization: Basic dGVzdDojYnhGeFgheWxTR3A=", CR, LF, CR, LF, {
+}               byte  "name=This is a test message", CR, LF, $0
+
   buff          byte  $0[BUFFER_2K]
 
   t1            long  $0
@@ -79,7 +92,8 @@ OBJ
    
 
 PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, totalBytes, i, dnsInit
- 
+
+  'wiz.HardReset(WIZ_RESET)
   receiving := true
   bytesToRead := 0
 
@@ -93,9 +107,9 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
 
   pst.str(string("Initialize W5200", CR)) 
 
-  'wiz.QS_Init
-  wiz.HardReset(WIZ_RESET)
-  wiz.Start(SPI_CS, SPI_SCK, SPI_MOSI, SPI_MISO)
+  wiz.QS_Init
+  
+  'wiz.Start(SPI_CS, SPI_SCK, SPI_MOSI, SPI_MISO)
 
 
   'Loop until we get the W5200 version
@@ -190,8 +204,9 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
   pst.str(string("Resolved IP(0)....")) 
   'remoteIP := dns.ResolveDomain(string("www.agaverobotics.com"))
   'remoteIP := dns.ResolveDomain(string("finance.google.com"))
-  remoteIP := dns.ResolveDomain(string("google.com"))
+  'remoteIP := dns.ResolveDomain(string("google.com"))
   'remoteIP := dns.ResolveDomain(string("www.weather.gov"))
+  remoteIP := dns.ResolveDomain(string("rcc.cfbtechnologies.com"))
    
   PrintIp(remoteIP)
    
@@ -206,14 +221,14 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
   sock.Init(0, TCP, 8080)
   sock.RemoteIp(byte[remoteIP][0], byte[remoteIP][1], byte[remoteIP][2], byte[remoteIP][3])  
   sock.RemotePort(80)
-  'sock.RemotePort(443) 
 
   'PrintIp(wiz.GetRemoteIP(0))
 
-  
-  pst.str(string(CR, "Begin Client Web Request", CR))
-repeat
+{{*****************************************************************   }}    
+  pst.str(string(CR, "Begin GET Client Web Request", CR))
+'repeat
   sock.Open
+  pause(100)
   sock.Connect
 
   pst.str(string(CR, "Connecting to.....")) 
@@ -227,8 +242,11 @@ repeat
   pst.str(string("Sending HTTP Request", CR)) 
   'bytesSent := sock.Send(@request2, strsize(@request2))
   'bytesSent := sock.Send(@google, strsize(@google))
-  bytesSent := sock.Send(@s_google, strsize(@s_google))
+  'bytesSent := sock.Send(@s_google, strsize(@s_google))
   'bytesSent := sock.Send(@weather, strsize(@weather))
+  bytesSent := sock.Send(@basicAuthReq, strsize(@basicAuthReq))
+  'bytesSent := sock.Send(@basicAuthPost, strsize(@basicAuthPost))
+  
   pst.str(string("Bytes Sent........"))
   pst.dec(bytesSent)
   pst.char(13)
@@ -253,7 +271,7 @@ repeat
     if(bytesToRead > 0) 
       'Get the Rx buffer  
       buffer := sock.Receive(@buff, bytesToRead)
-      'pst.str(buffer)
+      pst.str(buffer)
       
     bytesToRead~
 
@@ -264,19 +282,79 @@ repeat
   pst.str(string("Disconnect", CR, CR)) 
   sock.Disconnect
 
+  {{*****************************************************************   }} 
+  
+  pst.str(string(CR, "Begin POST Client Web Request", CR))
+  sock.Open
+  pause(100)
+  sock.Connect
+
+  pst.str(string(CR, "Connecting to.....")) 
+  PrintIp(wiz.GetRemoteIP(0))
+  pst.char(CR)
+    
+    'Connection?
+  repeat until sock.Connected
+    pause(100)
+
+  pst.str(string("Sending HTTP Request", CR)) 
+  'bytesSent := sock.Send(@request2, strsize(@request2))
+  'bytesSent := sock.Send(@google, strsize(@google))
+  'bytesSent := sock.Send(@s_google, strsize(@s_google))
+  'bytesSent := sock.Send(@weather, strsize(@weather))
+  'bytesSent := sock.Send(@basicAuthReq, strsize(@basicAuthReq))
+  bytesSent := sock.Send(@basicAuthPost, strsize(@basicAuthPost))
+  
+  pst.str(string("Bytes Sent........"))
+  pst.dec(bytesSent)
+  pst.char(13)
+
+  totalBytes := 0
+  receiving := true
+  repeat while receiving 
+    'Data in the buffer?
+    bytesToRead := sock.Available
+    totalBytes += bytesToRead
+     
+    'Check for a timeout
+    if(bytesToRead < 0)
+      receiving := false
+      pst.str(string("Timeout", CR))
+      return
+
+    if(bytesToRead == 0)
+      receiving := false
+      next 
+
+    if(bytesToRead > 0) 
+      'Get the Rx buffer  
+      buffer := sock.Receive(@buff, bytesToRead)
+      pst.str(buffer)
+      pst.char(CR)
+      
+    bytesToRead~
+
+  pst.str(string("Bytes Received...."))
+  pst.dec(totalBytes)
+  pst.char(CR)
+  
+  pst.str(string("Disconnect", CR, CR)) 
+  sock.Disconnect
+
+
   'Power down for x seconds
-  pst.str(string("Power Down", CR))
-  wiz.PowerDown(WIZ#WIZ_POWER_DOWN)
-  pause(10_000)
+  'pst.str(string("Power Down", CR))
+  'wiz.PowerDown(WIZ#WIZ_POWER_DOWN)
+  'pause(10_000)
 
   'Power Up
   'The pause is required 
   'min pause is around 1/2 sec found from experimentation
-  pst.str(string("Power Up", CR))
-  wiz.PowerUp(WIZ#WIZ_POWER_DOWN)
+  'pst.str(string("Power Up", CR))
+  'wiz.PowerUp(WIZ#WIZ_POWER_DOWN)
   'wiz.PowerDown(WIZ#WIZ_POWER_DOWN)
   'wiz.PowerUp(WIZ#WIZ_POWER_DOWN)
-  pause(500)
+  'pause(500)
 
 
 PUB DisplayMemory(addr, len, isHex) | j

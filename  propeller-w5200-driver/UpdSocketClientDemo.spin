@@ -34,11 +34,11 @@ PUB Main | bytesToRead, bytesSent, receiving, ptr
   pause(500)
 
   'Set network parameters
-  wiz.Init
+  wiz.QS_Init  
   wiz.SetCommonnMode(0)
   wiz.SetGateway(192, 168, 1, 1)
   wiz.SetSubnetMask(255, 255, 255, 0)
-  wiz.SetIp(192, 168, 1, 107)
+  wiz.SetIp(192, 168, 1, 108)
   wiz.SetMac($00, $08, $DC, $16, $F8, $01)
   
   
@@ -47,7 +47,7 @@ PUB Main | bytesToRead, bytesSent, receiving, ptr
   sock.Init(0, UDP, 8080)
 
 
-  sock.RemoteIp(192, 168, 1, 104)
+  sock.RemoteIp(192, 168, 1, 103)
   sock.RemotePort(8080)
   
   pst.str(string("Start UPD Client",CR))

@@ -5,18 +5,23 @@ CON
   TCP_MTU       = 1460
   BUFFER_2K     = $800
   BUFFER_WS     = $20
+  BUFFER_SNTP   = 48+8
   
   CR            = $0D
   LF            = $0A
 
   { Web Server Configuration }
-  SOCKETS       = 6       
-  HTTP_PORT     = 80
-  DHCP_SOCK     = 3
+  SOCKETS       = 7
+  DHCP_SOCK     = 7
+  SNTP_SOCK     = 6
   ATTEMPTS      = 5
-  DISK_PARTION  = 0
+  { Port Configuration }
+  HTTP_PORT     = 80
+  SNTP_PORT     = 123
+
 
   { SD IO }
+  DISK_PARTION  = 0
   SUCCESS       = -1
   IO_OK         = 0
   IO_READ       = "r"
@@ -29,11 +34,18 @@ CON
 
   {{ Content Types }}
   #0, CSS, GIF, HTML, ICO, JPG, JS, PDF, PNG, TXT, XML, ZIP
+  
+  {{ USA Standard Time Zone Abbreviations }}
+  #-10, HST,AtST,_PST,MST,CST,EST,AlST
+              
+  {{ USA Daylight Time Zone Abbreviations  }}
+  #-9, HDT,AtDT,PDT,MDT,CDT,EDT,AlDT
+
+  Zone = MST 
     
 VAR
-  'long  t1
   long  buttonStack[10]
-  long  dummyStack[10]
+  long  longHIGH, longLOW, MM_DD_YYYY, DW_HH_MM_SS 'Expected 4-contigous variables for SNTP
   
 DAT
   version       byte  "1.1", $0
@@ -47,6 +59,15 @@ DAT
 }                     "Page not found!",                                        {                                                                                                       
 }                     "</body>",                                                {
 }                     "</html>", CR, LF, $0
+
+  xmlPinState   byte  "<root>", CR, LF, "  <pin>" 
+  pinNum        byte  $30, $30, "</pin>", CR, LF, "  <value>"
+  pinState      byte  $30, $30, "</value>", CR, LF, "  <dir>" 
+  pinDir        byte  $30, $30, "</dir>", CR, LF,                               {
+}                    "</root>", 0
+
+  xmlTime       byte  "<root>", CR, LF, "  <time>" 
+  xtime         byte  "00/00/0000 00:00:00</time>", CR, LF, "</root>", 0
 
   touch         byte  "<?xml version='1.0' encoding='utf-8'?>",CR,LF,"<root>",CR,LF,"<t7>"
   _t7           byte  "#333333</t7>", CR, LF,"<t6>"
@@ -79,7 +100,8 @@ DAT
   _zip          byte  "Content-Type: application/zip",CR, LF, $0
   _contLen      byte  "Content-Length: ", $0   
   _newline      byte  CR, LF, $0
-  _ext          byte  $00
+  time          byte  "00/00/0000 00:00:00", 0
+  sntpBuff      byte  $0[BUFFER_SNTP]  
   workSpace     byte  $0[BUFFER_WS]
   wizver        byte  $00
   buff          byte  $0[BUFFER_2K+1]
@@ -95,7 +117,8 @@ OBJ
   sock[SOCKETS]   : "Socket"
   req             : "HttpHeader"
   sd              : "S35390A_SD-MMC_FATEngineWrapper"
-  buttons         : "Touch Buttons"  
+  buttons         : "Touch Buttons"
+   
  
 PUB Init | i
 
@@ -113,17 +136,12 @@ PUB Init | i
   '--------------------------------------------------- 
   pst.str(string("COG[0]: QuickStart Web Server v"))
   pst.str(@version)
-
+  pause(500)
   '---------------------------------------------------
   'Start the Parallax Serial Terminal
   '---------------------------------------------------
-  {
-  pst.str(string(CR, "COG["))
-  i := pst.GetCogId
-  pst.dec(i)
-  pst.str(string("]: Parallax Serial Terminal"))
-  }
   pst.str(string(CR, "COG[1]: Parallax Serial Terminal"))
+  
   '---------------------------------------------------
   'Start the SD Driver and Mount the SD card 
   '--------------------------------------------------- 
@@ -138,7 +156,7 @@ PUB Init | i
 
   pst.str(string(CR,"        Mount SD Card - "))
   pst.str(sd.mount(DISK_PARTION))
-
+  
 
   '--------------------------------------------------- 
   'Start the WizNet SPI driver
@@ -193,8 +211,12 @@ PUB Init | i
     PrintNetworkParams
   else
     PrintDhcpError
-    return     
+    return
 
+
+  '--------------------------------------------------- 
+  'Start up the web server
+  '---------------------------------------------------
   pst.str(string(CR, "Initialize Sockets"))
   pst.str(@divider)
   repeat i from 0 to SOCKETS-1
@@ -203,23 +225,14 @@ PUB Init | i
   OpenListeners
   StartListners
 
-  '---------------------------------------------------
-  'Debug start/stop COGs
-  '---------------------------------------------------
-  {
-  pst.str(string(CR, "Stopping COG.."))
-  pst.dec(wiz.GetCogId)
-  wiz.Stop
-
-  pst.str(string(CR, "Starting COG.."))
-  wiz.ReStart
-  pst.dec(wiz.GetCogId) 
-
-  pst.char(CR)
-  } 
   pst.str(string(CR, "Start Socket Services", CR))
   MultiSocketService
-  pause(5000)
+  
+  pst.str(string("Fatal Error!!!"))
+  pst.str(string(CR, "Rebooting..."))
+  wiz.HardReset(WIZ#WIZ_RESET)
+  pause(1000) 
+  reboot
 
   
 PRI MultiSocketService | bytesToRead, sockId, fn, i
@@ -252,7 +265,7 @@ PRI MultiSocketService | bytesToRead, sockId, fn, i
     sock[sockId].Receive(@buff, bytesToRead)
 
     'Display the request header
-    'pst.str(@buff)
+    pst.str(@buff)
 
     'Tokenize and index the header
     req.TokenizeHeader(@buff, bytesToRead)
@@ -271,8 +284,6 @@ PRI MultiSocketService | bytesToRead, sockId, fn, i
 
     sockId := ++sockId // SOCKETS
 
-PRI DummyCog
-  return true
 
 PRI ButtonProcess
   Buttons.start(clkfreq / 200)        ' Launch the touch buttons driver sampling 100 times a second
@@ -306,14 +317,118 @@ PRI BuildAndSendHeader(id, contentLength) | dest, src
 
   sock[id].send(@buff, strsize(@buff))  
 
+PRI BuildPinStateXml(strpin, strvalue) | pin, value, state, dir
+  pin := StrToBase(strpin, 10)
+  value := StrToBase(strvalue, 10)  
+
+  SetPinState(pin, value)
+  state := ReadPinState(pin)
+
+  'Write the pin number to the XML doc
+  if(strsize(strpin) > 1)
+    bytemove(@pinNum,strpin, 2)
+  else
+    byte[@pinNum] := $30
+    byte[@pinNum][1] := byte[strpin]
+
+  'Write the pin value
+  value := Dec(ReadPinState(pin))
+  if(strsize(value) > 1)
+    bytemove(@pinState, value, 2)
+  else
+    byte[@pinState] := $30
+    byte[@pinState][1] := byte[value]
+
+  'Write Pin direction
+  dir := Dec(ReadDirState(pin))
+  if(strsize(dir) > 1)
+    bytemove(@pinDir, value, 2)
+  else
+    byte[@pinDir] := $30
+    byte[@pinDir][1] := byte[dir]
+
+
+PRI ReadDirState(pin)
+  return dira[pin]
+   
+PRI ReadPinState(pin)
+  return outa[pin] | ina[pin]
+ 
+PRI SetPinState(pin, value)
+  if(value == -1)
+    return
+  if(pin > 23 or pin < 16)
+    return
+      
+  dira[pin]~~
+  outa[pin] := value  
+
+
+PRI BuildPinEndcodeStateXml(strvalue) | value, state, dir
+  value := StrToBase(strvalue, 10)  
+
+  if(value > -1)
+    SetEncodedPinstate(value)
+    state := ReadEncodedPinState
+
+  'Write the pin number to the XML doc
+  bytemove(@pinNum,string("$F"), 2)
+
+  'Write the pin value
+  value := Dec(ReadEncodedPinState)
+  if(strsize(value) > 1)
+    bytemove(@pinState, value, 2)
+  else
+    byte[@pinState] := $30
+    byte[@pinState][1] := byte[value]
+
+  'Write Pin direction
+  dir := Dec(ReadEncodedDirState)
+  if(strsize(dir) > 1)
+    bytemove(@pinDir, value, 2)
+  else
+    byte[@pinDir] := $30
+    byte[@pinDir][1] := byte[dir]
+
+    
+PRI ReadEncodedDirState
+  return dira[23..16]
+   
+PRI ReadEncodedPinState
+  return outa[23..16] | ina[23..16]
+
+PRI SetEncodedPinState(value)
+  dira[23..16]~~
+  outa[23..16] := value   
+  
+PRI ValidateParameters(pin, value)
+  if(pin > 23 or pin < 16)
+    return false
+  if(value > 1 or value < -1)
+    return false
+
+  return true
 
 PRI RenderDynamic(id)
+  'Filters
   if(  strcomp(req.GetFileName, string("touch.xml")) )
     'Read touch QS touch pads and update xml
     BuildXml
     BuildAndSendHeader(id, -1)
     sock[id].Send(@touch, strsize(@touch))
     return true
+    
+  if(strcomp(req.GetFileName, string("pinstate.xml")))
+    BuildPinStateXml( req.Get(string("led")), req.Get(string("value")) )
+    BuildAndSendHeader(id, -1)
+    sock[id].Send(@xmlPinState, strsize(@xmlPinState))
+    return true
+
+  if(strcomp(req.GetFileName, string("p_encode.xml")))
+    BuildPinEndcodeStateXml( req.Get(string("value")) )
+    BuildAndSendHeader(id, -1)
+    sock[id].Send(@xmlPinState, strsize(@xmlPinState))
+    return true 
 
   return false   
 
@@ -443,9 +558,9 @@ PRI InitNetworkParameters | i
 
   'Request an IP. The requested IP
   'might not be assigned by DHCP
-  'dhcp.SetRequestIp(192,168,1,130)
+  'dhcp.SetRequestIp(192,168,1,108)
 
-  'Invoke the SHCP process
+  'Invoke the DHCP process
   repeat until dhcp.DoDhcp(true)
     if(++i > ATTEMPTS)
       return false
@@ -496,16 +611,17 @@ PRI StartListners | i
   repeat i from 0 to SOCKETS-1
     if(sock[i].Listen)
       pst.str(string("Socket "))
+      pst.dec(i)
+      pst.str(string(" Port....."))
+      pst.dec(sock[i].GetPort)
+      pst.str(string("; MTU="))
+      pst.dec(sock[i].GetMtu)
+      pst.str(string("; TTL="))
+      pst.dec(sock[i].GetTtl)
+      pst.char(CR)
     else
       pst.str(string("Listener failed ",CR))
-    pst.dec(i)
-    pst.str(string(" Port....."))
-    pst.dec(sock[i].GetPort)
-    pst.str(string("; MTU="))
-    pst.dec(sock[i].GetMtu)
-    pst.str(string("; TTL="))
-    pst.dec(sock[i].GetTtl)
-    pst.char(CR)
+
 
 PRI CloseWait | i
   repeat i from 0 to SOCKETS-1
@@ -558,6 +674,47 @@ PRI PrintTokens | i, tcnt
     pst.str(req.EnumerateHeader(i))
     pst.char(CR)
 
+PUB DisplayUdpHeader(buffer)
+  pst.char(CR)
+  pst.str(string(CR, "Message from......."))
+  PrintIp(buffer)
+  pst.char(":")
+  pst.dec(DeserializeWord(buffer + 4))
+  pst.str(string(" ("))
+  pst.dec(DeserializeWord(buffer + 6))
+  pst.str(string(")", CR))
+    
+PUB DisplayHumanTime
+    if byte[@MM_DD_YYYY][3]<10
+       pst.Char("0")
+    pst.dec(byte[@MM_DD_YYYY][3])
+    pst.Char("/")
+    if byte[@MM_DD_YYYY][2]<10
+       pst.Char("0")
+    pst.dec(byte[@MM_DD_YYYY][2])
+    pst.Char("/")
+    pst.dec(word[@MM_DD_YYYY][0])                    
+    pst.Char($20)
+    if byte[@DW_HH_MM_SS][2]<10
+       pst.Char("0")
+    pst.dec(byte[@DW_HH_MM_SS][2])
+    pst.Char(":")
+    if byte[@DW_HH_MM_SS][1]<10
+       pst.Char("0")
+    pst.dec(byte[@DW_HH_MM_SS][1])
+    pst.Char(":")
+    if byte[@DW_HH_MM_SS][0]<10
+       pst.Char("0")
+    pst.dec(byte[@DW_HH_MM_SS][0])
+    pst.str(string("(GMT "))
+    if Zone<0
+       pst.Char("-")
+    else
+       pst.Char("+")
+    pst.str(string(" ",||Zone+48,":00) "))
+    pst.Char(13)
+    
+ 
 PUB Dec(value) | i, x, j
 {{Send value as decimal characters.
   Parameter:
@@ -584,10 +741,27 @@ Note: This source came from the Parallax Serial Termianl library
     
   workspace[j] := 0
   return @workspace
-         
+
+PRI StrToBase(stringptr, base) : value | chr, index
+{Converts a zero terminated string representation of a number to a value in the designated base.
+Ignores all non-digit characters (except negative (-) when base is decimal (10)).}
+
+  value := index := 0
+  repeat until ((chr := byte[stringptr][index++]) == 0)
+    chr := -15 + --chr & %11011111 + 39*(chr > 56)                              'Make "0"-"9","A"-"F","a"-"f" be 0 - 15, others out of range     
+    if (chr > -1) and (chr < base)                                              'Accumulate valid values into result; ignore others
+      value := value * base + chr                                                  
+  if (base == 10) and (byte[stringptr] == "-")                                  'If decimal, address negative sign; ignore otherwise
+    value := - value
+
+PRI DeserializeWord(buffer) | value
+  value := byte[buffer++] << 8
+  value += byte[buffer]
+  return value
+               
 PRI pause(Duration)  
   waitcnt(((clkfreq / 1_000 * Duration - 3932) #> 381) + cnt)
   return
 
 DAT
-  divider   byte  CR, "-----------------------------------------------", CR, $0
+  divider   byte  CR, "---------------------------------------------------", CR, $0
