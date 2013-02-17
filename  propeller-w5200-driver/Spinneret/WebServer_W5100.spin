@@ -6,18 +6,16 @@ CON
   BUFFER_2K     = $800
   BUFFER_LOG    = $80
   BUFFER_WS     = $20
-  BUFFER_SNTP   = 48+8 
   
   CR            = $0D
   LF            = $0A
 
   { Web Server Configuration }
-  SOCKETS       = 2
+  SOCKETS       = 3
   DHCP_SOCK     = 3
-  SNTP_SOCK     = 2
   ATTEMPTS      = 5
   { Port Configuration }
-  HTTP_PORT     = 8080
+  HTTP_PORT     = 80
   SNTP_PORT     = 123
 
   { SD IO }
@@ -84,7 +82,6 @@ DAT
   _contLen      byte  "Content-Length: ", $0   
   _newline      byte  CR, LF, $0
   time          byte  "00/00/0000 00:00:00", 0
-  sntpBuff      byte  $0[BUFFER_SNTP] 
   workSpace     byte  $0[BUFFER_WS]
   logBuf        byte  $0[BUFFER_LOG]
   wizver        byte  $00
@@ -191,19 +188,6 @@ PUB Init | i
     return     
   
   '--------------------------------------------------- 
-  'Snyc the RTC using SNTP
-  '---------------------------------------------------
-  {    } 
-  pst.str(string(CR, "Sync RTC with time server")) 
-  pst.str(@divider)
-  if(SyncSntpTime)
-    PrintRemoteIp(SNTP_SOCK)
-    pst.str(string("Web time.........."))
-    DisplayHumanTime
-  else
-    pst.str(string(CR, "Sync failed"))    
-
-  '--------------------------------------------------- 
   'Start up the web server
   '---------------------------------------------------
   pst.str(string(CR, "Initialize Sockets"))
@@ -214,8 +198,6 @@ PUB Init | i
   OpenListeners
   StartListners
 
-  ResetSntpSock
-     
   pst.str(string(CR, "Start Socket Services", CR))
   MultiSocketService
 
@@ -235,8 +217,8 @@ PRI MultiSocketService | bytesToRead, sockId, fn, i
     
     'Cycle through the sockets one at a time
     'looking for a connections
-    pst.str(string(CR, "Waiting for a connection", CR))
-    PrintAllStatuses 
+    'pst.str(string(CR, "Waiting for a connection", CR))
+    'PrintAllStatuses 
     repeat until sock[sockId].Connected
       sockId := ++sockId // SOCKETS
 
@@ -322,20 +304,6 @@ PRI RenderDynamic(id)
     BuildAndSendHeader(id, -1)
     sock[id].Send(@xmlPinState, strsize(@xmlPinState))
     return true
-
-  if(strcomp(req.GetFileName, string("time.xml")))
-    FillTime(@xTime)
-    BuildAndSendHeader(id, -1)
-    sock[id].Send(@xmlTime, strsize(@xmlTime))
-    return true
-
-  if(strcomp(req.GetFileName, string("sntptime.xml")))
-    SyncSntpTime
-    FillTime(@xTime)
-    BuildAndSendHeader(id, -1)
-    sock[id].Send(@xmlTime, strsize(@xmlTime))
-    ResetSntpSock
-    return true 
 
   return false
 
@@ -459,67 +427,6 @@ PRI RenderFile(id, fn) | fs, bytes
   sd.closeFile
   return
 
-
-PRI SyncSntpTime | ptr
-  'Initialize the socket
-  'sock[SNTP_SOCK].Close
-  
-  'Initialize the socket
-  sock[SNTP_SOCK].Init(SNTP_SOCK, WIZ#UDP, SNTP_PORT)
-
-  'Initialize the destination paramaters
-  sock[SNTP_SOCK].RemoteIp(64, 147, 116, 229)
-  sock[SNTP_SOCK].RemotePort(SNTP_PORT)
-
-  'Setup the buffer
-  sntp.CreateUDPtimeheader(@sntpBuff)  
-  ptr := SntpSendReceive(@sntpBuff, 48)
-  if(ptr == @null)
-    return false
-  else
-    'Set the time
-    SNTP.GetTransmitTimestamp(Zone,@sntpBuff,@LongHIGH,@LongLOW)
-    'PUB writeTime(second, minute, hour, day, date, month, year)                      
-    rtc.writeTime(byte[@DW_HH_MM_SS][0],      { Seconds
-                } byte[@DW_HH_MM_SS][1],      { Minutes
-                } byte[@DW_HH_MM_SS][2],      { Hour
-                } byte[@DW_HH_MM_SS][3],      { Day of week
-                } byte[@MM_DD_YYYY][2],       { Day
-                } byte[@MM_DD_YYYY][3],       { Month
-                } word[@MM_DD_YYYY][0])       { Year}
-
-  sock[SNTP_SOCK].Close
-  'sock[SNTP_SOCK].Destruct
-  return true
-
-PRI ResetSntpSock
-  sock[SNTP_SOCK].Init(SNTP_SOCK, WIZ#TCP, HTTP_PORT)
-  sock[SNTP_SOCK].Open
-  sock[SNTP_SOCK].Listen 
-    
-PUB SntpSendReceive(buffer, len) | bytesToRead, ptr 
-  
-  bytesToRead := 0
-
-  'Open socket and Send Message 
-  sock[SNTP_SOCK].Open
-  sock[SNTP_SOCK].Send(buffer, len)
-  pause(500)
-  bytesToRead := sock[SNTP_SOCK].Available
-   
-  'Check for a timeout
-  if(bytesToRead =< 0 )
-    bytesToRead~
-    return @null
-
-  if(bytesToRead > 0) 
-    'Get the Rx buffer  
-    ptr := sock[SNTP_SOCK].Receive(buffer, bytesToRead)
-
-  sock[SNTP_SOCK].Disconnect
-  return ptr
-
-    
 PRI Writeline(label, value)
   pst.str(label)
   repeat 25 - strsize(label)
