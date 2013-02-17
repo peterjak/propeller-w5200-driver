@@ -95,9 +95,10 @@ PUB Main | i, page, dnsServer
 
   wiz.HardReset(RESET_PIN)
 
-  wiz.SetMac($00, $08, $DC, $16, $F8, $01)
+  wiz.SetMac($00, $08, $DC, $16, $F8, $02)
 
   pst.str(string("Getting network paramters", CR))
+  dhcp.SetRequestIp(192, 168, 1, 110)
   dhcp.Init(@buff, DHCP_SOCKET)
   pst.str(string("Requesting IP....."))
 

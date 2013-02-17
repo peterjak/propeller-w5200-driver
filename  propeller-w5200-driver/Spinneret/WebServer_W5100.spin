@@ -6,18 +6,22 @@ CON
   BUFFER_2K     = $800
   BUFFER_LOG    = $80
   BUFFER_WS     = $20
+  BUFFER_SNTP   = 48+8 
   
   CR            = $0D
   LF            = $0A
 
   { Web Server Configuration }
-  SOCKETS       = 3
-  HTTP_PORT     = 8080
+  SOCKETS       = 2
   DHCP_SOCK     = 3
+  SNTP_SOCK     = 2
   ATTEMPTS      = 5
-  DISK_PARTION  = 0
+  { Port Configuration }
+  HTTP_PORT     = 8080
+  SNTP_PORT     = 123
 
   { SD IO }
+  DISK_PARTION  = 0 
   SUCCESS       = -1
   IO_OK         = 0
   IO_READ       = "r"
@@ -30,10 +34,18 @@ CON
 
   {{ Content Types }}
   #0, CSS, GIF, HTML, ICO, JPG, JS, PDF, PNG, TXT, XML, ZIP
+  
+  {{ USA Standard Time Zone Abbreviations }}
+  #-10, HST,AtST,_PST,MST,CST,EST,AlST
+              
+  {{ USA Daylight Time Zone Abbreviations  }}
+  #-9, HDT,AtDT,PDT,MDT,CDT,EDT,AlDT
+
+  Zone = MST 
     
 VAR
-  long  t1
   long  buttonStack[10]
+  long  longHIGH, longLOW, MM_DD_YYYY, DW_HH_MM_SS 'Expected 4-contigous variables for SNTP  
   
 DAT
   version       byte  "1.1", $0
@@ -53,6 +65,9 @@ DAT
   pinDir        byte  $30, $30, "</dir>", CR, LF,                               {
 }                     "</root>", 0
 
+  xmlTime       byte  "<root>", CR, LF, "  <time>" 
+  xtime         byte  "00/00/0000 00:00:00</time>", CR, LF, "</root>", 0
+
   _h200         byte  "HTTP/1.1 200 OK", CR, LF, $0
   _h404         byte  "HTTP/1.1 404 Not Found", CR, LF, $0
   _css          byte  "Content-Type: text/css",CR, LF, $0
@@ -68,6 +83,8 @@ DAT
   _zip          byte  "Content-Type: application/zip",CR, LF, $0
   _contLen      byte  "Content-Length: ", $0   
   _newline      byte  CR, LF, $0
+  time          byte  "00/00/0000 00:00:00", 0
+  sntpBuff      byte  $0[BUFFER_SNTP] 
   workSpace     byte  $0[BUFFER_WS]
   logBuf        byte  $0[BUFFER_LOG]
   wizver        byte  $00
@@ -83,13 +100,15 @@ OBJ
   dhcp            : "Dhcp" 
   sock[SOCKETS]   : "Socket"
   req             : "HttpHeader"
-  sd              : "S35390A_SD-MMC_FATEngineWrapper" 
+  sd              : "S35390A_SD-MMC_FATEngineWrapper"
+  sntp            : "SNTP Simple Network Time Protocol v2.01"
+  rtc             : "S35390A_RTCEngine" 
  
 PUB Init | i
 
   'A hardware reset can take 1.5 seconds
   'before the Sockets are ready to Send/Receive
-  'wiz.HardReset(WIZ#WIZ_RESET)
+  wiz.HardReset(WIZ#WIZ_RESET)
                            
   pst.Start(115_200)      
   pause(500)
@@ -125,6 +144,12 @@ PUB Init | i
   pst.str(string(CR,"        Mount SD Card - "))
   pst.str(sd.mount(DISK_PARTION))
 
+  '---------------------------------------------------
+  'Initialize the Realtime clock library
+  '--------------------------------------------------- 
+  pst.str(string(CR,"        Init RTC: "))
+  rtc.RTCEngineStart(29, 28, -1)
+  pst.str(FillTime(@time))
 
   '--------------------------------------------------- 
   'Start the WizNet SPI driver
@@ -152,7 +177,7 @@ PUB Init | i
 
   'MAC (Source Hardware Address) must be unique
   'on the local network
-  wiz.SetMac($00, $08, $DC, $16, $F8, $02)
+  wiz.SetMac($00, $08, $DC, $16, $F1, $32)
 
   'Invoke DHCP to retrived network parameters
   'This assumes the WizNet 5100 is connected 
@@ -164,7 +189,23 @@ PUB Init | i
   else
     PrintDhcpError
     return     
+  
+  '--------------------------------------------------- 
+  'Snyc the RTC using SNTP
+  '---------------------------------------------------
+  {    } 
+  pst.str(string(CR, "Sync RTC with time server")) 
+  pst.str(@divider)
+  if(SyncSntpTime)
+    PrintRemoteIp(SNTP_SOCK)
+    pst.str(string("Web time.........."))
+    DisplayHumanTime
+  else
+    pst.str(string(CR, "Sync failed"))    
 
+  '--------------------------------------------------- 
+  'Start up the web server
+  '---------------------------------------------------
   pst.str(string(CR, "Initialize Sockets"))
   pst.str(@divider)
   repeat i from 0 to SOCKETS-1
@@ -172,7 +213,8 @@ PUB Init | i
 
   OpenListeners
   StartListners
-  'SetTranactionTimeout(0)
+
+  ResetSntpSock
      
   pst.str(string(CR, "Start Socket Services", CR))
   MultiSocketService
@@ -193,6 +235,8 @@ PRI MultiSocketService | bytesToRead, sockId, fn, i
     
     'Cycle through the sockets one at a time
     'looking for a connections
+    pst.str(string(CR, "Waiting for a connection", CR))
+    PrintAllStatuses 
     repeat until sock[sockId].Connected
       sockId := ++sockId // SOCKETS
 
@@ -217,7 +261,7 @@ PRI MultiSocketService | bytesToRead, sockId, fn, i
     sock[sockId].Receive(@buff, bytesToRead)
 
     'Display the request header
-    'pst.str(@buff)
+    pst.str(@buff)
 
     'Tokenize and index the header
     req.TokenizeHeader(@buff, bytesToRead)
@@ -278,6 +322,20 @@ PRI RenderDynamic(id)
     BuildAndSendHeader(id, -1)
     sock[id].Send(@xmlPinState, strsize(@xmlPinState))
     return true
+
+  if(strcomp(req.GetFileName, string("time.xml")))
+    FillTime(@xTime)
+    BuildAndSendHeader(id, -1)
+    sock[id].Send(@xmlTime, strsize(@xmlTime))
+    return true
+
+  if(strcomp(req.GetFileName, string("sntptime.xml")))
+    SyncSntpTime
+    FillTime(@xTime)
+    BuildAndSendHeader(id, -1)
+    sock[id].Send(@xmlTime, strsize(@xmlTime))
+    ResetSntpSock
+    return true 
 
   return false
 
@@ -400,6 +458,67 @@ PRI RenderFile(id, fn) | fs, bytes
   
   sd.closeFile
   return
+
+
+PRI SyncSntpTime | ptr
+  'Initialize the socket
+  'sock[SNTP_SOCK].Close
+  
+  'Initialize the socket
+  sock[SNTP_SOCK].Init(SNTP_SOCK, WIZ#UDP, SNTP_PORT)
+
+  'Initialize the destination paramaters
+  sock[SNTP_SOCK].RemoteIp(64, 147, 116, 229)
+  sock[SNTP_SOCK].RemotePort(SNTP_PORT)
+
+  'Setup the buffer
+  sntp.CreateUDPtimeheader(@sntpBuff)  
+  ptr := SntpSendReceive(@sntpBuff, 48)
+  if(ptr == @null)
+    return false
+  else
+    'Set the time
+    SNTP.GetTransmitTimestamp(Zone,@sntpBuff,@LongHIGH,@LongLOW)
+    'PUB writeTime(second, minute, hour, day, date, month, year)                      
+    rtc.writeTime(byte[@DW_HH_MM_SS][0],      { Seconds
+                } byte[@DW_HH_MM_SS][1],      { Minutes
+                } byte[@DW_HH_MM_SS][2],      { Hour
+                } byte[@DW_HH_MM_SS][3],      { Day of week
+                } byte[@MM_DD_YYYY][2],       { Day
+                } byte[@MM_DD_YYYY][3],       { Month
+                } word[@MM_DD_YYYY][0])       { Year}
+
+  sock[SNTP_SOCK].Close
+  'sock[SNTP_SOCK].Destruct
+  return true
+
+PRI ResetSntpSock
+  sock[SNTP_SOCK].Init(SNTP_SOCK, WIZ#TCP, HTTP_PORT)
+  sock[SNTP_SOCK].Open
+  sock[SNTP_SOCK].Listen 
+    
+PUB SntpSendReceive(buffer, len) | bytesToRead, ptr 
+  
+  bytesToRead := 0
+
+  'Open socket and Send Message 
+  sock[SNTP_SOCK].Open
+  sock[SNTP_SOCK].Send(buffer, len)
+  pause(500)
+  bytesToRead := sock[SNTP_SOCK].Available
+   
+  'Check for a timeout
+  if(bytesToRead =< 0 )
+    bytesToRead~
+    return @null
+
+  if(bytesToRead > 0) 
+    'Get the Rx buffer  
+    ptr := sock[SNTP_SOCK].Receive(buffer, bytesToRead)
+
+  sock[SNTP_SOCK].Disconnect
+  return ptr
+
     
 PRI Writeline(label, value)
   pst.str(label)
@@ -493,7 +612,7 @@ PRI InitNetworkParameters | i
   'dhcp.SetRequestIp(192,168,1,130)
 
   'Invoke the SHCP process
-  repeat until dhcp.DoDhcp(false)
+  repeat until dhcp.DoDhcp(true)
     if(++i > ATTEMPTS)
       return false
   return true
@@ -543,16 +662,17 @@ PRI StartListners | i
   repeat i from 0 to SOCKETS-1
     if(sock[i].Listen)
       pst.str(string("Socket "))
+      pst.dec(i)
+      pst.str(string(" Port....."))
+      pst.dec(sock[i].GetPort)
+      pst.str(string("; MTU="))
+      pst.dec(sock[i].GetMtu)
+      pst.str(string("; TTL="))
+      pst.dec(sock[i].GetTtl)
+      pst.char(CR)
     else
       pst.str(string("Listener failed ",CR))
-    pst.dec(i)
-    pst.str(string(" Port....."))
-    pst.dec(sock[i].GetPort)
-    pst.str(string("; MTU="))
-    pst.dec(sock[i].GetMtu)
-    pst.str(string("; TTL="))
-    pst.dec(sock[i].GetTtl)
-    pst.char(CR)
+
 
 
 PRI SetTranactionTimeout(timeout) | i
@@ -615,6 +735,78 @@ PRI PrintTokens | i, tcnt
     pst.str(req.EnumerateHeader(i))
     pst.char(CR)
 
+PUB DisplayUdpHeader(buffer)
+  pst.char(CR)
+  pst.str(string(CR, "Message from......."))
+  PrintIp(buffer)
+  pst.char(":")
+  pst.dec(DeserializeWord(buffer + 4))
+  pst.str(string(" ("))
+  pst.dec(DeserializeWord(buffer + 6))
+  pst.str(string(")", CR))
+    
+PUB DisplayHumanTime
+    if byte[@MM_DD_YYYY][3]<10
+       pst.Char("0")
+    pst.dec(byte[@MM_DD_YYYY][3])
+    pst.Char("/")
+    if byte[@MM_DD_YYYY][2]<10
+       pst.Char("0")
+    pst.dec(byte[@MM_DD_YYYY][2])
+    pst.Char("/")
+    pst.dec(word[@MM_DD_YYYY][0])                    
+    pst.Char($20)
+    if byte[@DW_HH_MM_SS][2]<10
+       pst.Char("0")
+    pst.dec(byte[@DW_HH_MM_SS][2])
+    pst.Char(":")
+    if byte[@DW_HH_MM_SS][1]<10
+       pst.Char("0")
+    pst.dec(byte[@DW_HH_MM_SS][1])
+    pst.Char(":")
+    if byte[@DW_HH_MM_SS][0]<10
+       pst.Char("0")
+    pst.dec(byte[@DW_HH_MM_SS][0])
+    pst.str(string("(GMT "))
+    if Zone<0
+       pst.Char("-")
+    else
+       pst.Char("+")
+    pst.str(string(" ",||Zone+48,":00) "))
+    pst.Char(13)
+    
+PRI FillTime(ptr) | num
+ '00/00/0000 00:00:00
+
+  rtc.readTime
+
+  FillTimeHelper(rtc.clockMonth, ptr)
+  ptr += 3
+
+  FillTimeHelper(rtc.clockDate, ptr)
+  ptr += 3
+
+  FillTimeHelper(rtc.clockYear, ptr)
+  ptr += 5
+
+  FillTimeHelper(rtc.clockHour , ptr)
+  ptr += 3
+
+  FillTimeHelper(rtc.clockMinute , ptr)
+  ptr += 3
+
+  FillTimeHelper(rtc.clockSecond, ptr) 
+ 
+  return @time
+
+PRI FillTimeHelper(value, ptr) | t1
+  if(value < 10)
+    byte[ptr++] := "0"
+  
+  t1 := Dec(value)
+  bytemove(ptr, t1, strsize(t1))
+
+
 PUB Dec(value) | i, x, j
 {{Send value as decimal characters.
   Parameter:
@@ -642,6 +834,11 @@ Note: This source came from the Parallax Serial Termianl library
   workspace[j] := 0
   return @workspace
 
+PRI DeserializeWord(buffer) | value
+  value := byte[buffer++] << 8
+  value += byte[buffer]
+  return value
+  
 PRI StrToBase(stringptr, base) : value | chr, index
 {Converts a zero terminated string representation of a number to a value in the designated base.
 Ignores all non-digit characters (except negative (-) when base is decimal (10)).}

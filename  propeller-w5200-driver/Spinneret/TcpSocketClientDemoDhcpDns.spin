@@ -48,6 +48,11 @@ DAT
 }               byte  "Host: www.weather.gov", CR, LF, {
 }               byte  "User-Agent: Wiz5200", CR, LF, CR, LF, $0
 
+  basicAuthReq  byte  "GET /spinneret/formtest.php HTTP/1.1", CR, LF, {
+}               byte  "Host: rcc.cfbtechnologies.com", CR, LF, {
+}               byte  "User-Agent: Wiz5200", CR, LF, {
+}               byte  "Authorization: Basic dGVzdDojYnhGeFgheWxTR3A=", CR, LF, CR, LF, $0
+
   buff          byte  $0[BUFFER_2K]
 
   t1            long  $0
@@ -56,15 +61,16 @@ DAT
 
 OBJ
   pst           : "Parallax Serial Terminal"
-  'wiz           : "W5200"
-  wiz           : "W5100"
+  wiz           : "W5100"                                                                       
   sock          : "Socket"
   dhcp          : "Dhcp"
   dns           : "Dns"
    
 
 PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, totalBytes, i, dnsInit
- 
+
+  wiz.HardReset(WIZ_RESET)
+
   receiving := true
   bytesToRead := 0
 
@@ -72,16 +78,16 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
                                                
   pst.Start(115_200)      
   pause(500)
-
-  pst.str(string("Initialize W5200", CR))
- 
-  wiz.HardReset(WIZ_RESET)
-
+  
+  pst.str(string("Initialize W5100", CR))
   wiz.Start(SPI_CS, SPI_SCK, SPI_MOSI, SPI_MISO)  
-  wiz.SetMac($00, $08, $DC, $16, $F8, $01)
+  wiz.SetMac($00, $08, $DC, $16, $F1, $32)
+  pause(500)
 
   pst.str(string("Getting network paramters", CR))
   dhcp.Init(@buff, DHCP_SOCKET)
+
+  pst.str(string("--------------------------------------------------", CR))
  
   pst.str(string("Requesting IP....."))      
   repeat until dhcp.DoDhcp(true)
@@ -133,10 +139,10 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
   PrintIp(wiz.GetDns)
 
   pst.str(string("DHCP Server......."))
-  printIp(wiz.GetDhcpServerIp)
+  printIp(dhcp.GetDhcpServer)
 
   pst.str(string("Router............"))
-  printIp(wiz.GetRouter)
+  printIp(dhcp.GetRouter)
 
   pst.str(string("Gateway..........."))                                        
   printIp(wiz.GetGatewayIp)
@@ -144,13 +150,18 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
   pst.char(CR) 
 
   pst.str(string("DNS Init (bool)..."))
-  pst.dec(dns.Init(@buff, DNS_SOCKET))
+  if(dns.Init(@buff, DNS_SOCKET))
+    pst.str(string("True"))
+  else
+    pst.str(string("False"))
   pst.char(CR)
 
   pst.str(string("Resolved IP(0)....")) 
-  'remoteIP := dns.ResolveDomain(string("www.agaverobotics.com"))
-  remoteIP := dns.ResolveDomain(string("finance.google.com"))
+  remoteIP := dns.ResolveDomain(string("www.agaverobotics.com"))
+  'remoteIP := dns.ResolveDomain(string("finance.google.com"))
+  'remoteIP := dns.ResolveDomain(string("google.com"))
   'remoteIP := dns.ResolveDomain(string("www.weather.gov"))
+  'remoteIP := dns.ResolveDomain(string("rcc.cfbtechnologies.com"))
    
   PrintIp(remoteIP)
    
@@ -166,27 +177,43 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
   sock.RemoteIp(byte[remoteIP][0], byte[remoteIP][1], byte[remoteIP][2], byte[remoteIP][3])  
   sock.RemotePort(80) 
 
-  'PrintIp(wiz.GetRemoteIP(0))
-  
   pst.str(string(CR, "Begin Client Web Request", CR))
-  'wiz.setGateway(0,0,0,0)
+
   'Client
   'pst.str(string("Open Socket", CR))
   sock.Open
-  sock.Connect
+  pst.str(string("Status(open)......"))
+  pst.hex(sock.GetStatus, 2)
+  pst.char(CR)
 
+  repeat until sock.Connect > 1
+    pause(500)  
+    'sock.Open
+    'pst.str(string("Status(open)......"))
+    'pst.hex(sock.GetStatus, 2)
+    'pst.char(CR)
+    'pause(500)
+    
+  pst.str(string("Status(conn)......"))
+  pst.hex(sock.GetStatus, 2)
+  pst.char(CR)
+    
   pst.str(string("Connecting to.....")) 
   PrintIp(wiz.GetRemoteIP(0))
   pst.char(CR) 
    
   'Connection?
   repeat until sock.Connected
+
     pause(100)
 
-  pst.str(string("Sending HTTP Header", CR)) 
-  'bytesSent := sock.Send(@request2, strsize(@request2))
-  bytesSent := sock.Send(@google, strsize(@google))
+  pst.str(string("Sending HTTP Request", CR))
+  bytesSent := sock.Send(@request2, strsize(@request2))
+  'bytesSent := sock.Send(@google, strsize(@google))
+  'bytesSent := sock.Send(@s_google, strsize(@s_google))
   'bytesSent := sock.Send(@weather, strsize(@weather))
+  'bytesSent := sock.Send(@basicAuthReq, strsize(@basicAuthReq))
+  
   pst.str(string("Bytes Sent........"))
   pst.dec(bytesSent)
   pst.char(13)
