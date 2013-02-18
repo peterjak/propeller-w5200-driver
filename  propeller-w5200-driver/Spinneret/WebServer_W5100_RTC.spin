@@ -41,13 +41,14 @@ CON
   {{ USA Daylight Time Zone Abbreviations  }}
   #-9, HDT,AtDT,PDT,MDT,CDT,EDT,AlDT
 
-  Zone = MST 
+  Zone = MST '<- Insert your timezone
     
 VAR
   long  buttonStack[10]
   long  longHIGH, longLOW, MM_DD_YYYY, DW_HH_MM_SS 'Expected 4-contigous variables for SNTP  
   
 DAT
+  sntpIp        byte  64, 147, 116, 229 '<- This SNTP server is on the west coast
   version       byte  "1.1", $0
   _404          byte  "HTTP/1.1 404 OK", CR, LF,                                {
 }                     "Content-Type: text/html", CR, LF, CR, LF,                {
@@ -84,13 +85,13 @@ DAT
   _contLen      byte  "Content-Length: ", $0   
   _newline      byte  CR, LF, $0
   time          byte  "00/00/0000 00:00:00", 0
-  sntpIp        byte  64, 147, 116, 229
   sntpBuff      byte  $0[BUFFER_SNTP] 
   workSpace     byte  $0[BUFFER_WS]
   logBuf        byte  $0[BUFFER_LOG]
   wizver        byte  $00
   buff          byte  $0[BUFFER_2K]
   null          long  $00
+  dhcpRenew     byte  $00
   contentType   long  @_css, @_gif, @_html, @_ico, @_jpg, @_js, @_pdf, @_png, @_txt, @_xml, @_zip, $0
   mtuBuff       long  TCP_MTU
    
@@ -194,7 +195,6 @@ PUB Init | i
   '--------------------------------------------------- 
   'Snyc the RTC using SNTP
   '---------------------------------------------------
-  {    } 
   pst.str(string(CR, "Sync RTC with time server")) 
   pst.str(@divider)
   if(SyncSntpTime(SNTP_SOCK))
@@ -202,7 +202,18 @@ PUB Init | i
     pst.str(string("Web time.........."))
     DisplayHumanTime
   else
-    pst.str(string(CR, "Sync failed"))    
+    pst.str(string(CR, "Sync failed"))
+
+  '--------------------------------------------------- 
+  ' Set DHCP renew -> (Current hour + 12) // 24
+  '---------------------------------------------------
+  dhcpRenew := (rtc.clockHour + 12) // 24
+  pst.str(string("DHCP Renew........"))
+  if(dhcpRenew < 10)
+    pst.char("0")
+  pst.dec(dhcpRenew)
+  pst.str(string(":00:00",CR))
+    
 
   '--------------------------------------------------- 
   'Start up the web server
@@ -227,8 +238,7 @@ PUB Init | i
   reboot
   
 PRI MultiSocketService | bytesToRead, sockId, fn, i
-  bytesToRead := sockId := 0
-  i := 0
+  bytesToRead := sockId := i := 0
   repeat
      
     bytesToRead~ 
@@ -240,22 +250,23 @@ PRI MultiSocketService | bytesToRead, sockId, fn, i
     'PrintAllStatuses 
     repeat until sock[sockId].Connected
       sockId := ++sockId // SOCKETS
-
-    'pause(20)
-    
+      if(++i//100_000 == 0)
+        if(rtc.clockHour == dhcpRenew)
+          RenewDhcpLease
+        i~
+            
     'Repeat until we have data in the buffer
     repeat until bytesToRead := sock[sockId].Available
 
     'PrintAllStatuses
 
     'Check for a timeout error
+    i := 0
     if(bytesToRead =< 0)
       pst.str(string(CR, "Timeout: "))
       pst.dec(bytesToRead) 
       PrintAllStatuses
-      if(i++ == 1)
-        sock[sockId].Disconnect
-        i := 0    
+      sock[sockId].Disconnect
       next
        
     'Move the Rx buffer into HUB memory
@@ -281,6 +292,21 @@ PRI MultiSocketService | bytesToRead, sockId, fn, i
 
     sockId := ++sockId // SOCKETS
     
+PRI RenewDhcpLease | requestIp
+  pst.str(string(CR,"Retrieving Network Parameters...Please Wait"))
+  pst.str(@divider)
+  requestIp := dhcp.GetIp
+  dhcp.SetRequestIp(byte[requestIp][0],byte[requestIp][1],byte[requestIp][2],byte[requestIp][3]) 
+  if(InitNetworkParameters)
+    PrintNetworkParams
+  else
+    PrintDhcpError
+  dhcpRenew := (rtc.clockHour + 12) // 24
+  pst.str(string("DHCP Renew........"))
+  if(dhcpRenew < 10)
+    pst.char("0")
+  pst.dec(dhcpRenew)
+  pst.str(string(":00:00",CR))
  
 PRI BuildAndSendHeader(id, contentLength) | dest, src
   dest := @buff
