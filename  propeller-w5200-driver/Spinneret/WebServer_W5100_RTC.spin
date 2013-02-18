@@ -49,7 +49,7 @@ VAR
   
 DAT
   sntpIp        byte  64, 147, 116, 229 '<- This SNTP server is on the west coast
-  version       byte  "1.1", $0
+  version       byte  "1.2", $0
   _404          byte  "HTTP/1.1 404 OK", CR, LF,                                {
 }                     "Content-Type: text/html", CR, LF, CR, LF,                {
 }                     "<html>",                                                 {
@@ -195,7 +195,7 @@ PUB Init | i
   '--------------------------------------------------- 
   'Snyc the RTC using SNTP
   '---------------------------------------------------
-  pst.str(string(CR, "Sync RTC with time server")) 
+  pst.str(string(CR, "Sync RTC with Time Server")) 
   pst.str(@divider)
   if(SyncSntpTime(SNTP_SOCK))
     PrintRemoteIp(SNTP_SOCK)
