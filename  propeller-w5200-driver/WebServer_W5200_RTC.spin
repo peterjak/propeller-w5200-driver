@@ -18,7 +18,8 @@ CON
   { Port Configuration }
   HTTP_PORT     = 80
   SNTP_PORT     = 123
-
+  
+  RTC_CHECK_DELAY = 1_000_000 
 
   { SD IO }
   DISK_PARTION  = 0
@@ -41,25 +42,19 @@ CON
   {{ USA Daylight Time Zone Abbreviations  }}
   #-9, HDT,AtDT,PDT,MDT,CDT,EDT,AlDT
 
-  Zone = MST 
+  Zone = MST
+
     
 VAR
   long  buttonStack[10]
   long  longHIGH, longLOW, MM_DD_YYYY, DW_HH_MM_SS 'Expected 4-contigous variables for SNTP
   
 DAT
-  version       byte  "1.1", $0
-  hasSd         byte  $00
+  version       byte  "1.2", $0
+  sntpIp        byte  64, 147, 116, 229 '64, 147, 116, 229<- This SNTP server is on the west coast
+  hasSd         byte  $00 
+  dhcpRenew     byte  $00  
   
-  hello         byte  "HTTP/1.1 200 OK", CR, LF,                                {
-}                     "Content-Type: text/html", CR, LF, CR, LF,                {
-}                     "<html>",                                                 {
-}                     "<head>",                                                 {
-}                     "<title>Hello World</title><head>",                       {
-}                     "<body>",                                                 {
-}                     "Hello World!",                                           {                                                                                                       
-}                     "</body>",                                                {
-}                     "</html>", CR, LF, $0
   _404          byte  "HTTP/1.1 404 Not Found", CR, LF,                         {
 }                     "Content-Type: text/html", CR, LF, CR, LF,                {
 }                     "<html>",                                                 {
@@ -128,6 +123,8 @@ OBJ
   req             : "HttpHeader"
   sd              : "S35390A_SD-MMC_FATEngineWrapper"
   buttons         : "Touch Buttons"
+  sntp            : "SNTP Simple Network Time Protocol v2.01"
+  rtc             : "S35390A_RTCEngine" 
    
  
 PUB Init | i, t1
@@ -157,11 +154,13 @@ PUB Init | i, t1
   '--------------------------------------------------- 
   ifnot(sd.Start)
     pst.str(string(CR, "Failed to start SD driver"))
+    hasSd := false
   else
     pst.str(string(CR, "COG["))
     i := sd.GetCogId
     pst.dec(i)
-    pst.str(string("]: Starting SD Driver"))  
+    pst.str(string("]: Starting SD Driver"))
+    hasSd := true  
   pause(500)
 
   pst.str(string(CR,"        Mount SD Card - "))
@@ -171,7 +170,6 @@ PUB Init | i, t1
     hasSd := true
   else
     hasSd := false
-  
 
   '--------------------------------------------------- 
   'Start the WizNet SPI driver
@@ -228,6 +226,28 @@ PUB Init | i, t1
     PrintDhcpError
     return
 
+  '--------------------------------------------------- 
+  'Snyc the RTC using SNTP
+  '---------------------------------------------------
+  pst.str(string(CR, "Sync RTC with Time Server")) 
+  pst.str(@divider)
+  if(SyncSntpTime(SNTP_SOCK))
+    PrintRemoteIp(SNTP_SOCK)
+    pst.str(string("Web time.........."))
+    DisplayHumanTime
+  else
+    pst.str(string(CR, "Sync failed", CR))
+
+  '--------------------------------------------------- 
+  ' Set DHCP renew -> (Current hour + 12) // 24
+  '---------------------------------------------------
+  dhcpRenew := (rtc.clockHour + 12) // 24
+  dhcpRenew := 21
+  pst.str(string("DHCP Renew........"))
+  if(dhcpRenew < 10)
+    pst.char("0")
+  pst.dec(dhcpRenew)
+  pst.str(string(":00:00",CR))
 
   '--------------------------------------------------- 
   'Start up the web server
@@ -260,6 +280,10 @@ PRI MultiSocketService | bytesToRead, sockId, fn, i
     'looking for a connections
     repeat until sock[sockId].Connected
       sockId := ++sockId // SOCKETS
+      if(++i//RTC_CHECK_DELAY == 0)
+        if(rtc.clockHour == dhcpRenew)
+          RenewDhcpLease
+        i~
 
     'Repeat until we have data in the buffer
     repeat until bytesToRead := sock[sockId].Available
@@ -280,7 +304,7 @@ PRI MultiSocketService | bytesToRead, sockId, fn, i
     sock[sockId].Receive(@buff, bytesToRead)
 
     'Display the request header
-    pst.str(@buff)
+    'pst.str(@buff)
 
     'Tokenize and index the header
     req.TokenizeHeader(@buff, bytesToRead)
@@ -290,11 +314,7 @@ PRI MultiSocketService | bytesToRead, sockId, fn, i
       RenderFile(sockId, fn)
     else
       ifnot(RenderDynamic(sockId))
-        if(hasSd)
-          sock[sockId].Send(@_404, strsize(@_404))
-        else
-          if(strcomp( req.GetFileName, string("index.htm" )))
-            sock[sockId].send(@hello, strsize(@hello))
+        sock[sockId].Send(@_404, strsize(@_404))
 
     'Close the socket and reset the
     'interupt register
@@ -447,6 +467,20 @@ PRI RenderDynamic(id)
     BuildPinEndcodeStateXml( req.Get(string("value")) )
     BuildAndSendHeader(id, -1)
     sock[id].Send(@xmlPinState, strsize(@xmlPinState))
+    return true
+
+  if(strcomp(req.GetFileName, string("time.xml")))
+    FillTime(@xTime)
+    BuildAndSendHeader(id, -1)
+    sock[id].Send(@xmlTime, strsize(@xmlTime))
+    return true
+
+  if(strcomp(req.GetFileName, string("sntptime.xml")))
+    SyncSntpTime(SNTP_SOCK)
+    FillTime(@xTime)
+    BuildAndSendHeader(id, -1)
+    sock[id].Send(@xmlTime, strsize(@xmlTime))
+    ResetSntpSock(SNTP_SOCK) 
     return true 
 
   return false   
@@ -654,7 +688,79 @@ PRI CloseWait | i
     if(sock[i].IsClosed)  
       sock[i].Open
       sock[i].Listen
+      
+{{ SNTP Methods }}
+PRI SyncSntpTime(sockId) | ptr
 
+  'Initialize the socket
+  sock[sockId].Init(SNTP_SOCK, WIZ#UDP, SNTP_PORT)
+  'Initialize the destination paramaters
+  'sock[sockId].RemoteIp(64, 147, 116, 229)
+  sock[sockId].RemoteIp(sntpIp[0], sntpIp[1], sntpIp[2], sntpIp[3])
+  sock[sockId].RemotePort(SNTP_PORT)
+
+  'Setup the buffer
+  sntp.CreateUDPtimeheader(@sntpBuff)  
+  ptr := SntpSendReceive(SNTP_SOCK, @sntpBuff, 48)
+  if(ptr == @null)
+    return false
+  else
+    'Set the time
+    SNTP.GetTransmitTimestamp(Zone,@sntpBuff,@LongHIGH,@LongLOW)
+    'PUB writeTime(second, minute, hour, day, date, month, year)                      
+    rtc.writeTime(byte[@DW_HH_MM_SS][0],      { Seconds
+                } byte[@DW_HH_MM_SS][1],      { Minutes
+                } byte[@DW_HH_MM_SS][2],      { Hour
+                } byte[@DW_HH_MM_SS][3],      { Day of week
+                } byte[@MM_DD_YYYY][2],       { Day
+                } byte[@MM_DD_YYYY][3],       { Month
+                } word[@MM_DD_YYYY][0])       { Year}
+
+  return true
+
+PRI ResetSntpSock(sockId)
+  sock[sockId].Init(sockId, WIZ#TCP, HTTP_PORT)
+  sock[sockId].Open
+  sock[sockId].Listen 
+    
+PUB SntpSendReceive(sockId, buffer, len) | bytesToRead, ptr 
+  bytesToRead := 0
+
+  'Open socket and Send Message
+  sock[sockId].Open
+  sock[sockId].Send(buffer, len)
+  pause(500)
+  bytesToRead := sock[sockId].Available
+   
+  'Check for a timeout
+  if(bytesToRead =< 0 )
+    bytesToRead~
+    return @null
+
+  if(bytesToRead > 0) 
+    'Get the Rx buffer  
+    ptr := sock[sockId].Receive(buffer, bytesToRead)
+
+  sock[sockId].Disconnect
+  return ptr
+  
+{{ RTC Methods }}
+PRI RenewDhcpLease | requestIp
+  pst.str(string(CR,"Retrieving Network Parameters...Please Wait"))
+  pst.str(@divider)
+  requestIp := dhcp.GetIp
+  dhcp.SetRequestIp(byte[requestIp][0],byte[requestIp][1],byte[requestIp][2],byte[requestIp][3]) 
+  if(InitNetworkParameters)
+    PrintNetworkParams
+  else
+    PrintDhcpError
+  dhcpRenew := (rtc.clockHour + 12) // 24
+  pst.str(string("DHCP Renew........"))
+  if(dhcpRenew < 10)
+    pst.char("0")
+  pst.dec(dhcpRenew)
+  pst.str(string(":00:00",CR))
+  
 PRI PrintStatus(id)
   pst.str(string("Status ("))
   pst.dec(id)
@@ -736,7 +842,38 @@ PUB DisplayHumanTime
     pst.str(string(" ",||Zone+48,":00) "))
     pst.Char(13)
     
+
+PRI FillTime(ptr) | num
+ '00/00/0000 00:00:00
+
+  rtc.readTime
+
+  FillTimeHelper(rtc.clockMonth, ptr)
+  ptr += 3
+
+  FillTimeHelper(rtc.clockDate, ptr)
+  ptr += 3
+
+  FillTimeHelper(rtc.clockYear, ptr)
+  ptr += 5
+
+  FillTimeHelper(rtc.clockHour , ptr)
+  ptr += 3
+
+  FillTimeHelper(rtc.clockMinute , ptr)
+  ptr += 3
+
+  FillTimeHelper(rtc.clockSecond, ptr) 
  
+  return @time
+
+PRI FillTimeHelper(value, ptr) | t1
+  if(value < 10)
+    byte[ptr++] := "0"
+  
+  t1 := Dec(value)
+  bytemove(ptr, t1, strsize(t1))
+  
 PUB Dec(value) | i, x, j
 {{Send value as decimal characters.
   Parameter:
