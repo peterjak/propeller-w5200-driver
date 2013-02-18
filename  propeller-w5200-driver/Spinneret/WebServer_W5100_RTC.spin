@@ -37,11 +37,16 @@ CON
   
   {{ USA Standard Time Zone Abbreviations }}
   #-10, HST,AtST,_PST,MST,CST,EST,AlST
+
+  GMT           = 0
+  AZ_TIME       = 1
               
   {{ USA Daylight Time Zone Abbreviations  }}
   #-9, HDT,AtDT,PDT,MDT,CDT,EDT,AlDT
 
   Zone = MST '<- Insert your timezone
+
+  RTC_CHECK_DELAY = 1_000_000
     
 VAR
   long  buttonStack[10]
@@ -50,6 +55,7 @@ VAR
 DAT
   sntpIp        byte  64, 147, 116, 229 '<- This SNTP server is on the west coast
   version       byte  "1.2", $0
+  hasSd         byte  $00
   _404          byte  "HTTP/1.1 404 OK", CR, LF,                                {
 }                     "Content-Type: text/html", CR, LF, CR, LF,                {
 }                     "<html>",                                                 {
@@ -106,7 +112,7 @@ OBJ
   sntp            : "SNTP Simple Network Time Protocol v2.01"
   rtc             : "S35390A_RTCEngine" 
  
-PUB Init | i
+PUB Init | i, t1
 
   'A hardware reset can take 1.5 seconds
   'before the Sockets are ready to Send/Receive
@@ -144,7 +150,12 @@ PUB Init | i
   pause(500)
 
   pst.str(string(CR,"        Mount SD Card - "))
-  pst.str(sd.mount(DISK_PARTION))
+  t1 := sd.mount(DISK_PARTION)
+  pst.str(t1)
+  if(strcomp(t1, string("OK")))
+    hasSd := true
+  else
+    hasSd := false
 
   '---------------------------------------------------
   'Initialize the Realtime clock library
@@ -208,6 +219,7 @@ PUB Init | i
   ' Set DHCP renew -> (Current hour + 12) // 24
   '---------------------------------------------------
   dhcpRenew := (rtc.clockHour + 12) // 24
+  dhcpRenew := 21
   pst.str(string("DHCP Renew........"))
   if(dhcpRenew < 10)
     pst.char("0")
@@ -250,7 +262,7 @@ PRI MultiSocketService | bytesToRead, sockId, fn, i
     'PrintAllStatuses 
     repeat until sock[sockId].Connected
       sockId := ++sockId // SOCKETS
-      if(++i//100_000 == 0)
+      if(++i//RTC_CHECK_DELAY == 0)
         if(rtc.clockHour == dhcpRenew)
           RenewDhcpLease
         i~
@@ -261,7 +273,6 @@ PRI MultiSocketService | bytesToRead, sockId, fn, i
     'PrintAllStatuses
 
     'Check for a timeout error
-    i := 0
     if(bytesToRead =< 0)
       pst.str(string(CR, "Timeout: "))
       pst.dec(bytesToRead) 
@@ -564,6 +575,9 @@ PRI FileExists(filename) | rc
 {{
   Verify if the file exists
 }}
+  ifnot(hasSd)
+    return false
+    
   rc := sd.listEntry(filename)
   if(rc == IO_OK)
     rc := sd.openFile(filename, IO_READ)

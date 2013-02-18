@@ -47,6 +47,7 @@ VAR
   
 DAT
   version       byte  "1.1", $0
+  hasSd         byte  $00
   _404          byte  "HTTP/1.1 404 OK", CR, LF,                                {
 }                     "Content-Type: text/html", CR, LF, CR, LF,                {
 }                     "<html>",                                                 {
@@ -101,7 +102,7 @@ OBJ
   sntp            : "SNTP Simple Network Time Protocol v2.01"
   rtc             : "S35390A_RTCEngine" 
  
-PUB Init | i
+PUB Init | i, t1
 
   'A hardware reset can take 1.5 seconds
   'before the Sockets are ready to Send/Receive
@@ -139,7 +140,12 @@ PUB Init | i
   pause(500)
 
   pst.str(string(CR,"        Mount SD Card - "))
-  pst.str(sd.mount(DISK_PARTION))
+  t1 := sd.mount(DISK_PARTION)
+  pst.str(t1)
+  if(strcomp(t1, string("OK")))
+    hasSd := true
+  else
+    hasSd := false
 
   '---------------------------------------------------
   'Initialize the Realtime clock library
@@ -449,6 +455,9 @@ PRI FileExists(filename) | rc
 {{
   Verify if the file exists
 }}
+  ifnot(hasSd)
+    return false
+    
   rc := sd.listEntry(filename)
   if(rc == IO_OK)
     rc := sd.openFile(filename, IO_READ)
