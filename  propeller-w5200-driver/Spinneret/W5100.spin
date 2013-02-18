@@ -443,7 +443,7 @@ PUB GetMaximumSegmentSize(socket)
   return ReadSocketWord(socket, S_MAX_SEGM0)
   
 PUB GetTimeToLive(socket)
-  return ReadSocketWord(socket, S_TTL)
+  return ReadSocketByte(socket, S_TTL)
   
 PUB GetRxBytesToRead(socket)
 {{
