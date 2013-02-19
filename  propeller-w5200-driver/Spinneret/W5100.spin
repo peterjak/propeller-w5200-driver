@@ -918,6 +918,9 @@ PRI SocketReadByte(socket, register)
 PRI SocketWriteByte(socket, register, value)
   WriteByte(GetSocketRegister(socket, register), value)
 
+PRI ReadSocketByte(socket, register)
+  return ReadByte(GetSocketRegister(socket, register))
+  
 '----------------------------------------------------
 ' Helper Methods
 '---------------------------------------------------- 
