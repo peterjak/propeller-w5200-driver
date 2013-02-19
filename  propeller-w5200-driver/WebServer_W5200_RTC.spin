@@ -242,7 +242,8 @@ PUB Init | i, t1
   '--------------------------------------------------- 
   ' Set DHCP renew -> (Current hour + 12) // 24
   '---------------------------------------------------
-  dhcpRenew := (rtc.clockHour + 12) // 24
+  rtc.readTime
+  dhcpRenew := (rtc.clockHour + 12) // 24 
   pst.str(string("DHCP Renew........"))
   if(dhcpRenew < 10)
     pst.char("0")
@@ -281,6 +282,7 @@ PRI MultiSocketService | bytesToRead, sockId, fn, i
     repeat until sock[sockId].Connected
       sockId := ++sockId // SOCKETS
       if(++i//RTC_CHECK_DELAY == 0)
+        rtc.readTime 
         if(rtc.clockHour == dhcpRenew)
           RenewDhcpLease
         i~
