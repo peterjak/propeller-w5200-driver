@@ -72,8 +72,9 @@ DAT
 }                    "</root>", 0
 
   xmlTime       byte  "<root>", CR, LF, "  <time>" 
-  xtime         byte  "00/00/0000 00:00:00</time>", CR, LF, "</root>", 0
-
+  xtime         byte  "00/00/0000 00:00:00</time>", CR, LF, "  <day>"
+  xday          byte  "---","</day>", CR, LF, "</root>", $0
+  
   touch         byte  "<?xml version='1.0' encoding='utf-8'?>",CR,LF,"<root>",CR,LF,"<t7>"
   _t7           byte  "#333333</t7>", CR, LF,"<t6>"
   _t6           byte  "#333333</t6>", CR, LF,"<t5>"
@@ -242,7 +243,6 @@ PUB Init | i, t1
   ' Set DHCP renew -> (Current hour + 12) // 24
   '---------------------------------------------------
   dhcpRenew := (rtc.clockHour + 12) // 24
-  dhcpRenew := 21
   pst.str(string("DHCP Renew........"))
   if(dhcpRenew < 10)
     pst.char("0")
@@ -471,6 +471,7 @@ PRI RenderDynamic(id)
 
   if(strcomp(req.GetFileName, string("time.xml")))
     FillTime(@xTime)
+    FillDay(@xday)
     BuildAndSendHeader(id, -1)
     sock[id].Send(@xmlTime, strsize(@xmlTime))
     return true
@@ -478,6 +479,7 @@ PRI RenderDynamic(id)
   if(strcomp(req.GetFileName, string("sntptime.xml")))
     SyncSntpTime(SNTP_SOCK)
     FillTime(@xTime)
+    FillDay(@xday) 
     BuildAndSendHeader(id, -1)
     sock[id].Send(@xmlTime, strsize(@xmlTime))
     ResetSntpSock(SNTP_SOCK) 
@@ -865,7 +867,12 @@ PRI FillTime(ptr) | num
 
   FillTimeHelper(rtc.clockSecond, ptr) 
  
-  return @time
+  'return @time
+
+PRI FillDay(ptr)
+  rtc.readTime
+  bytemove(ptr, rtc.getDayString, 3)
+  'return @xday
 
 PRI FillTimeHelper(value, ptr) | t1
   if(value < 10)
