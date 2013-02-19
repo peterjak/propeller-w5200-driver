@@ -172,6 +172,13 @@ PUB Init | i, t1
   else
     hasSd := false
 
+  '---------------------------------------------------
+  'Initialize the Realtime clock library
+  '--------------------------------------------------- 
+  pst.str(string(CR,"        Init RTC: "))
+  rtc.RTCEngineStart(29, 28, -1)
+  pst.str(FillTime(@time))
+
   '--------------------------------------------------- 
   'Start the WizNet SPI driver
   '--------------------------------------------------- 
@@ -242,7 +249,6 @@ PUB Init | i, t1
   '--------------------------------------------------- 
   ' Set DHCP renew -> (Current hour + 12) // 24
   '---------------------------------------------------
-  rtc.readTime
   dhcpRenew := (rtc.clockHour + 12) // 24 
   pst.str(string("DHCP Renew........"))
   if(dhcpRenew < 10)
