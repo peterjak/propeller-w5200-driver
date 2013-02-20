@@ -264,11 +264,11 @@ PRI MultiSocketService | bytesToRead, sockId, fn, i
       sockId := ++sockId // SOCKETS
       if(++i//RTC_CHECK_DELAY == 0)
         rtc.readTime
-        pst.str(string("DHCP Time check: "))
-        pst.dec(rtc.clockHour)
-        pst.char(":")
-        pst.dec(rtc.clockMinute)
-        pst.char(CR)
+        'pst.str(string("DHCP Time check: "))
+        'pst.dec(rtc.clockHour)
+        'pst.char(":")
+        'pst.dec(rtc.clockMinute)
+        'pst.char(CR)
         if(rtc.clockHour == dhcpRenew)
           RenewDhcpLease
         i~
