@@ -220,7 +220,6 @@ PUB Init | i, t1
   ' Set DHCP renew -> (Current hour + 12) // 24
   '--------------------------------------------------- 
   dhcpRenew := (rtc.clockHour + 12) // 24
-  dhcpRenew := 14
   pst.str(string("DHCP Renew........"))
   if(dhcpRenew < 10)
     pst.char("0")
