@@ -46,7 +46,7 @@ CON
 
   Zone = MST '<- Insert your timezone
 
-  RTC_CHECK_DELAY = 1_000_000
+  RTC_CHECK_DELAY = 4_000_000  '1_000_000 = ~4 minutes
     
 VAR
   long  buttonStack[10]
@@ -218,9 +218,9 @@ PUB Init | i, t1
 
   '--------------------------------------------------- 
   ' Set DHCP renew -> (Current hour + 12) // 24
-  '---------------------------------------------------
-  rtc.readTime 
+  '--------------------------------------------------- 
   dhcpRenew := (rtc.clockHour + 12) // 24
+  dhcpRenew := 14
   pst.str(string("DHCP Renew........"))
   if(dhcpRenew < 10)
     pst.char("0")
@@ -265,6 +265,11 @@ PRI MultiSocketService | bytesToRead, sockId, fn, i
       sockId := ++sockId // SOCKETS
       if(++i//RTC_CHECK_DELAY == 0)
         rtc.readTime
+        pst.str(string("DHCP Time check: "))
+        pst.dec(rtc.clockHour)
+        pst.char(":")
+        pst.dec(rtc.clockMinute)
+        pst.char(CR)
         if(rtc.clockHour == dhcpRenew)
           RenewDhcpLease
         i~
@@ -314,6 +319,8 @@ PRI RenewDhcpLease | requestIp
     PrintNetworkParams
   else
     PrintDhcpError
+    
+  rtc.readTime 
   dhcpRenew := (rtc.clockHour + 12) // 24
   pst.str(string("DHCP Renew........"))
   if(dhcpRenew < 10)
@@ -815,7 +822,7 @@ PUB DisplayHumanTime
     pst.str(string(" ",||Zone+48,":00) "))
     pst.Char(13)
     
-PRI FillTime(ptr) | num
+PRI FillTime(ptr)
  '00/00/0000 00:00:00
 
   rtc.readTime
@@ -837,12 +844,12 @@ PRI FillTime(ptr) | num
 
   FillTimeHelper(rtc.clockSecond, ptr) 
  
-  'return @time
+  return ptr-17
 
 PRI FillDay(ptr)
   rtc.readTime
   bytemove(ptr, rtc.getDayString, 3)
-  'return @xday
+  return ptr
   
 PRI FillTimeHelper(value, ptr) | t1
   if(value < 10)
