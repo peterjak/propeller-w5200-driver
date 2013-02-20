@@ -19,7 +19,7 @@ CON
   HTTP_PORT     = 80
   SNTP_PORT     = 123
   
-  RTC_CHECK_DELAY = 1_000_000 
+  RTC_CHECK_DELAY = 4_000_000  '1_000_000 = 4mins
 
   { SD IO }
   DISK_PARTION  = 0
@@ -764,6 +764,8 @@ PRI RenewDhcpLease | requestIp
     PrintNetworkParams
   else
     PrintDhcpError
+    
+  rtc.readTime 
   dhcpRenew := (rtc.clockHour + 12) // 24
   pst.str(string("DHCP Renew........"))
   if(dhcpRenew < 10)
@@ -853,9 +855,9 @@ PUB DisplayHumanTime
     pst.Char(13)
     
 
-PRI FillTime(ptr) | num
+PRI FillTime(ptr) | t1
  '00/00/0000 00:00:00
-
+  t1 := ptr
   rtc.readTime
 
   FillTimeHelper(rtc.clockMonth, ptr)
@@ -875,12 +877,12 @@ PRI FillTime(ptr) | num
 
   FillTimeHelper(rtc.clockSecond, ptr) 
  
-  'return @time
+  return t1
 
 PRI FillDay(ptr)
   rtc.readTime
   bytemove(ptr, rtc.getDayString, 3)
-  'return @xday
+  return ptr
 
 PRI FillTimeHelper(value, ptr) | t1
   if(value < 10)
