@@ -20,6 +20,16 @@ DAT
   _cs       long  $0
   _miso     long  $0
 
+  _cnt1      long  $00
+  _cnt2      long  $00
+  
+
+PUB Cnt1
+  return _cnt1
+
+PUB Cnt2
+  return _cnt2
+  
 PUB Init(p_cs, p_sck, p_mosi, p_miso)
   Start(p_cs, p_sck, p_mosi, p_miso)
 
@@ -51,13 +61,16 @@ PUB GetCogId
   return cog-1
       
 PUB Write( addr, numberOfBytes, source) 
-
+  
   ReStart
+  
   ' Validate
   if (numberOfBytes => 1)
     'wait for the command to complete
     repeat until _cmd == 0
     
+    
+    _cnt1 := CNT
     _iobuff := source                    
     ' 32 bit instruction
     '     [address(31-16)| Op Code(15)| length(14-0)]
@@ -65,7 +78,9 @@ PUB Write( addr, numberOfBytes, source)
 
     'wait for the command to complete
     repeat until _cmd == 0
-
+    
+    _cnt2 := CNT
+    
     ' return bytes written
     return( numberOfBytes )
 
@@ -249,31 +264,31 @@ startSpi
                     djnz    len,    #:readNext    'Get next byte
 
                     or      outa,   cs            'Deselect
-                    or      outa,  sck            'Set the clock high
+                    or      outa,   sck           'Set the clock high
                     jmp     #:done 
 '--------------------------------------------------------------------------
 ' Write
 '--------------------------------------------------------------------------   
- :write             nop
-                    rdbyte  phsb, pbuff
-                    shl     phsb, #32-8
+ :write             'nop
+                    rdbyte  phsb,   pbuff
+                    shl     phsb,   #32-8
                     mov     frqa,   frqx20
-                    mov     ctra,  cntclk         'Start clocking
+                    mov     ctra,   cntclk        'Start clocking
                     
-                    rol     phsb,  #1             'Write bits 31 to 23
-                    rol     phsb,  #1
-                    rol     phsb,  #1
-                    rol     phsb,  #1
-                    rol     phsb,  #1
-                    rol     phsb,  #1
-                    rol     phsb,  #1
+                    rol     phsb,   #1            'Write bits 31 to 23
+                    rol     phsb,   #1
+                    rol     phsb,   #1
+                    rol     phsb,   #1
+                    rol     phsb,   #1
+                    rol     phsb,   #1
+                    rol     phsb,   #1
 
-                    mov     ctra,  zero           'Stop clocking
-                    add     pbuff, #1             '+1 HUB pointer
-                    djnz    len,   #:write        'Process next byte
+                    mov     ctra,   zero          'Stop clocking
+                    add     pbuff,  #1            '+1 HUB pointer
+                    djnz    len,    #:write       'Process next byte
                     
-                    or      outa,  cs             'Deselect
-                    or      outa,  sck            'Set the clock high
+                    or      outa,   cs            'Deselect
+                    or      outa,   sck           'Set the clock high
 '--------------------------------------------------------------------------
 'Done - return
 '--------------------------------------------------------------------------

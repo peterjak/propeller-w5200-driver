@@ -23,6 +23,7 @@ DAT
   serBuff       byte  $0[SERIAL_BUFFER]
   serialIO      byte  $FF
   udpIO         byte  $FF
+  counter       long  $0
 
   
 OBJ
@@ -36,6 +37,7 @@ PUB Main | bytesToRead, bytesSent, receiving, ptr
   pause(500)
   pst.Start(115_200)
   pause(500)
+  counter~
 
   'Set network parameters
   wiz.Start(WIZ#SPI_CS, WIZ#SPI_SCK, WIZ#SPI_MOSI, WIZ#SPI_MISO) 
@@ -75,6 +77,11 @@ PRI SerialHandler | char
       'Otherwise save the first char
       if(CR == char := pst.RxCheck)
         pst.RxFlush
+        pst.str(string("Count: "))
+        pst.dec(counter)
+        pst.char(CR)
+        DisplayMemory(@sockBuff+8, strsize(@sockBuff+8), false)
+        counter~
         next
       else
         serBuff[0] := char
@@ -89,8 +96,12 @@ PRI SerialHandler | char
     'and display the data
     if(serialIO == RX)
       'Debug Display -> process the serial data  
-      DisplayMemory(@sockBuff+8, strsize(@sockBuff+8), true)
+      'DisplayMemory(@sockBuff+8, strsize(@sockBuff+8), false)
       serialIO~~
+      counter++ 
+      'pst.str(string("Count: "))
+      'pst.dec(counter++)
+      'pst.char(CR)
 
      
 PRI UdpHandler | bytesToRead
@@ -102,15 +113,16 @@ PRI UdpHandler | bytesToRead
     if(bytesToRead := sock.DataReady)
       'Buffer the received UDP data
       sock.Receive(@sockBuff, bytesToRead)
-      pause(10)
+      'pause(10)
       'Let SerialHandler know we have serial data ready
       serialIO := RX
 
     'Send buffered serial data  
     if(udpIO == TX)
       sock.Send(@serBuff, strsize(@serBuff))
-      pause(10)
-      udpIO~~  
+      'pause(10)
+      udpIO~~
+      
 
 
 PRI PrintNetworkParams

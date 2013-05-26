@@ -1,35 +1,52 @@
 CON
   _clkmode = xtal1 + pll16x     
   _xinfreq = 5_000_000
+
+  HEADER_BUFFER       = $200
   
   CR    = $0D
   LF    = $0A
   
-  TOKEN_PTR_LEN       = $FF
-  HEADER_SECTIONS_LEN = 3
-  FILE_EXTENSION_LEN  = 3
+  TOKEN_POINTERS                = $FF
+  HEADER_SECTIONS               = 4
+  FILE_EXTENSION_LEN            = 3
+  MIN_STATUS_LINE_TOKENS        = 3
 
-  #0, STATUS_LINE, HEADER_LINES, BODY
+  #0, STATUS_LINE, QUERYSTRING, HEADER_LINES, BODY
 
 VAR
 
 DAT
+  buffer          byte  $0[HEADER_BUFFER]
   index           byte  "index.htm", $0
+  isFileReq       byte  $0
   ext             byte  $0[3], $0
-  sectionTokenCnt byte  $0[HEADER_SECTIONS_LEN]
+  sectionTokenCnt byte  $0[HEADER_SECTIONS]
   tokens          byte  $0 
   null            long  $0
-  headerSections  long  $0[HEADER_SECTIONS_LEN]
-  tokenPtr        long  $0[TOKEN_PTR_LEN]
+  headerSections  long  $0[HEADER_SECTIONS]
+  tokenPtr        long  $0[TOKEN_POINTERS]
   ptr             long  $0
   isToken         long  $0
   t1              long  $0
 
-PUB Get(key) | i
-  repeat i from 0 to sectionTokenCnt[STATUS_LINE]-1
+
+PUB GetMethod
+  return tokenPtr[0]
+
+PUB Get(key) | i, p
+  if(sectionTokenCnt[QUERYSTRING] == 0)
+    return null
+
+  p :=  PathElements  
+  repeat i from p to sectionTokenCnt[STATUS_LINE]-2
     if(strcomp(key, tokenPtr[i]))
       return tokenPtr[i+1]
   return @null
+
+PUB QueryStringElements
+  'HTTP path/file.ext?name=value HTTP/1.1
+  return sectionTokenCnt[QUERYSTRING]
 
 PUB Header(key) | i
   repeat i from sectionTokenCnt[STATUS_LINE] to sectionTokenCnt[HEADER_LINES]
@@ -42,6 +59,9 @@ PUB Post(key) | i
     if(strcomp(key, tokenPtr[i]))
         return tokenPtr[i+1]
   return @null
+
+PUB PostIdx(idx)
+  return tokenPtr[idx+1]   
  
 PUB Request(key) | i
   repeat i from 0 to sectionTokenCnt[BODY]-1
@@ -55,6 +75,19 @@ PUB UrlContains(value) | i
       return true
   return false
 
+PUB PathElements
+  'return sectionTokenCnt[STATUS_LINE]-3
+  '[Status line token count] - [Querystring token count] - [3] 
+  return ( (sectionTokenCnt[STATUS_LINE] - sectionTokenCnt[QUERYSTRING] - MIN_STATUS_LINE_TOKENS)  #> 0 )
+
+PUB GetUrlPart(value)
+  if(sectionTokenCnt[STATUS_LINE] == 3)
+    return string("\")
+  if((value >  sectionTokenCnt[STATUS_LINE]-3) OR (++value > sectionTokenCnt[STATUS_LINE]-3))
+    return @null
+    
+  return EnumerateHeader(value)
+
 PUB GetFileName | i, j
   repeat i from 1 to sectionTokenCnt[STATUS_LINE]-2
     t1 := tokenPtr[i]
@@ -62,6 +95,17 @@ PUB GetFileName | i, j
       if(byte[t1][j] == ".")
         return tokenPtr[i]
   return @index
+
+PUB IsFileRequest
+  return isFileReq
+
+PRI UrlContainsFileRequest | i, j
+  repeat i from 1 to sectionTokenCnt[STATUS_LINE]-2
+    t1 := tokenPtr[i]
+    repeat j from 0 to strsize(t1)-1
+      if(byte[t1][j] == ".")
+        return true
+  return false
 
 PUB GetFileNameExtension
   return @ext
@@ -72,8 +116,12 @@ PRI _GetFileNameExtension | i, j
     repeat j from 0 to strsize(t1)-1
       if(byte[t1][j] == ".")
         return tokenPtr[i]+j+1
-  return @index + strsize(@index)-FILE_EXTENSION_LEN   
+  return @index + strsize(@index)-FILE_EXTENSION_LEN 
+  'return string("xxx")  
 
+PUB GetSectionIndex(value)
+  return sectionTokenCnt[value]
+  
 PUB Decode(value)
   DecodeString(value)
   return value
@@ -84,10 +132,22 @@ PUB GetTokens
 PUB EnumerateHeader(idx)
   return tokenPtr[idx]
 
+PUB GetSectionCount(idx)
+  return sectionTokenCnt[idx]
+  
 PUB TokenizeHeader(buff, len)
-  ptr := buff
+
   tokens := 0
   isToken := false
+
+  headerSections[QUERYSTRING] := null
+  sectionTokenCnt[QUERYSTRING] := null 
+    
+  ' Copy the header and clear
+  bytemove(@buffer, buff, len)
+  ptr := @buffer
+  buff := @buffer
+  byte[buff][len] := 0
 
   'Initialize pointer arrays
   'Mark the start of the status line
@@ -97,6 +157,10 @@ PUB TokenizeHeader(buff, len)
   'Parse the status line 
   repeat until IsEndOfLine(byte[ptr]) 
     if(IsStatusLineToken(byte[ptr]))
+      'Set a pointer to the querystring if one exists
+      if(byte[ptr] == "?")
+        headerSections[QUERYSTRING] := ptr
+        sectionTokenCnt[QUERYSTRING] := tokens-1
       byte[ptr++] := 0
       isToken := true
     else
@@ -115,7 +179,12 @@ PUB TokenizeHeader(buff, len)
   bytemove(@ext, _GetFileNameExtension, 3)
 
   'Mark the start of the header lines
-  sectionTokenCnt[STATUS_LINE] := tokens 
+  sectionTokenCnt[STATUS_LINE] := tokens
+  
+  'Get the query string count
+  if(sectionTokenCnt[QUERYSTRING]) 
+    sectionTokenCnt[QUERYSTRING] := tokens - sectionTokenCnt[QUERYSTRING] - 3
+    
   headerSections[HEADER_LINES] := ptr
   tokenPtr[tokens++] := ptr
 
@@ -148,6 +217,10 @@ PUB TokenizeHeader(buff, len)
   repeat t1 from 1 to sectionTokenCnt[STATUS_LINE]-3
     DecodeString(tokenPtr[t1])
 
+  'Determine if a file is being requested
+  'Otherwise this can request can be a RESTful call
+  isFileReq := UrlContainsFileRequest
+  
   'Return if body does not contain data
   if(ptr == (buff + len))
     sectionTokenCnt[BODY] := sectionTokenCnt[HEADER_LINES] 

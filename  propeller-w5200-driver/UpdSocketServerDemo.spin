@@ -33,45 +33,38 @@ PUB Main | bytesToRead, bytesSent, receiving
   bytesToRead := 0
   pst.Start(115_200)
   pause(500)
-
+  bytesToRead~
 
   'Set network parameters
-  wiz.Init
+  wiz.Start(WIZ#SPI_CS, WIZ#SPI_SCK, WIZ#SPI_MOSI, WIZ#SPI_MISO) 
   wiz.SetCommonnMode(0)
   wiz.SetGateway(192, 168, 1, 1)
   wiz.SetSubnetMask(255, 255, 255, 0)
-  wiz.SetIp(192, 168, 1, 104)
+  wiz.SetIp(192, 168, 1, 130)
   wiz.SetMac($00, $08, $DC, $16, $F8, $01)
   
 
   pst.str(string("Initialize", CR))
-  'Initialize Socket 0 port 8080
-  sock.Init(0, UDP, 8080)
+  sock.Init(0, UDP, 10000)
+  sock.RemoteIp(192, 168, 1, 106)
+  sock.RemotePort(8000)
 
   
 
   
   pst.str(string("Start UPD Socket Server",CR))
   pst.str(string("Open",CR))
-  pst.str(string(CR, "---------------------------",CR))
+  pst.str(string("---------------------------",CR))
+  sock.Open 
   repeat
-    sock.Open
-    
+
     'Data in the buffer?
-    repeat until bytesToRead := sock.Available
+    repeat until bytesToRead := sock.DataReady
 
-    'Check for a timeout
-    if(bytesToRead < 0)
-      bytesToRead~
-      pst.str(string("Timeout",CR))
-      next
-
-    pst.str(string("Copy Rx Data",CR))
-  
     'Get the Rx buffer  
     sock.Receive(@buff, bytesToRead)
 
-    {{ Process the Rx data}}
+    {{ Process the Rx data  }} 
     pst.char(CR)
     pst.str(string("Request:",CR))
     PrintIp(@buff)
@@ -96,8 +89,8 @@ PUB Main | bytesToRead, bytesSent, receiving
     
     sock.Send(@udpMsg, strsize(@udpMsg))
 
-    pst.str(string("Disconnect",CR))
-    sock.Disconnect
+    'pst.str(string("Disconnect",CR))
+    'sock.Disconnect
     
     bytesToRead~
 
