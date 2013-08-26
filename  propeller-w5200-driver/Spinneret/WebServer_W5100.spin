@@ -3,6 +3,7 @@ CON
   _xinfreq = 5_000_000
 
   TCP_MTU       = 1460
+  MAIN_BUFFER   = $800
   BUFFER_2K     = $800
   BUFFER_LOG    = $80
   BUFFER_WS     = $20
@@ -11,7 +12,7 @@ CON
   LF            = $0A
 
   { Web Server Configuration }
-  SOCKETS       = 3
+  SOCKETS       = 4
   DHCP_SOCK     = 3
   ATTEMPTS      = 5
   { Port Configuration }
@@ -48,6 +49,7 @@ VAR
 DAT
   version       byte  "1.1", $0
   hasSd         byte  $00
+  approot       byte  "\", $0
   _404          byte  "HTTP/1.1 404 OK", CR, LF,                                {
 }                     "Content-Type: text/html", CR, LF, CR, LF,                {
 }                     "<html>",                                                 {
@@ -58,10 +60,19 @@ DAT
 }                     "</body>",                                                {
 }                     "</html>", CR, LF, $0
 
-  xmlPinState   byte  "<root>", CR, LF, "  <pin>" 
-  pinNum        byte  $30, $30, "</pin>", CR, LF, "  <value>"
-  pinState      byte  $30, $30, "</value>", CR, LF, "  <dir>" 
-  pinDir        byte  $30, $30, "</dir>", CR, LF,                               {
+  xsltPinState   byte  "<?xml version='1.0' encoding='utf-8'?>", CR, LF, {
+  }                   "<?xml-stylesheet type='text/xsl' href='pinstate.xsl'?>", CR , LF, {
+  }                   "<root>", CR, LF, "  <pin>" 
+  xslPinNum     byte  $30, $30, $30, "</pin>", CR, LF, "  <value>"
+  xslPinState   byte  $30, $30, $30, "</value>", CR, LF, "  <dir>" 
+  xslPinDir     byte  $30, $30, $30, "</dir>", CR, LF,                               {
+}                     "</root>", 0
+
+  xmlPinState   byte  "<?xml version='1.0' encoding='utf-8'?>", CR, LF, {
+  }                   "<root>", CR, LF, "  <pin>" 
+  pinNum        byte  $30, $30, $30, "</pin>", CR, LF, "  <value>"
+  pinState      byte  $30, $30, $30, "</value>", CR, LF, "  <dir>" 
+  pinDir        byte  $30, $30, $30, "</dir>", CR, LF,                               {
 }                     "</root>", 0
 
   xmlTime       byte  "<root>", CR, LF, "  <time>" 
@@ -86,7 +97,7 @@ DAT
   workSpace     byte  $0[BUFFER_WS]
   logBuf        byte  $0[BUFFER_LOG]
   wizver        byte  $00
-  buff          byte  $0[BUFFER_2K]
+  buff          byte  $0[MAIN_BUFFER+1]
   null          long  $00
   contentType   long  @_css, @_gif, @_html, @_ico, @_jpg, @_js, @_pdf, @_png, @_txt, @_xml, @_zip, $0
   mtuBuff       long  TCP_MTU
@@ -100,7 +111,8 @@ OBJ
   req             : "HttpHeader"
   sd              : "S35390A_SD-MMC_FATEngineWrapper"
   sntp            : "SNTP Simple Network Time Protocol v2.01"
-  rtc             : "S35390A_RTCEngine" 
+  rtc             : "S35390A_RTCEngine"
+  'gadget          : "ThermometerGadget"
  
 PUB Init | i, t1
 
@@ -213,7 +225,7 @@ PUB Init | i, t1
   pause(1000) 
   reboot
   
-PRI MultiSocketService | bytesToRead, sockId, fn, i
+PRI MultiSocketService | bytesToRead, sockId, fn, i, pathElements
   bytesToRead := sockId := 0
   i := 0
   repeat
@@ -249,13 +261,34 @@ PRI MultiSocketService | bytesToRead, sockId, fn, i
     sock[sockId].Receive(@buff, bytesToRead)
 
     'Display the request header
-    pst.str(@buff)
+    'pst.str(@buff)
 
     'Tokenize and index the header
     req.TokenizeHeader(@buff, bytesToRead)
- 
     fn := req.GetFileName
-    if(FileExists(fn))
+    
+    'http://192.168.1.110/xslpin.xml?led=23&value=-1
+    {
+    pst.str(string("Status Line #..."))
+    pst.dec(req.GetSectionCount(REQ#STATUS_LINE))
+    pst.char(CR)
+
+    pst.str(string("QS #............"))
+    pst.dec(req.GetSectionCount(REQ#QUERYSTRING))
+    pst.char(CR)
+    
+    PrintTokens(0, 5)
+     }  
+    'PrintRequestedFileName
+    pathElements := req.PathElements
+
+    {
+    pst.str(string("Path Elements..."))
+    pst.dec(pathElements)
+    pst.char(CR)
+    }
+     
+    if(FileExists(fn, pathElements))
       RenderFile(sockId, fn)
     else
       ifnot(RenderDynamic(sockId))
@@ -269,12 +302,12 @@ PRI MultiSocketService | bytesToRead, sockId, fn, i
     sockId := ++sockId // SOCKETS
     
  
-PRI BuildAndSendHeader(id, contentLength) | dest, src
+PRI BuildAndSendHeader(id, contentLength, ext) | dest, src
   dest := @buff
   bytemove(dest, @_h200, strsize(@_h200))
   dest += strsize(@_h200)
 
-  src := GetContentType(req.GetFileNameExtension)
+  src := GetContentType(GetExtension(ext))
   bytemove(dest, src, strsize(src))
   dest += strsize(src)
 
@@ -296,19 +329,28 @@ PRI BuildAndSendHeader(id, contentLength) | dest, src
   sock[id].send(@buff, strsize(@buff))  
 
 
+PRI GetExtension(fn)  
+  return fn + (strsize(fn) - 3)
+
 PRI RenderDynamic(id)
 
   'Process pinstate
   if(strcomp(req.GetFileName, string("pinstate.xml")))
     BuildPinStateXml( req.Get(string("led")), req.Get(string("value")) )
-    BuildAndSendHeader(id, -1)
+    BuildAndSendHeader(id, -1, string("xml"))
     sock[id].Send(@xmlPinState, strsize(@xmlPinState))
     return true
 
   if(strcomp(req.GetFileName, string("p_encode.xml")))
     BuildPinEndcodeStateXml( req.Get(string("value")) )
-    BuildAndSendHeader(id, -1)
+    BuildAndSendHeader(id, -1, string("xml"))
     sock[id].Send(@xmlPinState, strsize(@xmlPinState))
+    return true
+
+  if(strcomp(req.GetFileName, string("xslpin.xml")))
+    BuildXslPinStateXml( req.Get(string("led")), req.Get(string("value")) )
+    BuildAndSendHeader(id, -1, string("xml"))
+    sock[id].Send(@xsltPinState, strsize(@xsltPinState))
     return true
 
   return false
@@ -321,29 +363,79 @@ PRI BuildPinStateXml(strpin, strvalue) | pin, value, state, dir
   state := ReadPinState(pin)
 
   'Write the pin number to the XML doc
-  if(strsize(strpin) > 1)
-    bytemove(@pinNum,strpin, 2)
-  else
-    byte[@pinNum] := $30
-    byte[@pinNum][1] := byte[strpin]
+  PadLeft(@pinNum, strpin, 3, "0")
 
   'Write the pin value
   value := Dec(ReadPinState(pin))
-  if(strsize(value) > 1)
-    bytemove(@pinState, value, 2)
-  else
-    byte[@pinState] := $30
-    byte[@pinState][1] := byte[value]
+  PadLeft(@pinState, value, 3, "0")
 
   'Write Pin direction
   dir := Dec(ReadDirState(pin))
-  if(strsize(dir) > 1)
-    bytemove(@pinDir, value, 2)
+  PadLeft(@pinDir, dir, 3, "0")
+
+PRI PadLeft(dest, source, len, padChar)
+  'Fill the destination buffer with the padding char
+  if(strsize(source) < len)
+    bytefill(dest, padChar,  len)
+
+  'Write the string offset from the start of the destination buffer
+  bytemove(dest+len-strsize(source), source, strsize(source))
+
+PRI PadRight(dest, source, len, padChar)
+  'Fill the destination buffer with the padding char 
+  if(strsize(source) < len)
+    bytefill(dest, padChar,  len)
+    
+  'Write to the start of the destination buffer
+  bytemove(dest, source, strsize(source))
+
+
+
+PRI BuildXslPinStateXml(strpin, strvalue) | pin, value, state, dir
+  pin := StrToBase(strpin, 10)
+  value := StrToBase(strvalue, 10)
+
+
+  pst.str(string("Pin: "))
+  pst.dec(pin)
+  pst.char(CR)
+  
+  pst.str(string("Value: "))
+  pst.dec(value)
+  pst.char(CR)  
+
+  SetPinState(pin, value)
+  state := ReadPinState(pin)
+
+  'Write the pin number to the XML doc
+  PadLeft(@xslPinNum, strPin, 3, "0")
+  {
+  if(strsize(strpin) > 1)
+    bytemove(@xslPinNum,strpin, 2)
   else
-    byte[@pinDir] := $30
-    byte[@pinDir][1] := byte[dir]
-
-
+    byte[@xslPinNum] := $30
+    byte[@xslPinNum][1] := byte[strpin]
+  }
+  'Write the pin value
+  value := Dec(ReadPinState(pin))
+  PadLeft(@xslPinState, value, 3, "0")
+  {
+  if(strsize(value) > 1)
+    bytemove(@xslPinState, value, 2)
+  else
+    byte[@xslPinState] := $30
+    byte[@xslPinState][1] := byte[value]
+  }
+  'Write Pin direction
+  dir := Dec(ReadDirState(pin))
+  PadLeft(@xslPinDir, dir, 3, "0")
+  {
+  if(strsize(dir) > 1)
+    bytemove(@xslPinDir, value, 2)
+  else
+    byte[@xslPinDir] := $30
+    byte[@xslPinDir][1] := byte[dir]
+ }
 PRI ReadDirState(pin)
   return dira[pin]
    
@@ -370,24 +462,30 @@ PRI BuildPinEndcodeStateXml(strvalue) | value, state, dir
     state := ReadEncodedPinState
 
   'Write the pin number to the XML doc
-  bytemove(@pinNum,string("$F"), 2)
+  'bytemove(@pinNum,string("$F"), 2)
+
+  PadLeft(@pinNum, string("$F"), 3, "0") 
 
   'Write the pin value
   value := Dec(ReadEncodedPinState)
+  PadLeft(@pinState, value, 3, "0")
+  {
   if(strsize(value) > 1)
     bytemove(@pinState, value, 2)
   else
     byte[@pinState] := $30
     byte[@pinState][1] := byte[value]
-
+  }
   'Write Pin direction
   dir := Dec(ReadEncodedDirState)
+  PadLeft(@dir, dir, 3, "0")
+  {
   if(strsize(dir) > 1)
     bytemove(@pinDir, value, 2)
   else
     byte[@pinDir] := $30
     byte[@pinDir][1] := byte[dir]
-
+ }
     
 PRI ReadEncodedDirState
   return dira[27..24]
@@ -416,7 +514,7 @@ PRI RenderFile(id, fn) | fs, bytes
 
   OpenFile(fn)
   fs := sd.getFileSize 
-  BuildAndSendHeader(id, fs)
+  BuildAndSendHeader(id, fs, fn)
 
   'pst.str(string(cr,"Render File",cr))
   repeat until fs =< 0
@@ -451,12 +549,14 @@ PRI OpenFile(filename) | rc
         return true
   return false
 
-PRI FileExists(filename) | rc
+PRI FileExists(filename, pathElements) | rc
 {{
   Verify if the file exists
 }}
   ifnot(hasSd)
     return false
+
+  ChangeDirectory(pathElements)
     
   rc := sd.listEntry(filename)
   if(rc == IO_OK)
@@ -466,6 +566,22 @@ PRI FileExists(filename) | rc
         return true
   return false  
 
+PRI ChangeDirectory(pathElements) | i
+  sd.changeDirectory(@approot)
+  if(req.IsFileRequest)
+    pathElements--  
+  'Path elements include a file name
+  ' req.IsFileRequest = true if a file is explictly requested
+  if(pathElements =< 0)
+    'pst.str(string("Root request", CR, CR))
+    return
+  else
+    'pst.str(string("Sub dir request", CR, CR))
+    repeat i from 0 to pathElements-1
+      'pst.str( req.GetUrlPart(i) )
+      'pst.char(CR)
+      sd.changeDirectory(req.GetUrlPart(i))
+      
 PRI GetContentType(ext)
 {{
   Determine the content-type 
@@ -498,6 +614,9 @@ PRI GetContentType(ext)
     return @@contentType[TXT]
     
   if(strcomp(ext, string("xml")) OR strcomp(ext, string("XML")))
+    return @@contentType[XML]
+
+  if(strcomp(ext, string("xsl")) OR strcomp(ext, string("XSL")))
     return @@contentType[XML]
     
   if(strcomp(ext, string("zip")) OR strcomp(ext, string("ZIP")))
@@ -635,19 +754,22 @@ PRI PrintIp(addr) | i
       pst.char($2E)
     else
       pst.char($0D)
-      
+{      
 PRI PrintExtension
   pst.str(req.GetFileNameExtension)
   pst.char(CR)
-
+}
 PRI PrintRequestedFileName
   pst.str(req.GetFileName)
   pst.char(CR)  
     
-PRI PrintTokens | i, tcnt   
-  't1 := req.GetTokens
-  tcnt := req.GetStatusLineTokenCount
-  repeat i from 0 to tcnt-1
+PRI PrintTokens(start, end) | i   
+  'tcnt := req.GetTokens
+  'tcnt := req.GetStatusLineTokenCount
+  'pst.str(string("Status line count: "))
+  'pst.dec(tcnt)
+  'pst.char(CR)
+  repeat i from start to end
     pst.str(req.EnumerateHeader(i))
     pst.char(CR)
 
