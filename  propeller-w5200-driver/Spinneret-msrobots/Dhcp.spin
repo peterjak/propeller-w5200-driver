@@ -1,3 +1,21 @@
+'*********************************************************************************************
+{
+AUTHOR: Mike Gebhard
+COPYRIGHT: Parallax Inc.
+LAST MODIFIED: 10/30/2012
+VERSION 1.0
+LICENSE: MIT (see end of file)
+
+DESCRIPTION:
+The DHCP object
+
+MODIFICATION:
+
+  8/31/2013     added option to set hostname. default is propnet as before
+                but after Init you can do SetHostname(string("MYPROP")) to chose another 
+
+}
+'*********************************************************************************************
 CON
   BUFFER_2K         = $800
   BUFFER_16         = $10
@@ -81,7 +99,7 @@ DAT
   transId         long  $00_00_00_00
   null            long  $00_00_00_00
   errors          long  @noErr, @errDis, @erroff, @errReq, @errAck, @errDunno
-
+  hostptr         long  0       ' Holds pointer to hostname
   _dhcpServer      byte  $00, $00, $00, $00
   _router          byte  $00, $00, $00, $00 
   
@@ -94,10 +112,12 @@ OBJ
 PUB Init(buffer, socket)
 
   buffPtr := buffer
-
+  hostPtr := @hostName
   'Set up the host socket 
   sock.Init(socket, UDP, HOST_PORT)
 
+PUB SetHostname(hostnameaddress)
+  hostptr := hostnameaddress
 
 PUB GetErrorCode
   return errorCode
@@ -210,7 +230,7 @@ PRI Discover | len
   if(IsRequestIp)
     WriteDhcpOption(REQUEST_IP, 4, @requestIp)
   WriteDhcpOption(PARAM_REQUEST, 4, @paramReq)
-  WriteDhcpOption(HOST_NAME, strsize(@hostName), @hostName)
+  WriteDhcpOption(HOST_NAME, strsize(hostPtr), hostPtr)
   len := EndDhcpOptions
   return SendReceive(buffPtr, len)
 
@@ -268,7 +288,7 @@ PRI Request | len
   IsRequestIp
     WriteDhcpOption(REQUEST_IP, 4, @requestIp)
   WriteDhcpOption(DHCP_SERVER_IP, 4, GetDhcpServer)
-  WriteDhcpOption(HOST_NAME, strsize(@hostName), @hostName)
+  WriteDhcpOption(HOST_NAME, strsize(hostPtr), hostPtr)
   len := EndDhcpOptions
   return SendReceive(buffPtr, len)
 
@@ -434,3 +454,21 @@ PUB SendReceive(buffer, len) | bytesToRead, ptr
   
 PUB UpdRxLen(buffer)
   return sock.DeserializeWord(buffer + 6)
+CON
+{{
+ ______________________________________________________________________________________________________________________________
+|                                                   TERMS OF USE: MIT License                                                  |                                                            
+|______________________________________________________________________________________________________________________________|
+|Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation    |     
+|files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,    |
+|modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software|
+|is furnished to do so, subject to the following conditions:                                                                   |
+|                                                                                                                              |
+|The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.|
+|                                                                                                                              |
+|THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE          |
+|WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR         |
+|COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,   |
+|ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                         |
+ ------------------------------------------------------------------------------------------------------------------------------ 
+}}

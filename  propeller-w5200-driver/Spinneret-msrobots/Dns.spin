@@ -147,9 +147,7 @@ PUB ResolveDomain(url) | ptr, dnsPtr
 
   bytefill(@ip1, 0, @dnsIps-@ip1)
 
-  bytemove(@urlBuff, url, strsize(url))
   bytemove(@urlBuff, url, strsize(url)+1)
-  'byte[strsize(url)] := 0
   
   {   }  
   dnsPtr := wiz.GetDns

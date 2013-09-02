@@ -1,3 +1,11 @@
+'*********************************************************************************************
+{
+ AUTHOR: Mike Gebhard
+ COPYRIGHT: Parallax Inc.
+ LAST MODIFIED: 8/12/2012
+ VERSION 1.0
+ LICENSE: MIT (see end of file)
+}
 CON
   _clkmode = xtal1 + pll16x     
   _xinfreq = 5_000_000

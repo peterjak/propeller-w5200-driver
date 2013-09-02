@@ -5,7 +5,7 @@
 // Author: Kwabena W. Agyeman
 // Updated: 3/10/2011
 // Designed For: P8X32A
-// Version: 1.9
+// Version: 1.9.2
 //
 // Copyright (c) 2011 Kwabena W. Agyeman
 // See end of file for terms of use.
@@ -24,6 +24,7 @@
 // v1.9 - Removed all hacks from the block driver and made it faster. The block driver now follows the SD/MMC card protocol
 //        exactly. Also, updated file system methods to reflect changes in the block driver - 3/10/2011.
 // v1.9.1 - Added get last error so aborts are easier to deal with; Mike Gebhard 12/8/2012
+// v1.9.2 - Addded function to access address of directoryEntryCache; Michael Sommer (@MSrobots) - 8/31/2013
 //
 // For each included copy of this object only one spin interpreter should access it at a time.
 //
@@ -199,6 +200,10 @@ VAR long dataStructureAddress[0]
 
 'PUB fileTime
   'return readClock
+
+PUB GetADRdirectoryEntryCache
+  return @directoryEntryCache
+    
 PUB GetCogID
   return cardCogID - 1
   

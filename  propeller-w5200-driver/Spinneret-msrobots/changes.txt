@@ -1,0 +1,8 @@
+8/30/2013 	added 'SNTP Simple Network Time Protocol v2.01.SPIN' from repo w5200 to spinneretxxxx (was mising,did not compile without)
+8/31/2013 	added some webdav verbs and dynamic pasm pages  
+		added SetHostname to DHCP
+9/1/2013	added cmdtools dir with tools to test webdav
+		added propfind.spin - pasm propfind handler (not complete yet) - (compile to binary rename propfind.pse and put on sd-root)
+		added dirhtm.spin - pasm demo - (compile to binary rename dirhtm.psx and put on sd-root)
+		added dirxml.spin - pasm demo - (compile to binary rename dirxml.psx and put on sd-root)
+

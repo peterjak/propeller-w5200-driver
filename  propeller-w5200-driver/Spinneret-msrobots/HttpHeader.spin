@@ -1,50 +1,63 @@
-CON
-  _clkmode = xtal1 + pll16x     
-  _xinfreq = 5_000_000
+'*********************************************************************************************
+{
+AUTHOR: Mike Gebhard
+COPYRIGHT: Parallax Inc.
+LAST MODIFIED: 8/31/2013
+VERSION 1.0
+LICENSE: MIT (see end of file)
 
-  HEADER_BUFFER       = $200
+DESCRIPTION:     
+The HttpHeader object
+
+MODIFIED: Michael Sommer (@MSrobots)
+
+this version DOES NOT tokenize the Filename inside TokenizeHeader
+so '/' is allowed in Filename and in POST/GET parameters
+
+but for RESTful Interfaces you can call TokenizeFilename after TokenizeHeader did its job
+to provide url_parts as values.
+
+So before calling TokenizeFilename
+
+GetFileName will return the path and filename
+
+and after calling TokenizeFilename
+
+GetFileName will just return the filename without path
+GetUrlPart(index) will work as desired (enumerating each part of the path & filename )
+
+}                                            
+'*********************************************************************************************
+CON
   
   CR    = $0D
   LF    = $0A
   
-  TOKEN_POINTERS                = $FF
-  HEADER_SECTIONS               = 4
-  FILE_EXTENSION_LEN            = 3
-  MIN_STATUS_LINE_TOKENS        = 3
+  TOKEN_PTR_LEN       = $FF
+  HEADER_SECTIONS_LEN = 4
+  FILE_EXTENSION_LEN  = 3
 
-  #0, STATUS_LINE, QUERYSTRING, HEADER_LINES, BODY
+  #0, STATUS_LINE, HEADER_LINES, BODY, URL_PARTS
 
 VAR
 
 DAT
-  buffer          byte  $0[HEADER_BUFFER]
   index           byte  "index.htm", $0
-  isFileReq       byte  $0
   ext             byte  $0[3], $0
-  sectionTokenCnt byte  $0[HEADER_SECTIONS]
+  sectionTokenCnt byte  $0[HEADER_SECTIONS_LEN]
   tokens          byte  $0 
   null            long  $0
-  headerSections  long  $0[HEADER_SECTIONS]
-  tokenPtr        long  $0[TOKEN_POINTERS]
+  headerSections  long  $0[HEADER_SECTIONS_LEN]
+  tokenPtr        long  $0[TOKEN_PTR_LEN]
   ptr             long  $0
   isToken         long  $0
   t1              long  $0
 
-
-
-PUB Get(key) | i, p
-  if(sectionTokenCnt[QUERYSTRING] == 0)
-    return null
-
-  p :=  PathElements  
-  repeat i from p to sectionTokenCnt[STATUS_LINE]-2
+PUB Get(key) | i
+  repeat i from 0 to sectionTokenCnt[STATUS_LINE]-1
     if(strcomp(key, tokenPtr[i]))
       return tokenPtr[i+1]
   return @null
-
-PUB QueryStringElements
-  'HTTP path/file.ext?name=value HTTP/1.1
-  return sectionTokenCnt[QUERYSTRING]
 
 PUB Header(key) | i
   repeat i from sectionTokenCnt[STATUS_LINE] to sectionTokenCnt[HEADER_LINES]
@@ -64,56 +77,69 @@ PUB Request(key) | i
       return tokenPtr[i+1]
   return @null
 
-PUB UrlContains(value) | i
+PUB UrlContains(value) | i, j, adr, size
+  ifnot sectionTokenCnt[URL_PARTS] == sectionTokenCnt[BODY]' Filename already tokenized
+    repeat i from sectionTokenCnt[BODY] to sectionTokenCnt[URL_PARTS]
+      if(strcomp(value, tokenPtr[i]))                   ' check URL_PARTS
+        return true
+        
   repeat i from 1 to sectionTokenCnt[STATUS_LINE]-3
-    if(strcomp(value, tokenPtr[i]))
-      return true
+    adr := tokenPtr[i]                                  ' get token
+    size := strsize(t1) - strsize(value)                ' compare length
+    if size=>0                                          ' if ok
+      repeat j from 0 to size                           '   check all possible positions
+        if(strcomp(value, adr + j))                     '   in token.
+          return true
+          
   return false
 
-PUB PathElements
-  'return sectionTokenCnt[STATUS_LINE]-3
-  '[Status line token count] - [Querystring token count] - [3] 
-  return ( (sectionTokenCnt[STATUS_LINE] - sectionTokenCnt[QUERYSTRING] - MIN_STATUS_LINE_TOKENS)  #> 0 )
-
-PUB GetUrlPart(value)
-  if(sectionTokenCnt[STATUS_LINE] == 3)
-    return string("\")
-  if((value >  sectionTokenCnt[STATUS_LINE]-3) OR (++value > sectionTokenCnt[STATUS_LINE]-3))
-    return @null
+PUB GetUrlPart(value) 
+  if(sectionTokenCnt[STATUS_LINE] == 3)                 ' why that?
+    return string("/")                                  ' ??? MSrobots
     
-  return EnumerateHeader(value)
-
-PUB GetFileName | i, j
+  ifnot sectionTokenCnt[URL_PARTS] == sectionTokenCnt[BODY]' Filename already tokenized
+    if value > (sectionTokenCnt[URL_PARTS] - sectionTokenCnt[BODY])
+      return @null
+    if value<1
+      return tokenPtr[0] 
+    return tokenPtr[sectionTokenCnt[BODY] + value-1]   
+  else
+    if((value >  sectionTokenCnt[STATUS_LINE]-3) OR (++value > sectionTokenCnt[STATUS_LINE]-3))
+      return @null
+      
+    return EnumerateHeader(value)
+     
+PUB GetFileName
+  if sectionTokenCnt[URL_PARTS] == sectionTokenCnt[BODY]' complete request Path & File 
+    return tokenPtr[1]                                  ' without get-params (?&...)
+  else                                                  ' Filename already tokenized
+    return tokenPtr[sectionTokenCnt[URL_PARTS]-1]         ' last URL token ? one less?
+{  
   repeat i from 1 to sectionTokenCnt[STATUS_LINE]-2
     t1 := tokenPtr[i]
     repeat j from 0 to strsize(t1)-1
       if(byte[t1][j] == ".")
         return tokenPtr[i]
   return @index
-
-PUB IsFileRequest
-  return isFileReq
-
-PRI UrlContainsFileRequest | i, j
-  repeat i from 1 to sectionTokenCnt[STATUS_LINE]-2
-    t1 := tokenPtr[i]
-    repeat j from 0 to strsize(t1)-1
-      if(byte[t1][j] == ".")
-        return true
-  return false
-
+}
 PUB GetFileNameExtension
   return @ext
 
-PRI _GetFileNameExtension | i, j
+PRI _GetFileNameExtension | j
+  t1 := tokenPtr[1]  
+  repeat j from strsize(t1)-6 to strsize(t1)-1
+    if(byte[t1][j] == ".")
+      return tokenPtr[1]+j+1
+      
+  return @index + strsize(@index)-FILE_EXTENSION_LEN 
+{      
   repeat i from 1 to sectionTokenCnt[STATUS_LINE]-2
     t1 := tokenPtr[i]
     repeat j from 0 to strsize(t1)-1
       if(byte[t1][j] == ".")
         return tokenPtr[i]+j+1
-  return @index + strsize(@index)-FILE_EXTENSION_LEN 
-  'return string("xxx")  
-
+  return @index + strsize(@index)-FILE_EXTENSION_LEN   
+}
 PUB Decode(value)
   DecodeString(value)
   return value
@@ -124,22 +150,10 @@ PUB GetTokens
 PUB EnumerateHeader(idx)
   return tokenPtr[idx]
 
-PUB GetSectionCount(idx)
-  return sectionTokenCnt[idx]
-  
 PUB TokenizeHeader(buff, len)
-
+  ptr := buff
   tokens := 0
   isToken := false
-
-  headerSections[QUERYSTRING] := null
-  sectionTokenCnt[QUERYSTRING] := null 
-    
-  ' Copy the header and clear
-  bytemove(@buffer, buff, len)
-  ptr := @buffer
-  buff := @buffer
-  byte[buff][len] := 0
 
   'Initialize pointer arrays
   'Mark the start of the status line
@@ -149,10 +163,6 @@ PUB TokenizeHeader(buff, len)
   'Parse the status line 
   repeat until IsEndOfLine(byte[ptr]) 
     if(IsStatusLineToken(byte[ptr]))
-      'Set a pointer to the querystring if one exists
-      if(byte[ptr] == "?")
-        headerSections[QUERYSTRING] := ptr
-        sectionTokenCnt[QUERYSTRING] := tokens-1
       byte[ptr++] := 0
       isToken := true
     else
@@ -171,12 +181,7 @@ PUB TokenizeHeader(buff, len)
   bytemove(@ext, _GetFileNameExtension, 3)
 
   'Mark the start of the header lines
-  sectionTokenCnt[STATUS_LINE] := tokens
-  
-  'Get the query string count
-  if(sectionTokenCnt[QUERYSTRING]) 
-    sectionTokenCnt[QUERYSTRING] := tokens - sectionTokenCnt[QUERYSTRING] - 3
-    
+  sectionTokenCnt[STATUS_LINE] := tokens 
   headerSections[HEADER_LINES] := ptr
   tokenPtr[tokens++] := ptr
 
@@ -209,37 +214,50 @@ PUB TokenizeHeader(buff, len)
   repeat t1 from 1 to sectionTokenCnt[STATUS_LINE]-3
     DecodeString(tokenPtr[t1])
 
-  'Determine if a file is being requested
-  'Otherwise this can request can be a RESTful call
-  isFileReq := UrlContainsFileRequest
-  
-  'Return if body does not contain data
-  if(ptr == (buff + len))
-    sectionTokenCnt[BODY] := sectionTokenCnt[HEADER_LINES] 
+  'Return if body does not contain data                 
+  if(ptr == (buff + len))                              
+    sectionTokenCnt[URL_PARTS] := sectionTokenCnt[BODY] := sectionTokenCnt[HEADER_LINES] 
     return
 
   'Decode POST data
   if(strcomp(tokenPtr[0], string("POST")))
     DecodeString(ptr)
-
-  'Tokenize the body
-  tokenPtr[tokens++] := ptr++
-  repeat until ptr > (buff + len)-1
-    if(IsPostToken(byte[ptr]))    
-      byte[ptr++] := 0
-      isToken := true
-    else
-      if(isToken)
-        if(byte[ptr] == $20)
+                                                        ' just tokenize Body on POST
+    'Tokenize the body
+    tokenPtr[tokens++] := ptr++
+    repeat until ptr > (buff + len)-1
+      if(IsPostToken(byte[ptr]))    
+        byte[ptr++] := 0
+        isToken := true
+      else
+        if(isToken)
+          if(byte[ptr] == $20)
+            ptr++
+          tokenPtr[tokens++] := ptr++
+          isToken := false
+        else        
           ptr++
-        tokenPtr[tokens++] := ptr++
-        isToken := false
-      else        
-        ptr++
-        
-  sectionTokenCnt[BODY] := tokens
+          
+    sectionTokenCnt[URL_PARTS] := sectionTokenCnt[BODY] := tokens
 
-
+PUB TokenizeFilename 
+  ifnot sectionTokenCnt[URL_PARTS] == sectionTokenCnt[BODY]' Filename already tokenized
+    ptr := tokenPtr[1]
+    
+    if byte[ptr] == "/"                                 ' if /                          '
+      ifnot byte[ptr+1] == 0                            ' but not just /
+        ptr++                                           ' ignore /
+    headerSections[URL_PARTS] := ptr
+    tokenPtr[tokens++] := ptr
+    ifnot byte[ptr]==0                                  ' if not done already
+      repeat until byte[ptr]==0
+        if byte[ptr] == "/"                             ' if / found next token
+          byte[ptr] := 0
+          tokenPtr[tokens++] := ptr+1 
+        ptr++        
+    
+    sectionTokenCnt[URL_PARTS] := tokens
+    
 PRI FindBody(value, len)
   repeat len
     if(byte[value] == CR AND byte[value+1] == LF AND byte[value+2] == CR AND byte[value+3] == LF)
@@ -250,7 +268,8 @@ PRI FindBody(value, len)
   return null
   
 PRI IsStatusLineToken(value)
-  return lookdown(value & $FF: "/", "?", "=", "+", " ", "&")
+  'return lookdown(value & $FF: "/", "?", "=", "+", " ", "&")
+  return lookdown(value & $FF:  "?", "=", "+", " ", "&")
   
 PRI IsHeaderToken(value1, value2)
   if(value1 == ":" AND NOT value2 == " ")
@@ -308,3 +327,21 @@ PUB GetHeaderLinesTokenCount
 
 PUB GetBodyTokenCount
   return  sectionTokenCnt[BODY] - sectionTokenCnt[HEADER_LINES]
+CON
+{{
+ ______________________________________________________________________________________________________________________________
+|                                                   TERMS OF USE: MIT License                                                  |                                                            
+|______________________________________________________________________________________________________________________________|
+|Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation    |     
+|files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,    |
+|modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software|
+|is furnished to do so, subject to the following conditions:                                                                   |
+|                                                                                                                              |
+|The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.|
+|                                                                                                                              |
+|THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE          |
+|WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR         |
+|COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,   |
+|ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                         |
+ ------------------------------------------------------------------------------------------------------------------------------ 
+}}

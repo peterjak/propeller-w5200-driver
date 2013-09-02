@@ -21,6 +21,7 @@ v2      01-29-2013              - Fixed an illusive bug that caused problems aro
 
 v2.01   02-02-2013              - Logic order error with previous bug fix
 
+        08-31-2013              - corrected day of week - MSrobots
                            1                   2                   3
        0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9  0  1
       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -73,8 +74,8 @@ PUB CreateUDPtimeheader(BufferAddress)
   '---------------------------------------------------------------------
   '                       UDP Packet - 44 Bytes
   '---------------------------------------------------------------------
-    byte[BufferAddress][0]  := %11_100_011    'leap,version, and mode
-    byte[BufferAddress][1]  := 0              'stratum
+    byte[BufferAddress][0] := %11_100_011    'leap,version, and mode
+    byte[BufferAddress][1] := 0              'stratum
     byte[BufferAddress][2] := 0              'Poll   
     byte[BufferAddress][3] := %10010100      'precision
     
@@ -251,19 +252,28 @@ PUB  GetTransmitTimestamp(Offset,BufferAddress,Long1,Long2)|Temp1
      HumanTime(Offset,Long1)
      
 PUB HumanTime(Offset,TimeStampAddress)|i,Seconds,Days,Years,LYrs,DW,DD,HH,MM,SS,Month,Date,Year
-    Seconds := long[TimeStampAddress] + Offset * 3600
-    Days    := ((Seconds >>= 7)/675) + 1 '<- Days since Jan 1, 1900 ... divide by 86,400 and add 1
+    Seconds := long[TimeStampAddress] + Offset * 3600  
+                           
+   'Days   := ((Seconds >>= 7)/675) + 1 '<- Days since Jan 1, 1900 ... divide by 86,400 and add 1
 
-    DW      := (Days-1) // 7
+    i       := Seconds          ' need Seconds unchanged
+    Days    := ((i >>= 7)/675)  '<- Days since Mo Jan 1, 1900 ... divide by 86,400 
+    DW      := ((Days+1) // 7) + 1 ' add 1 for Mo, add 1 since rtcEngine wants 1 - 7 for So - Sa
     
-    Years := Days / 365         '   Number of Days THIS year and
+    Years   := Days / 365       ' first approx.
+    LYrs    := years / 4        
+    Years   := (Days-LYrs) / 365 ' second approx.
+    LYrs    := Years / 4            '<- Leap years since 1900
+    Days    -= LYrs             '<- Leap year Days correction
+   
+
     Days -= (Years * 365)       '   number of years since 1900.
 
-    LYrs := Years / 4           '<- Leap years since 1900
+    
+    
     Year := Years + 1900        '<- Current Year                   
 
-    Days -= LYrs                '<- Leap year Days correction
-                                '   for THIS year
+    Days++                      '   for 1 as first day not 0
     repeat
       repeat i from 1 to 12     '<- Calculate number of days 
         Month := 30             '   in each month.  Stop if
@@ -274,22 +284,15 @@ PUB HumanTime(Offset,TimeStampAddress)|i,Seconds,Days,Years,LYrs,DW,DD,HH,MM,SS,
         if Days =< Month        '<- When done, Days will contain
            quit                 '   the number of days so far this 
         if Days > Month         '   month.  In other words, the Date.
-           Days -= Month     
-
-{
-        if Days > Month         '<- When done, Days will contain
-           Days -= Month        '   the number of days so far this 
-        if Days =< Month        '   month.  In other words, the Date.
-           quit     
-}
+           Days -= Month
 
     until Days =< Month
     Month := i                  '<- Current Month               
     Date  := Days               '<- Current Date
 
 
-    SS := long[TimeStampAddress] + Offset * 3600
-    SS := SS -(((Years*365)*675)<<7) '<- seconds this year
+    'SS := long[TimeStampAddress] + Offset * 3600
+    SS := Seconds -(((Years*365)*675)<<7) '<- seconds this year
          
     MM := SS / 60                        '<- minutes this year
     SS := SS - (MM * 60)                 '<- current seconds
@@ -300,7 +303,7 @@ PUB HumanTime(Offset,TimeStampAddress)|i,Seconds,Days,Years,LYrs,DW,DD,HH,MM,SS,
     DD := HH / 24                        '<- days this year
     HH := HH - (DD * 24)                 '<- current hour
 
-    DD -= LYrs                           '<- Leap year Days correction
+    'DD -= LYrs                          '<- Leap year Days correction
                                          '   for THIS year
 
     long[TimeStampAddress][2] := Month<<24+Date<<16+Year

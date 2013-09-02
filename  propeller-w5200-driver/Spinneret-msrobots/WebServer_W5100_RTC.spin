@@ -1,9 +1,42 @@
+'*********************************************************************************************
+{
+AUTHOR: Mike Gebhard
+COPYRIGHT: Parallax Inc.
+LAST MODIFIED: 8/31/2013
+VERSION 1.0
+LICENSE: MIT (see end of file)
+
+DESCRIPTION:
+The MAIN webserver object for spinneret
+
+NOTE:   please change MAC address below at top of the first CON section
+        to the number on the back of your spinneret.
+      
+        you also may need to change the hostname at top of the first DAT section
+        if you need more then one spineret in the same network
+
+MODIFICATIONS:
+8/31/2013       added support for OPTIONS,HEAD,PUT,MKCOL,DELETE (minimal PROPFIND)
+                added SetHostname to DHCP
+                added support for dynamic PASM pages/responses (and some demos)     
+
+}
+'*********************************************************************************************
 CON
   _clkmode = xtal1 + pll16x     
   _xinfreq = 5_000_000
+  
+  'wiz.SetMac($00, $08, $DC, $16, $F1, $32)             ' MAC Mike G
+
+  MAC_1         = $00                                   ' MAC MSrobots          ' 
+  MAC_2         = $08
+  MAC_3         = $DC
+  MAC_4         = $16
+  MAC_5         = $F0
+  MAC_6         = $4F
 
   TCP_MTU       = 1460
-  BUFFER_2K     = $800
+  BUFFER_3K     = $C00
   BUFFER_LOG    = $80
   BUFFER_WS     = $20
   BUFFER_SNTP   = 48+8 
@@ -47,12 +80,33 @@ CON
   Zone = MST '<- Insert your timezone
 
   RTC_CHECK_DELAY = 4_000_000  '1_000_000 = ~4 minutes
-    
+
+  {{ PSX CMDS }}  
+  REQ_PARA_STRING  = 1
+  REQ_PARA_NUMBER  = 2
+  REQ_FILENAME     = 3
+  REQ_HEADER_STRING= 4
+  REQ_HEADER_NUMBER= 5
+  
+  SEND_FILE_EXT    = 11
+  SEND_SIZE_HEADER = 12
+  SEND_DATA        = 13
+  SEND_STRING      = 14
+  SEND_FLUSH       = 15
+  
+  CHANGE_DIRECTORY = 21
+  LIST_ENTRIES     = 22
+  LIST_ENTRY_ADR   = 23
+
+  PSE_CALL         = 91
+  PSE_TRANSFER     = 92
+        
 VAR
   long  buttonStack[10]
   long  longHIGH, longLOW, MM_DD_YYYY, DW_HH_MM_SS 'Expected 4-contigous variables for SNTP  
   
 DAT
+  hostname      byte  "PROPNET",0 '<- you need to change this if you have more then one spineret
   sntpIp        byte  64, 147, 116, 229 '<- This SNTP server is on the west coast
   version       byte  "1.2", $0
   hasSd         byte  $00
@@ -76,8 +130,19 @@ DAT
   xtime         byte  "00/00/0000 00:00:00</time>", CR, LF, "  <day>"
   xday          byte  "---","</day>", CR, LF, "</root>", $0
 
+  _options      byte  "Allow: OPTIONS, HEAD, GET, POST, PUT, MKCOL, DELETE, PROPFIND", CR, LF
+                'byte  "Allow: OPTIONS, HEAD, GET, POST, PUT, MKCOL, DELETE, PROPFIND, PROPPATCH, COPY, MOVE, LOCK, UNLOCK", CR, LF
+                byte  "Public: OPTIONS, HEAD, GET, POST, PUT, MKCOL, DELETE, PROPFIND", CR, LF
+                byte  "DAV: 1",CR, LF           ' ,2,3
+                'byte  "MS-Author-Via: DAV", CR, LF
+                byte  "Content-Length: 0", CR, LF,0   
+  _h100         byte  "HTTP/1.1 100 Continue", CR, LF, $0     
   _h200         byte  "HTTP/1.1 200 OK", CR, LF, $0
+  _h207         byte  "HTTP/1.1 207 Multi-Status", CR, LF, $0
+  _h201         byte  "HTTP/1.1 201 Created", CR, LF, $0
+  _h403         byte  "HTTP/1.1 403 Forbidden", CR, LF, $0
   _h404         byte  "HTTP/1.1 404 Not Found", CR, LF, $0
+  _h409         byte  "HTTP/1.1 409 Conflict", CR, LF, $0
   _css          byte  "Content-Type: text/css",CR, LF, $0
   _gif          byte  "Content-Type: image/gif",CR, LF, $0
   _html         byte  "Content-Type: text/html", CR, LF, $0
@@ -92,16 +157,18 @@ DAT
   _contLen      byte  "Content-Length: ", $0   
   _newline      byte  CR, LF, $0
   time          byte  "00/00/0000 00:00:00", 0
+  wizver        byte  $00
+  dhcpRenew     byte  $00
+  buff          long
+                byte  $0[BUFFER_3K]
   sntpBuff      byte  $0[BUFFER_SNTP] 
   workSpace     byte  $0[BUFFER_WS]
   logBuf        byte  $0[BUFFER_LOG]
-  wizver        byte  $00
-  buff          byte  $0[BUFFER_2K]
   null          long  $00
-  dhcpRenew     byte  $00
   contentType   long  @_css, @_gif, @_html, @_ico, @_jpg, @_js, @_pdf, @_png, @_txt, @_xml, @_zip, $0
   mtuBuff       long  TCP_MTU
    
+  outBufPtr     long  0 ' used for delayed writing
 
 OBJ
   pst             : "Parallax Serial Terminal"
@@ -191,7 +258,9 @@ PUB Init | i, t1
 
   'MAC (Source Hardware Address) must be unique
   'on the local network
-  wiz.SetMac($00, $08, $DC, $16, $F1, $32)
+  
+  'wiz.SetMac($00, $08, $DC, $16, $F1, $32)
+  wiz.SetMac(MAC_1,MAC_2,MAC_3,MAC_4,MAC_5,MAC_6)
 
   'Invoke DHCP to retrived network parameters
   'This assumes the WizNet 5100 is connected 
@@ -250,6 +319,9 @@ PUB Init | i, t1
   reboot
   
 PRI MultiSocketService | bytesToRead, sockId, fn, i
+
+  outBufPtr := @Buff     ' used for delayed writing (global)
+
   bytesToRead := sockId := i := 0
   repeat
      
@@ -290,17 +362,25 @@ PRI MultiSocketService | bytesToRead, sockId, fn, i
     sock[sockId].Receive(@buff, bytesToRead)
 
     'Display the request header
+    pst.str(@divider)  
     pst.str(@buff)
 
     'Tokenize and index the header
     req.TokenizeHeader(@buff, bytesToRead)
  
     fn := req.GetFileName
-    if(FileExists(fn))
-      RenderFile(sockId, fn)
+    pst.str(fn)                
+    
+    if PropfindHandler(sockId, fn)
+    elseif PutHandler(sockId, fn)
+    elseif MKcolHandler(sockId, fn)
+    elseif DeleteHandler(sockId, fn)
+    elseif OptionsHandler(sockId, fn)
+    elseif PsxHandler(sockId, fn)
+    elseif FileHandler(sockId, fn)
+    elseif RenderDynamic(sockId)
     else
-      ifnot(RenderDynamic(sockId))
-        sock[sockId].Send(@_404, strsize(@_404))
+      sock[sockId].Send(@_404, strsize(@_404))
 
     'Close the socket and reset the
     'interupt register
@@ -327,65 +407,309 @@ PRI RenewDhcpLease | requestIp
   pst.dec(dhcpRenew)
   pst.str(string(":00:00",CR))
  
-PRI BuildAndSendHeader(id, contentLength) | dest, src
-  dest := @buff
-  bytemove(dest, @_h200, strsize(@_h200))
-  dest += strsize(@_h200)
-
+PRI BuildHeader(id, contentLength)
+    BuildStatusHeader(id, @_h200, contentLength)
+                            
+PRI BuildStatusHeader(id, status, contentLength) | src
+  write_outBuf(id, status, strsize(status))             ' write status
   src := GetContentType(req.GetFileNameExtension)
-  bytemove(dest, src, strsize(src))
-  dest += strsize(src)
-
-  'Add content-length : value CR, LF
-  if(contentLength > 0)
-    bytemove(dest, @_contLen, strsize(@_contLen))
-    dest += strsize(@_contLen)
+  write_outBuf(id, src, strsize(src))                                                        
+  if(contentLength > 0)                                 ' Add content-length : value CR, LF
+    write_outBuf(id, @_contLen, strsize(@_contLen))
     src := Dec(contentLength)
-    bytemove(dest, src, strsize(src))
-    dest += strsize(src)
-    bytemove(dest, @_newline, strsize(@_newline))
-    dest += strsize(@_newline)
+    write_outBuf(id, src, strsize(src))
+    write_outBuf(id, @_newline, strsize(@_newline))   
+  write_outBuf(id, @_newline, strsize(@_newline))       ' End the header with a new line
 
-  'End the header with a new line
-  bytemove(dest, @_newline, strsize(@_newline))
-  dest += strsize(@_newline)
-  byte[dest] := 0
+PRI flush_outBuf(id)  
+  ifnot outBufPtr == @Buff                        ' flush needed
+    sock[id].Send(@Buff,outBufPtr - @Buff)        ' rest of buff
+  outBufPtr := @Buff                              ' reset outBufPtr
 
-  sock[id].send(@buff, strsize(@buff))  
+PRI write_outBuf(id, addr, bytes) | maxlen
 
+  maxlen:=1000
 
-PRI RenderDynamic(id)
+  if (outBufPtr + bytes - @Buff) > maxlen
+    flush_outBuf(id)
+  bytemove(outBufPtr, addr, bytes)
+  outBufPtr += bytes   
 
+PRI PropfindHandler(id, fn) | options
+  if strcomp(@buff, string("PROPFIND"))
+    return PseHandler(id, string("/PROPFIND.PSE"))
+  return false
+
+PRI OptionsHandler(id, fn) | options
+  if strcomp(@buff, string("OPTIONS"))
+    write_outBuf(id, @_h200, strsize(@_h200))           ' send 200 OK
+    write_outBuf(id, @_options, strsize(@_options))     ' send _options
+    write_outBuf(id, @_newline, strsize(@_newline))     ' send _newline
+    flush_outBuf(id)
+    return true
+    
+  return false
+    
+PRI PutHandler(id, fn) | bytesToRead, size , status, noerr
+  if strcomp(@buff, string("PUT"))
+    status :=  @_h201                                   ' 201 created
+    size := StrToBase(req.Header(string("Content-Length")) , 10)
+    if FileExists(fn)                                   ' if file already there
+      status :=  @_h200                                 '    200 OK ( or 202 no Content?)
+      \sd.deleteEntry(fn)                               '    delete
+    \sd.newFile(fn)                                     ' new file
+    sd.closeFile                                        
+    noerr := sd.openFile(fn, IO_WRITE)                                 
+    ifnot ( noerr == true)           ' now open file write
+      status :=  @_h409                                 ' 409 Conflict  
+    else
+      PST.str(string("send 100..."))
+      'sock[sockId].send(@_h100, strsize(@_h100))       ' send 100 continue
+      write_outBuf(id, @_h100, strsize(@_h100))
+      'sock[sockId].send(@_newline, strsize(@_newline)) ' send _newline
+      write_outBuf(id, @_newline, strsize(@_newline))
+      flush_outBuf(id)
+    
+      repeat until size<1                               ' expecting size bytes
+        repeat until bytesToRead := sock[id].Available  ' Repeat until we have data in the buffer                            
+        if(bytesToRead < 1)                             ' Check for a timeout error 
+          size := -1 'timeout
+        else       
+          sock[id].Receive(@buff, bytesToRead)          ' Move the Rx buffer into HUB memory 
+          size -= bytesToRead
+          PST.str(string("write data..."))
+          sd.writeData(@buff, bytesToRead)              ' now write file        \
+        
+      sd.closeFile                                      ' now close file
+    PST.str(status)
+    write_outBuf(id, status, strsize(status))           ' send 409 Conflict 201 Created or 200 OK
+    write_outBuf(id, @_newline, strsize(@_newline))     ' send _newline
+    flush_outBuf(id)
+    return true                                         ' done
+
+  return false
+  
+PRI MKcolHandler(id, fn) | noerr
+  if strcomp(@buff, string("MKCOL"))
+    noerr:=sd.newDirectory(fn)
+    if noerr==true
+      write_outBuf(id, @_h201, strsize(@_h201))         ' send 201 created
+    else
+      write_outBuf(id, @_h409, strsize(@_h409))         ' send 409 conflict
+    write_outBuf(id, @_newline, strsize(@_newline))     ' send _newline
+    flush_outBuf(id) 
+    return true
+    
+  return false
+
+PRI DeleteHandler(id, fn) | noerr
+  if strcomp(@buff, string("DELETE"))
+    noerr := sd.deleteEntry(fn)
+    if noerr == true
+      write_outBuf(id, @_h200, strsize(@_h200))         ' send 200 OK 
+    else
+      write_outBuf(id, @_h409, strsize(@_h409))         ' send 409 conflict
+    write_outBuf(id, @_newline, strsize(@_newline))     ' send _newline
+    flush_outBuf(id) 
+    return true
+    
+  return false
+                                                
+PRI PsxHandler(id, fn) | ext
+  ext := req.GetFileNameExtension 
+  if ((strcomp(ext, string("psx")) OR strcomp(ext, string("PSX"))))
+    return PseHandler(id, fn)
+  if ((strcomp(ext, string("pse")) OR strcomp(ext, string("PSE"))))
+    write_outBuf(id, @_h403, strsize(@_h403))           ' send 403 Forbidden
+    write_outBuf(id, @_newline, strsize(@_newline))     ' send _newline
+    flush_outBuf(id) 
+    return true
+    
+  return false
+    
+PRI PseHandler(id, fn) | Daisy, JustHeader, fs, psmptr, bufptr, cog, cmd, param1, param2 , param3, param4
+  JustHeader :=  strcomp(@buff, string("HEAD"))
+  Daisy := 1
+  repeat until (Daisy == 0 )
+    RESULT:= false                                                                        
+    Daisy := 0                                            ' no DaisyChain yet
+    if FileExists(fn)
+      OpenFile(fn)                                        ' load PASM to end of Buffer
+      fs := sd.getFileSize - 28                           ' we just need Pasm block
+      if fs>0 and fs<1985
+        bufptr := (@buff+BUFFER_3K-$400) & $FFFFFC        ' last 1 kb buffer
+        psmptr := (@buff+BUFFER_3K-fs) & $FFFFFC          ' end buffer minus pasm size
+        sd.readFromFile(bufptr, 24)                       ' load fist 24 bytes and discard
+        sd.readFromFile(psmptr, fs)                       ' load pasm to end of buffer
+      else
+        fs := -1                                          ' no pasm/wrong size
+      sd.closeFile
+      if fs>0                                             ' if no error yet
+        cmd := -1                                         ' idle
+        param1 := bufptr                                  ' output area for pasm at init    
+        param2 := 0                                          
+        cog := cognew(psmptr, @cmd) + 1                   ' run pasm
+        'cog := cognew(psm.getPasmADR, @cmd) + 1
+        if cog                                            ' if started
+          pst.str(string(CR, "using COG["))
+          pst.dec(cog)
+          pst.str(string("].."))
+          pst.str(fn)
+          repeat until cmd==0                             ' exit
+            case cmd                                      ' commands from PASM cog to spin
+              REQ_PARA_STRING:                            ' PASM request Param as String
+                param1 := req.Get(@param1)                ' Param1 contains string up to 15 letter+0
+                cmd := -1                                 ' return address of string in Param1 
+              REQ_PARA_NUMBER:                            ' PASM request Param as Number
+                param1 := StrToBase(req.Get(@param1) , 10)' Param1-4 CONTAIN string up to 15 letter+0
+                cmd := -1                                 ' return value as long in Param1
+              REQ_FILENAME:                               ' PASM request org. Filename
+                param1 := req.GetFileName                 ' (used by propfind)
+                cmd := -1                                 ' return answer in Param1
+              REQ_HEADER_STRING:                          ' PASM request Header as string (used by propfind)
+                param1 := req.Header(@param1)             ' Param1-4 CONTAIN key up to 15 letter+0
+                cmd := -1                                 ' return address of string in Param1
+              REQ_HEADER_NUMBER:                          ' PASM request Header as number (used by propfind)
+                param1 := StrToBase(req.Header(@param1) , 10)' Param1-4 CONTAIN key up to 15 letter+0
+                cmd := -1                                 ' return value as long in Param1 
+                
+              SEND_FILE_EXT:
+                if param1>0                               ' PASM sends ext.
+                  Bytemove(req.GetFileNameExtension,@param1,3) 'Param1 contains string up to 3 letter+0
+                cmd := -1                                 ' idle - back to PASM
+              SEND_SIZE_HEADER:                           ' PASM sends size or -1
+                if (param2==1)
+                  BuildStatusHeader(id, @_h207, param1)   ' send header 207 Multi-Status      
+                else
+                  BuildStatusHeader(id, @_h200, param1)   ' send header 200 OK      
+                if JustHeader                             ' if request is HEAD
+                  Daisy := 0
+                  cmd := 0                                '    exit 
+                else
+                  cmd := -1                               ' idle - back to PASM
+              SEND_DATA:                                  ' PASM sends data in bufptr
+                write_outBuf(id, param1, param2)          ' param2 bytes at adress param1
+                cmd := -1                                 ' idle - back to PASM
+              SEND_STRING:                                ' PASM sends string in bufptr
+                param2 := strsize(param1)                 ' returns aize in param2                
+                write_outBuf(id, param1, param2)          ' strsize bytes at adress param1
+                'PST.str(param1)
+                cmd := -1                                 ' idle - back to PASM
+              SEND_FLUSH:
+                flush_outBuf(id)                          ' send buffered output manual if needed
+                cmd := -1                                 ' idle - back to PASM
+              CHANGE_DIRECTORY:                           ' Change Directory param1 path
+                param1 := sd.changeDirectory(param1)      ' param1 adr string path
+                sd.listEntry(string("."))                 ' ? bug? needed or sd.listEntries wont work ?
+                cmd := -1                                 ' idle - back to PASM 
+              LIST_ENTRIES:                               ' List Directory param1 "W" or "N"
+                param1 := sd.listEntries(@param1)         ' param1 contains string up to 3 letter+0
+                cmd := -1                                 ' idle - back to PASM
+              LIST_ENTRY_ADR:                             ' PASM needs sd directoryEntryCache 
+                param1 := sd.GetADRdirectoryEntryCache    ' adr EntryCache
+                cmd := -1                                 ' idle - back to PASM
+              PSE_CALL:                                   ' call pse
+                fs := strsize(bufptr)                     ' size request
+                bytemove(@buff,bufptr,fs)                 ' move to buff
+                req.TokenizeHeader(@buff, fs)             ' tokenize
+                param1:=PseHandler(id, req.GetFileName)   ' call sub modul (new cog)
+                cmd := -1                                 ' idle - back to PASM 
+              PSE_TRANSFER:                               ' dasychain pse
+                fs := strsize(bufptr)                     ' size request
+                bytemove(@buff,bufptr,fs)                 ' move to buff                             
+                req.TokenizeHeader(@buff, fs)             ' tokenize
+                fn := req.GetFileName
+                Daisy := 1
+                cmd := 0                                  ' exit
+
+          flush_outBuf(id)
+                                      
+          if cog                                             
+            pst.str(string("..COG["))
+            pst.dec(cog)
+            pst.str(string("] finished."))
+            cogstop(cog~ - 1)
+          RESULT := true                                ' if done return true
+       
+PRI FileHandler(id, fn) | fs, bytes , JustHeader, offset
+{{
+  Render a static file from the SD Card
+}}
+  JustHeader :=  strcomp(@buff, string("HEAD")) 
+  if FileExists(fn)
+    mtuBuff := sock[id].GetMtu
+    OpenFile(fn)
+    fs := sd.getFileSize 
+    BuildHeader(id, fs)
+    if JustHeader     
+      flush_outBuf(id) 
+    else 
+      offset :=  outBufPtr - @Buff 
+      repeat until fs =< 0
+        if(fs < (mtuBuff - offset))
+          bytes := fs
+        else
+          bytes := (mtuBuff - offset) 
+        sd.readFromFile(@buff + offset, bytes)
+        fs -= sock[id].Send(@buff, bytes  + offset  )
+        offset := 0
+        
+    sd.closeFile
+    return true
+
+  return false
+
+PRI RenderDynamic(id) | JustHeader
+  'req.TokenizeFilename                                  ' now ready for RESTful stuff
+  
   'Process pinstate
-  if(strcomp(req.GetFileName, string("pinstate.xml")))
+  JustHeader :=  strcomp(@buff, string("HEAD"))
+  
+  if(strEndsWith(req.GetFileName, string("pinstate.xml")))
     BuildPinStateXml( req.Get(string("led")), req.Get(string("value")) )
-    BuildAndSendHeader(id, -1)
-    sock[id].Send(@xmlPinState, strsize(@xmlPinState))
+    BuildHeader(id, -1)
+    write_outBuf(id, @xmlPinState, strsize(@xmlPinState))
+    flush_outBuf(id)
     return true
 
-  if(strcomp(req.GetFileName, string("p_encode.xml")))
+  if(strEndsWith(req.GetFileName, string("p_encode.xml")))
     BuildPinEndcodeStateXml( req.Get(string("value")) )
-    BuildAndSendHeader(id, -1)
-    sock[id].Send(@xmlPinState, strsize(@xmlPinState))
+    BuildHeader(id, -1)
+    write_outBuf(id, @xmlPinState, strsize(@xmlPinState))
+    flush_outBuf(id)
     return true
 
-  if(strcomp(req.GetFileName, string("time.xml")))
+  if(strEndsWith(req.GetFileName, string("time.xml")))
     FillTime(@xTime)
     FillDay(@xday)
-    BuildAndSendHeader(id, -1)
-    sock[id].Send(@xmlTime, strsize(@xmlTime))
+    BuildHeader(id, -1)
+    write_outBuf(id, @xmlTime, strsize(@xmlTime))
+    flush_outBuf(id)
     return true
-
-  if(strcomp(req.GetFileName, string("sntptime.xml")))
+               
+  if(strEndsWith(req.GetFileName, string("sntptime.xml")))
     SyncSntpTime(SNTP_SOCK)
     FillTime(@xTime)
     FillDay(@xday) 
-    BuildAndSendHeader(id, -1)
-    sock[id].Send(@xmlTime, strsize(@xmlTime))
+    BuildHeader(id, -1)
+    write_outBuf(id, @xmlTime, strsize(@xmlTime))
+    flush_outBuf(id)
     ResetSntpSock(SNTP_SOCK) 
     return true  
 
   return false
+
+PRI strEndsWith(str1,str2) | lenmin, len1, len2, pos1, pos2
+  RESULT := true
+  lenmin := len1 := strsize(str1)
+  len2 := strsize(str2)  
+  if len2 < lenmin
+    lenmin := len2
+  pos1 := str1 + len1
+  pos2 := str2 + len2  
+  repeat lenmin-1
+    if (byte[--pos1] <> byte[--pos2])    
+      RESULT := false
 
 PRI BuildPinStateXml(strpin, strvalue) | pin, value, state, dir
   pin := StrToBase(strpin, 10)
@@ -481,32 +805,6 @@ PRI ValidateParameters(pin, value)
 
   return true
 
-  
-PRI RenderFile(id, fn) | fs, bytes
-{{
-  Render a static file from the SD Card
-}}
-  mtuBuff := sock[id].GetMtu
-
-  OpenFile(fn)
-  fs := sd.getFileSize 
-  BuildAndSendHeader(id, fs)
-
-  'pst.str(string(cr,"Render File",cr))
-  repeat until fs =< 0
-    'Writeline(string("Bytes Left"), fs)
-
-    if(fs < mtuBuff)
-      bytes := fs
-    else
-      bytes := mtuBuff
-
-    sd.readFromFile(@buff, bytes)
-    fs -= sock[id].Send(@buff, bytes)
-  
-  sd.closeFile
-  return
-
 
 PRI SyncSntpTime(sockId) | ptr
 
@@ -574,6 +872,9 @@ PRI OpenFile(filename) | rc
 {{
   Verify if the file exists
 }}
+  ifnot(hasSd)
+    return false
+    
   rc := sd.listEntry(filename)
   if(rc == IO_OK)
     rc := sd.openFile(filename, IO_READ)
@@ -635,9 +936,6 @@ PRI GetContentType(ext)
     
   return @@contentType[HTML]
 
-
-  
-
 PRI GetVersion | i
   i := 0
   result := 0
@@ -652,6 +950,7 @@ PRI InitNetworkParameters | i
   i := 0 
   'Initialize the DHCP object
   dhcp.Init(@buff, DHCP_SOCK)
+  dhcp.SetHostname(@hostname)   ' defined at top of first DAT section
 
   'Request an IP. The requested IP
   'might not be assigned by DHCP
