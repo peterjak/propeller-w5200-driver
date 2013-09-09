@@ -42,8 +42,10 @@ CON
 VAR
 
 DAT
+  ext             long
+                  byte  $0[3], $0               ' needs to be long alignt
+
   index           byte  "index.htm", $0
-  ext             byte  $0[3], $0
   sectionTokenCnt byte  $0[HEADER_SECTIONS_LEN]
   tokens          byte  $0 
   null            long  $0

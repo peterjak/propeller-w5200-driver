@@ -44,10 +44,11 @@ CON
   CR            = $0D
   LF            = $0A
 
+  SOCKETS       = 4                                     ' 4 w5100 8 w5200
+
   { Web Server Configuration }
-  SOCKETS       = 3
-  DHCP_SOCK     = 3
-  SNTP_SOCK     = 2
+  MULTIUSE_SOCK = SOCKETS -1                            ' sock 3   (7) used for DHCP, NETBIOS and SNTP
+  HTTPSOCKETS   = MULTIUSE_SOCK -1                      ' sock 0-2 (6) 
   ATTEMPTS      = 5
   { Port Configuration }
   HTTP_PORT     = 80
@@ -81,6 +82,7 @@ CON
 
   RTC_CHECK_DELAY = 4_000_000  '1_000_000 = ~4 minutes
 
+  
   {{ PSX CMDS }}  
   REQ_PARA_STRING  = 1
   REQ_PARA_NUMBER  = 2
@@ -107,6 +109,9 @@ VAR
   
 DAT
   hostname      byte  "PROPNET",0 '<- you need to change this if you have more then one spineret
+  'workgroup     byte  "WORKGROUP", 0
+  workgroup     byte  "MSROBOTS", 0
+  
   sntpIp        byte  64, 147, 116, 229 '<- This SNTP server is on the west coast
   version       byte  "1.2", $0
   hasSd         byte  $00
@@ -118,8 +123,8 @@ DAT
 }                     "<body>",                                                 {
 }                     "Page not found!",                                        {                                                                                                       
 }                     "</body>",                                                {
-}                     "</html>", CR, LF, $0
-
+}                     "</html>", CR, LF
+  _404end       byte  0
   xmlPinState   byte  "<root>", CR, LF, "  <pin>" 
   pinNum        byte  $30, $30, "</pin>", CR, LF, "  <value>"
   pinState      byte  $30, $30, "</value>", CR, LF, "  <dir>" 
@@ -135,14 +140,22 @@ DAT
                 byte  "Public: OPTIONS, HEAD, GET, POST, PUT, MKCOL, DELETE, PROPFIND", CR, LF
                 byte  "DAV: 1",CR, LF           ' ,2,3
                 'byte  "MS-Author-Via: DAV", CR, LF
-                byte  "Content-Length: 0", CR, LF,0   
-  _h100         byte  "HTTP/1.1 100 Continue", CR, LF, $0     
-  _h200         byte  "HTTP/1.1 200 OK", CR, LF, $0
-  _h207         byte  "HTTP/1.1 207 Multi-Status", CR, LF, $0
-  _h201         byte  "HTTP/1.1 201 Created", CR, LF, $0
-  _h403         byte  "HTTP/1.1 403 Forbidden", CR, LF, $0
-  _h404         byte  "HTTP/1.1 404 Not Found", CR, LF, $0
-  _h409         byte  "HTTP/1.1 409 Conflict", CR, LF, $0
+                byte  "Content-Length: 0", CR, LF
+  _optionsend   byte   0 
+  _h100         byte  "HTTP/1.1 100 Continue", CR, LF
+  _h100end      byte  $0      
+  _h200         byte  "HTTP/1.1 200 OK", CR, LF
+  _h200end      byte  $0    
+  _h207         byte  "HTTP/1.1 207 Multi-Status", CR, LF
+  _h207end      byte  $0      
+  _h201         byte  "HTTP/1.1 201 Created", CR, LF
+  _h201end      byte  $0   
+  _h403         byte  "HTTP/1.1 403 Forbidden", CR, LF
+  _h403end      byte  $0  
+'  _h404         byte  "HTTP/1.1 404 Not Found", CR, LF
+'  _h404end      byte  $0 
+  _h409         byte  "HTTP/1.1 409 Conflict", CR, LF
+  _h409end      byte  $0  
   _css          byte  "Content-Type: text/css",CR, LF, $0
   _gif          byte  "Content-Type: image/gif",CR, LF, $0
   _html         byte  "Content-Type: text/html", CR, LF, $0
@@ -154,8 +167,10 @@ DAT
   _txt          byte  "Content-Type: text/plain; charset=utf-8",CR, LF, $0  
   _xml          byte  "Content-Type: text/xml",CR, LF, $0
   _zip          byte  "Content-Type: application/zip",CR, LF, $0
-  _contLen      byte  "Content-Length: ", $0   
-  _newline      byte  CR, LF, $0
+  _contLen      byte  "Content-Length: "
+  _contlenend   byte  $0          
+  _newline      byte  CR, LF
+  _newlineend   byte  $0
   time          byte  "00/00/0000 00:00:00", 0
   wizver        byte  $00
   dhcpRenew     byte  $00
@@ -170,17 +185,27 @@ DAT
    
   outBufPtr     long  0 ' used for delayed writing
 
+  pse1          long
+                byte "pse",0
+  pse2          long
+                byte "PSE",0
+  psx1          long
+                byte "psx",0
+  psx2          long
+                byte "PSX",0
+
 OBJ
   pst             : "Parallax Serial Terminal"
-  wiz             : "W5100"
-  dhcp            : "Dhcp" 
+  wiz             : "W5100"                           
+  dhcp            : "Dhcp"
+  netbios         : "NetBios"
   sock[SOCKETS]   : "Socket"
   req             : "HttpHeader"
   sd              : "S35390A_SD-MMC_FATEngineWrapper"
   sntp            : "SNTP Simple Network Time Protocol v2.01"
   rtc             : "S35390A_RTCEngine" 
  
-PUB Init | i, t1
+PUB Init | i, t1 , t2
 
   'A hardware reset can take 1.5 seconds
   'before the Sockets are ready to Send/Receive
@@ -198,12 +223,6 @@ PUB Init | i, t1
   '---------------------------------------------------
   'Start the Parallax Serial Terminal
   '---------------------------------------------------
-  {
-  pst.str(string(CR, "COG["))
-  i := pst.GetCogId
-  pst.dec(i)
-  pst.str(string("]: Parallax Serial Terminal"))
-  }
   pst.str(string(CR, "COG[1]: Parallax Serial Terminal"))
   '---------------------------------------------------
   'Start the SD Driver and Mount the SD card 
@@ -271,15 +290,46 @@ PUB Init | i, t1
     PrintNetworkParams
   else
     PrintDhcpError
-    return     
-  
+    return
+    
+  '--------------------------------------------------- 
+  'Startup NetBios
+  '---------------------------------------------------
+  pst.str(string(CR, "Starting NetBios ... Please Wait ... ")) 
+  i := netbios.Init(@Buff, MULTIUSE_SOCK, @hostname, @workgroup)
+  if i > 0
+    pst.str(string("NetBios Error ID: "))
+    pst.dec(i)
+    nbDebug(3,true)
+  else
+    pst.str(@hostname)
+    pst.str(string(" registered",CR))  
+            
+  'PST.dec(netbios.SendNameQuery(string("MSROBOTS"),0))   ' trans id
+  netbios.SendNameQuery(string("*"),0)
+
+  repeat
+    t1 := netbios.CheckSocket
+    t2 := netbios.GetLastReadSize
+    if t2
+      if t1 == 3
+        
+        PST.dec(t2)
+        pst.char(CR)
+     '   PST.str(netbios.GetLastName)
+      '  pst.char(CR)
+        PrintIp(netbios.GetLastIP)
+        pst.char(CR)
+      nbDebug(t1,false)
+  until t2 == 0
+    
   '--------------------------------------------------- 
   'Snyc the RTC using SNTP
   '---------------------------------------------------
   pst.str(string(CR, "Sync RTC with Time Server")) 
-  pst.str(@divider)
-  if(SyncSntpTime(SNTP_SOCK))
-    PrintRemoteIp(SNTP_SOCK)
+  pst.str(@divider)                                                   
+  if(SyncSntpTime)
+    PrintRemoteIp(MULTIUSE_SOCK)
     pst.str(string("Web time.........."))
     DisplayHumanTime
   else
@@ -295,19 +345,18 @@ PUB Init | i, t1
   pst.dec(dhcpRenew)
   pst.str(string(":00:00",CR))
     
-
   '--------------------------------------------------- 
   'Start up the web server
   '---------------------------------------------------
   pst.str(string(CR, "Initialize Sockets"))
   pst.str(@divider)
-  repeat i from 0 to SOCKETS-1
+  repeat i from 0 to HTTPSOCKETS
     sock[i].Init(i, WIZ#TCP, HTTP_PORT)
+           
+  mtuBuff := sock[0].GetMtu 
 
   OpenListeners
   StartListners
-
-  ResetSntpSock(SNTP_SOCK)
      
   pst.str(string(CR, "Start Socket Services", CR))
   MultiSocketService
@@ -317,38 +366,33 @@ PUB Init | i, t1
   pst.str(string(CR, "Rebooting..."))
   pause(1000) 
   reboot
-  
-PRI MultiSocketService | bytesToRead, sockId, fn, i
 
-  outBufPtr := @Buff     ' used for delayed writing (global)
-
-  bytesToRead := sockId := i := 0
-  repeat
-     
-    bytesToRead~ 
-    CloseWait
-    
+   
+PRI MultiSocketService | bytesToRead, sockId, filename, rtcDelay, JustHeader, i 
+  bytesToRead := sockId := rtcDelay := 0
+  CloseWait                     ' ? MSrobots    
+  repeat                     
     'Cycle through the sockets one at a time
     'looking for a connections
-    'pst.str(string(CR, "Waiting for a connection", CR))
-    'PrintAllStatuses 
-    repeat until sock[sockId].Connected
-      sockId := ++sockId // SOCKETS
-      if(++i//RTC_CHECK_DELAY == 0)
+    repeat    
+      sockId := ++sockId // constant(HTTPSOCKETS+1)
+      
+      i := netbios.CheckSocket      
+      'just for debug start ... Request  data still in Buffer 
+      nbDebug(i,false)
+      'just for debug end
+                                  
+      if(++rtcDelay//RTC_CHECK_DELAY == 0)
         rtc.readTime
-        'pst.str(string("DHCP Time check: "))
-        'pst.dec(rtc.clockHour)
-        'pst.char(":")
-        'pst.dec(rtc.clockMinute)
-        'pst.char(CR)
         if(rtc.clockHour == dhcpRenew)
           RenewDhcpLease
-        i~
+        rtcDelay~
+    until sock[sockId].Connected  
+        
+    pst.str(@divider)  
             
     'Repeat until we have data in the buffer
     repeat until bytesToRead := sock[sockId].Available
-
-    'PrintAllStatuses
 
     'Check for a timeout error
     if(bytesToRead =< 0)
@@ -356,40 +400,55 @@ PRI MultiSocketService | bytesToRead, sockId, fn, i
       pst.dec(bytesToRead) 
       PrintAllStatuses
       sock[sockId].Disconnect
-      next
-       
-    'Move the Rx buffer into HUB memory
-    sock[sockId].Receive(@buff, bytesToRead)
-
-    'Display the request header
-    pst.str(@divider)  
-    pst.str(@buff)
-
-    'Tokenize and index the header
-    req.TokenizeHeader(@buff, bytesToRead)
- 
-    fn := req.GetFileName
-    pst.str(fn)                
-    
-    if PropfindHandler(sockId, fn)
-    elseif PutHandler(sockId, fn)
-    elseif MKcolHandler(sockId, fn)
-    elseif DeleteHandler(sockId, fn)
-    elseif OptionsHandler(sockId, fn)
-    elseif PsxHandler(sockId, fn)
-    elseif FileHandler(sockId, fn)
-    elseif RenderDynamic(sockId)
     else
-      sock[sockId].Send(@_404, strsize(@_404))
-
-    'Close the socket and reset the
-    'interupt register
-    sock[sockId].Disconnect
-    sock[sockId].SetSocketIR($FF)
-
-    sockId := ++sockId // SOCKETS
     
+      'Move the Rx buffer into HUB memory
+      sock[sockId].Receive(@buff, bytesToRead)
+       
+      'Display the request header
+      pst.str(@buff)
+       
+      'Tokenize and index the header
+      req.TokenizeHeader(@buff, bytesToRead)
+       
+      filename := req.GetFileName
+      pst.str(filename)
+       
+      RESULT := false
+      JustHeader := false
+      outBufPtr := @Buff     ' used for delayed writing (global)
+     
+      ifnot strcomp(@buff, string("GET"))
+        RESULT := true
+        if strcomp(@buff, string("PROPFIND"))
+          RESULT := PseHandler(sockId, string("/PROPFIND.PSE"), false)
+        elseif OptionsHandler(sockId, filename)
+        elseif MKcolHandler(sockId, filename)
+        elseif DeleteHandler(sockId, filename)
+        elseif PutHandler(sockId, filename)
+        elseif (strcomp(@buff, string("HEAD")))
+          JustHeader := true
+          RESULT := false
+        else
+          RESULT := false
+          
+      ifnot RESULT 
+        if PsxHandler(sockId, filename, JustHeader)
+        elseif FileHandler(sockId, filename, JustHeader)
+        elseif RenderDynamic(sockId, JustHeader)
+        else
+          sock[sockId].Send(@_404, constant(@_404end - @_404))
+       
+      'Close the socket and reset the
+      'interupt register     
+      sock[sockId].Disconnect
+      sock[sockId].Close
+      sock[sockId].SetSocketIR($FF)
+      sock[sockId].Open
+      sock[sockId].Listen
+
 PRI RenewDhcpLease | requestIp
+  netbios.DisconnectSocket
   pst.str(string(CR,"Retrieving Network Parameters...Please Wait"))
   pst.str(@divider)
   requestIp := dhcp.GetIp
@@ -397,8 +456,7 @@ PRI RenewDhcpLease | requestIp
   if(InitNetworkParameters)
     PrintNetworkParams
   else
-    PrintDhcpError
-    
+    PrintDhcpError    
   rtc.readTime 
   dhcpRenew := (rtc.clockHour + 12) // 24
   pst.str(string("DHCP Renew........"))
@@ -406,7 +464,8 @@ PRI RenewDhcpLease | requestIp
     pst.char("0")
   pst.dec(dhcpRenew)
   pst.str(string(":00:00",CR))
- 
+  netbios.ReInitSocket
+  
 PRI BuildHeader(id, contentLength)
     BuildStatusHeader(id, @_h200, contentLength)
                             
@@ -415,39 +474,34 @@ PRI BuildStatusHeader(id, status, contentLength) | src
   src := GetContentType(req.GetFileNameExtension)
   write_outBuf(id, src, strsize(src))                                                        
   if(contentLength > 0)                                 ' Add content-length : value CR, LF
-    write_outBuf(id, @_contLen, strsize(@_contLen))
+    write_outBuf(id, @_contLen, constant(@_contlenend-@_contLen))
     src := Dec(contentLength)
     write_outBuf(id, src, strsize(src))
-    write_outBuf(id, @_newline, strsize(@_newline))   
-  write_outBuf(id, @_newline, strsize(@_newline))       ' End the header with a new line
+    write_outBuf(id, @_newline, constant(@_newlineend-@_newline))   
+  write_outBuf(id, @_newline, constant(@_newlineend-@_newline) )       ' End the header with a new line
 
-PRI flush_outBuf(id)  
+PRI flush_outBuf(id) | ptr, size  
   ifnot outBufPtr == @Buff                        ' flush needed
-    sock[id].Send(@Buff,outBufPtr - @Buff)        ' rest of buff
+    size := outBufPtr - @Buff
+    sock[id].Send(@Buff,size)        ' rest of buff
+'    ptr := @Buff
+'    repeat size
+'      PST.Char(byte[ptr++])
   outBufPtr := @Buff                              ' reset outBufPtr
 
-PRI write_outBuf(id, addr, bytes) | maxlen
-
-  maxlen:=1000
-
-  if (outBufPtr + bytes - @Buff) > maxlen
+PRI write_outBuf(id, addr, bytes)
+  if (outBufPtr + bytes - @Buff) > mtuBuff
     flush_outBuf(id)
   bytemove(outBufPtr, addr, bytes)
   outBufPtr += bytes   
 
-PRI PropfindHandler(id, fn) | options
-  if strcomp(@buff, string("PROPFIND"))
-    return PseHandler(id, string("/PROPFIND.PSE"))
-  return false
-
 PRI OptionsHandler(id, fn) | options
   if strcomp(@buff, string("OPTIONS"))
-    write_outBuf(id, @_h200, strsize(@_h200))           ' send 200 OK
-    write_outBuf(id, @_options, strsize(@_options))     ' send _options
-    write_outBuf(id, @_newline, strsize(@_newline))     ' send _newline
+    write_outBuf(id, @_h200, constant(@_h200end-@_h200) )            ' send 200 OK
+    write_outBuf(id, @_options, constant(@_optionsend-@_options))    ' send _options
+    write_outBuf(id, @_newline, constant(@_newlineend-@_newline))    ' send _newline
     flush_outBuf(id)
-    return true
-    
+    return true    
   return false
     
 PRI PutHandler(id, fn) | bytesToRead, size , status, noerr
@@ -460,14 +514,12 @@ PRI PutHandler(id, fn) | bytesToRead, size , status, noerr
     \sd.newFile(fn)                                     ' new file
     sd.closeFile                                        
     noerr := sd.openFile(fn, IO_WRITE)                                 
-    ifnot ( noerr == true)           ' now open file write
+    ifnot ( noerr == true)                              ' now open file write
       status :=  @_h409                                 ' 409 Conflict  
     else
       PST.str(string("send 100..."))
-      'sock[sockId].send(@_h100, strsize(@_h100))       ' send 100 continue
-      write_outBuf(id, @_h100, strsize(@_h100))
-      'sock[sockId].send(@_newline, strsize(@_newline)) ' send _newline
-      write_outBuf(id, @_newline, strsize(@_newline))
+      write_outBuf(id, @_h100, constant(@_h100end-@_h100))          ' send 100 continue
+      write_outBuf(id, @_newline,constant(@_newlineend-@_newline) ) ' send _newline  
       flush_outBuf(id)
     
       repeat until size<1                               ' expecting size bytes
@@ -483,52 +535,48 @@ PRI PutHandler(id, fn) | bytesToRead, size , status, noerr
       sd.closeFile                                      ' now close file
     PST.str(status)
     write_outBuf(id, status, strsize(status))           ' send 409 Conflict 201 Created or 200 OK
-    write_outBuf(id, @_newline, strsize(@_newline))     ' send _newline
+    write_outBuf(id, @_newline, constant(@_newlineend-@_newline) )     ' send _newline
     flush_outBuf(id)
     return true                                         ' done
-
   return false
   
 PRI MKcolHandler(id, fn) | noerr
   if strcomp(@buff, string("MKCOL"))
     noerr:=sd.newDirectory(fn)
     if noerr==true
-      write_outBuf(id, @_h201, strsize(@_h201))         ' send 201 created
+      write_outBuf(id, @_h201, constant(@_h201end-@_h201))         ' send 201 created
     else
-      write_outBuf(id, @_h409, strsize(@_h409))         ' send 409 conflict
-    write_outBuf(id, @_newline, strsize(@_newline))     ' send _newline
+      write_outBuf(id, @_h409, constant(@_h409end-@_h409))         ' send 409 conflict
+    write_outBuf(id, @_newline, constant(@_newlineend-@_newline) )     ' send _newline
     flush_outBuf(id) 
-    return true
-    
+    return true   
   return false
 
 PRI DeleteHandler(id, fn) | noerr
   if strcomp(@buff, string("DELETE"))
     noerr := sd.deleteEntry(fn)
     if noerr == true
-      write_outBuf(id, @_h200, strsize(@_h200))         ' send 200 OK 
+      write_outBuf(id, @_h200, constant(@_h200end-@_h200) )         ' send 200 OK 
     else
-      write_outBuf(id, @_h409, strsize(@_h409))         ' send 409 conflict
-    write_outBuf(id, @_newline, strsize(@_newline))     ' send _newline
+      write_outBuf(id, @_h409, constant(@_h409end-@_h409))         ' send 409 conflict
+    write_outBuf(id, @_newline, constant(@_newlineend-@_newline) )     ' send _newline
     flush_outBuf(id) 
     return true
-    
   return false
                                                 
-PRI PsxHandler(id, fn) | ext
-  ext := req.GetFileNameExtension 
-  if ((strcomp(ext, string("psx")) OR strcomp(ext, string("PSX"))))
-    return PseHandler(id, fn)
-  if ((strcomp(ext, string("pse")) OR strcomp(ext, string("PSE"))))
-    write_outBuf(id, @_h403, strsize(@_h403))           ' send 403 Forbidden
-    write_outBuf(id, @_newline, strsize(@_newline))     ' send _newline
+PRI PsxHandler(id, fn, JustHeader) | ext
+  ext := long[req.GetFileNameExtension] 
+  if (ext==psx1) OR (ext==psx2)
+    return PseHandler(id, fn, JustHeader)
+  if (ext==pse1) OR (ext==pse2)
+    write_outBuf(id, @_h403, constant(@_h403end-@_h403))           ' send 403 Forbidden
+    write_outBuf(id, @_newline, constant(@_newlineend-@_newline) )     ' send _newline
     flush_outBuf(id) 
-    return true
-    
+    return true    
   return false
     
-PRI PseHandler(id, fn) | Daisy, JustHeader, fs, psmptr, bufptr, cog, cmd, param1, param2 , param3, param4
-  JustHeader :=  strcomp(@buff, string("HEAD"))
+PRI PseHandler(id, fn, JustHeader) | Daisy, fs, psmptr, bufptr, cog, cmd, param1, param2 , param3, param4, param5,param6
+  cmd := param1 := param2 := param3 := param4 := param5 := param6 := 0
   Daisy := 1
   repeat until (Daisy == 0 )
     RESULT:= false                                                                        
@@ -537,8 +585,8 @@ PRI PseHandler(id, fn) | Daisy, JustHeader, fs, psmptr, bufptr, cog, cmd, param1
       OpenFile(fn)                                        ' load PASM to end of Buffer
       fs := sd.getFileSize - 28                           ' we just need Pasm block
       if fs>0 and fs<1985
-        bufptr := (@buff+BUFFER_3K-$400) & $FFFFFC        ' last 1 kb buffer
-        psmptr := (@buff+BUFFER_3K-fs) & $FFFFFC          ' end buffer minus pasm size
+        bufptr := (@buff+constant(BUFFER_3K-$400)) & $FFFFFC' last 1 kb buffer
+        psmptr := (@buff-fs+BUFFER_3K) & $FFFFFC  ' end buffer minus pasm size
         sd.readFromFile(bufptr, 24)                       ' load fist 24 bytes and discard
         sd.readFromFile(psmptr, fs)                       ' load pasm to end of buffer
       else
@@ -558,19 +606,25 @@ PRI PseHandler(id, fn) | Daisy, JustHeader, fs, psmptr, bufptr, cog, cmd, param1
           repeat until cmd==0                             ' exit
             case cmd                                      ' commands from PASM cog to spin
               REQ_PARA_STRING:                            ' PASM request Param as String
-                param1 := req.Get(@param1)                ' Param1 contains string up to 15 letter+0
-                cmd := -1                                 ' return address of string in Param1 
+                param1 := req.Get(@param1)                ' Param1-4 CONTAIN string up to 15 letter+0
+                param2 := strsize(param1)                 ' Param2 returns string size
+                cmd := -1                                 ' Param1 returns address of string
               REQ_PARA_NUMBER:                            ' PASM request Param as Number
-                param1 := StrToBase(req.Get(@param1) , 10)' Param1-4 CONTAIN string up to 15 letter+0
-                cmd := -1                                 ' return value as long in Param1
+                param2 := req.Get(@param1)                ' Param1-4 CONTAIN string up to 15 letter+0
+                param1 := StrToBase(param2 , 10)          ' Param1 returns value as long
+                param2 := strsize(param2)                 ' Param2 returns string size
+                cmd := -1                                 '  
               REQ_FILENAME:                               ' PASM request org. Filename
                 param1 := req.GetFileName                 ' (used by propfind)
-                cmd := -1                                 ' return answer in Param1
+                cmd := -1                                 ' Param1 returns address of string 
               REQ_HEADER_STRING:                          ' PASM request Header as string (used by propfind)
                 param1 := req.Header(@param1)             ' Param1-4 CONTAIN key up to 15 letter+0
+                param2 := strsize(param1)                 ' Param2 returns string size
                 cmd := -1                                 ' return address of string in Param1
               REQ_HEADER_NUMBER:                          ' PASM request Header as number (used by propfind)
-                param1 := StrToBase(req.Header(@param1) , 10)' Param1-4 CONTAIN key up to 15 letter+0
+                param2 := req.Header(@param1)             ' Param1-4 CONTAIN string up to 15 letter+0
+                param1 := StrToBase(param2 , 10)          ' Param1 returns value as long
+                param2 := strsize(param2)                 ' Param2 returns string size
                 cmd := -1                                 ' return value as long in Param1 
                 
               SEND_FILE_EXT:
@@ -612,7 +666,7 @@ PRI PseHandler(id, fn) | Daisy, JustHeader, fs, psmptr, bufptr, cog, cmd, param1
                 fs := strsize(bufptr)                     ' size request
                 bytemove(@buff,bufptr,fs)                 ' move to buff
                 req.TokenizeHeader(@buff, fs)             ' tokenize
-                param1:=PseHandler(id, req.GetFileName)   ' call sub modul (new cog)
+                param1:=PseHandler(id, req.GetFileName, false)   ' call sub modul (new cog)
                 cmd := -1                                 ' idle - back to PASM 
               PSE_TRANSFER:                               ' dasychain pse
                 fs := strsize(bufptr)                     ' size request
@@ -631,11 +685,10 @@ PRI PseHandler(id, fn) | Daisy, JustHeader, fs, psmptr, bufptr, cog, cmd, param1
             cogstop(cog~ - 1)
           RESULT := true                                ' if done return true
        
-PRI FileHandler(id, fn) | fs, bytes , JustHeader, offset
+PRI FileHandler(id, fn, JustHeader) | fs, bytes , offset
 {{
   Render a static file from the SD Card
 }}
-  JustHeader :=  strcomp(@buff, string("HEAD")) 
   if FileExists(fn)
     mtuBuff := sock[id].GetMtu
     OpenFile(fn)
@@ -651,19 +704,17 @@ PRI FileHandler(id, fn) | fs, bytes , JustHeader, offset
         else
           bytes := (mtuBuff - offset) 
         sd.readFromFile(@buff + offset, bytes)
-        fs -= sock[id].Send(@buff, bytes  + offset  )
+        fs -= sock[id].Send(@buff, bytes  + offset)
         offset := 0
         
     sd.closeFile
     return true
-
   return false
 
-PRI RenderDynamic(id) | JustHeader
+PRI RenderDynamic(id, JustHeader) 
   'req.TokenizeFilename                                  ' now ready for RESTful stuff
   
   'Process pinstate
-  JustHeader :=  strcomp(@buff, string("HEAD"))
   
   if(strEndsWith(req.GetFileName, string("pinstate.xml")))
     BuildPinStateXml( req.Get(string("led")), req.Get(string("value")) )
@@ -688,13 +739,12 @@ PRI RenderDynamic(id) | JustHeader
     return true
                
   if(strEndsWith(req.GetFileName, string("sntptime.xml")))
-    SyncSntpTime(SNTP_SOCK)
+    SyncSntpTime
     FillTime(@xTime)
     FillDay(@xday) 
     BuildHeader(id, -1)
     write_outBuf(id, @xmlTime, strsize(@xmlTime))
     flush_outBuf(id)
-    ResetSntpSock(SNTP_SOCK) 
     return true  
 
   return false
@@ -806,18 +856,19 @@ PRI ValidateParameters(pin, value)
   return true
 
 
-PRI SyncSntpTime(sockId) | ptr
+PRI SyncSntpTime | ptr
 
-  'Initialize the socket
-  sock[sockId].Init(SNTP_SOCK, WIZ#UDP, SNTP_PORT)
+  netbios.DisconnectSocket
+ 'Initialize the socket
+  sock[MULTIUSE_SOCK].Init(MULTIUSE_SOCK, WIZ#UDP, SNTP_PORT)
   'Initialize the destination paramaters
-  'sock[sockId].RemoteIp(64, 147, 116, 229)
-  sock[sockId].RemoteIp(sntpIp[0], sntpIp[1], sntpIp[2], sntpIp[3])
-  sock[sockId].RemotePort(SNTP_PORT)
+  'sock[MULTIUSE_SOCK].RemoteIp(64, 147, 116, 229)
+  sock[MULTIUSE_SOCK].RemoteIp(sntpIp[0], sntpIp[1], sntpIp[2], sntpIp[3])
+  sock[MULTIUSE_SOCK].RemotePort(SNTP_PORT)
 
   'Setup the buffer
   sntp.CreateUDPtimeheader(@sntpBuff)  
-  ptr := SntpSendReceive(SNTP_SOCK, @sntpBuff, 48)
+  ptr := SntpSendReceive(@sntpBuff, 48)
   if(ptr == @null)
     return false
   else
@@ -832,21 +883,17 @@ PRI SyncSntpTime(sockId) | ptr
                 } byte[@MM_DD_YYYY][3],       { Month
                 } word[@MM_DD_YYYY][0])       { Year}
 
+  netbios.ReInitSocket
   return true
-
-PRI ResetSntpSock(sockId)
-  sock[sockId].Init(sockId, WIZ#TCP, HTTP_PORT)
-  sock[sockId].Open
-  sock[sockId].Listen 
     
-PUB SntpSendReceive(sockId, buffer, len) | bytesToRead, ptr 
+PRI SntpSendReceive(buffer, len) | bytesToRead, ptr 
   bytesToRead := 0
 
   'Open socket and Send Message
-  sock[sockId].Open
-  sock[sockId].Send(buffer, len)
+  sock[MULTIUSE_SOCK].Open
+  sock[MULTIUSE_SOCK].Send(buffer, len)
   pause(500)
-  bytesToRead := sock[sockId].Available
+  bytesToRead := sock[MULTIUSE_SOCK].Available
    
   'Check for a timeout
   if(bytesToRead =< 0 )
@@ -855,11 +902,10 @@ PUB SntpSendReceive(sockId, buffer, len) | bytesToRead, ptr
 
   if(bytesToRead > 0) 
     'Get the Rx buffer  
-    ptr := sock[sockId].Receive(buffer, bytesToRead)
+    ptr := sock[MULTIUSE_SOCK].Receive(buffer, bytesToRead)
 
-  sock[sockId].Disconnect
+  sock[MULTIUSE_SOCK].Disconnect
   return ptr
-
     
 PRI Writeline(label, value)
   pst.str(label)
@@ -949,7 +995,7 @@ PRI InitNetworkParameters | i
 
   i := 0 
   'Initialize the DHCP object
-  dhcp.Init(@buff, DHCP_SOCK)
+  dhcp.Init(@buff, MULTIUSE_SOCK)
   dhcp.SetHostname(@hostname)   ' defined at top of first DAT section
 
   'Request an IP. The requested IP
@@ -1000,11 +1046,11 @@ PRI PrintRemoteIp(id)
      
 PRI OpenListeners | i
   'pst.str(string("Open",CR))
-  repeat i from 0 to SOCKETS-1  
+  repeat i from 0 to HTTPSOCKETS
     sock[i].Open
       
 PRI StartListners | i
-  repeat i from 0 to SOCKETS-1
+  repeat i from 0 to HTTPSOCKETS
     if(sock[i].Listen)
       pst.str(string("Socket "))
       pst.dec(i)
@@ -1018,14 +1064,12 @@ PRI StartListners | i
     else
       pst.str(string("Listener failed ",CR))
 
-
-
 PRI SetTranactionTimeout(timeout) | i
-  repeat i from 0 to SOCKETS-1
+  repeat i from 0 to HTTPSOCKETS
     sock[i].SetTransactionTimeout(timeout)
 
 PRI CloseWait | i
-  repeat i from 0 to SOCKETS-1
+  repeat i from 0 to HTTPSOCKETS
     if(sock[i].IsCloseWait) 
       sock[i].Disconnect
       sock[i].Close
@@ -1035,7 +1079,7 @@ PRI CloseWait | i
       sock[i].Listen
 
 PRI CloseAll | i
-  repeat i from 0 to SOCKETS-1
+  repeat i from 0 to HTTPSOCKETS
     sock[i].Disconnect
     sock[i].Close
         
@@ -1048,11 +1092,11 @@ PRI PrintStatus(id)
 
 PRI PrintAllStatuses | i
   pst.str(string(CR, "Socket Status", CR))
-  repeat i from 0 to SOCKETS-1
+  repeat i from 0 to HTTPSOCKETS
     pst.dec(i)
     pst.str(string("  "))
   pst.char(CR)
-  repeat i from 0 to SOCKETS-1
+  repeat i from 0 to HTTPSOCKETS
     pst.hex(wiz.GetSocketStatus(i), 2)
     pst.char($20)
   pst.char(CR)
@@ -1080,15 +1124,19 @@ PRI PrintTokens | i, tcnt
     pst.str(req.EnumerateHeader(i))
     pst.char(CR)
 
-PUB DisplayUdpHeader(buffer)
+PUB DisplayUdpHeader(buffer) | i
   pst.char(CR)
-  pst.str(string(CR, "Message from......."))
+  pst.str(string(CR, "Message from:......."))
   PrintIp(buffer)
   pst.char(":")
   pst.dec(DeserializeWord(buffer + 4))
-  pst.str(string(" ("))
+  pst.str(string(" Size:"))
   pst.dec(DeserializeWord(buffer + 6))
-  pst.str(string(")", CR))
+  pst.char(CR)
+  
+  repeat 20
+    PrintIp( buffer)
+    buffer += 4
     
 PUB DisplayHumanTime
     if byte[@MM_DD_YYYY][3]<10
@@ -1184,10 +1232,42 @@ Note: This source came from the Parallax Serial Termianl library
   workspace[j] := 0
   return @workspace
 
-PRI DeserializeWord(buffer) | value
+PRI nbDebug(nbs, showdata) | i
+  
+  if (nbs>0)
+    PST.Str(string(CR,"NB size "))
+    PST.Dec(netbios.GetLastReadSize)
+    case nbs
+      1:
+        PST.Str(string(" host todo "))
+      2:
+        PST.Str(string(" group todo "))
+      3:
+        PST.Str(string(" other "))
+      11:
+        PST.Str(string(" host PosQueryResp  "))
+      12:
+        PST.Str(string(" host StatQueryResp "))
+      21:
+        PST.Str(string(" group PosQueryResp  "))
+    netbios.DecodeLastNameInplace
+    PST.Str(netbios.GetLastName)
+    pst.str(string(" Request from: "))
+    PrintIp(@buff)
+    
+   
+    PST.char(":")
+    PST.dec(DeserializeWord(@buff + 4))
+    PST.str(string(" ("))
+    PST.dec(DeserializeWord(@buff + 6))
+    PST.str(string(")"))
+
+    if showdata
+      DisplayUdpHeader(@Buff)    
+
+PRI DeserializeWord(buffer) : value
   value := byte[buffer++] << 8
   value += byte[buffer]
-  return value
   
 PRI StrToBase(stringptr, base) : value | chr, index
 {Converts a zero terminated string representation of a number to a value in the designated base.

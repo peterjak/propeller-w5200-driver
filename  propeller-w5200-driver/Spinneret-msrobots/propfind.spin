@@ -46,8 +46,12 @@ Dat
 cmdptr                  mov     cmdptr,         par     ' adr of cmd mailbox
 par1ptr                 mov     par1ptr,        par     ' adr of param1 mailbox
 par2ptr                 mov     par2ptr,        par     ' adr of param2 mailbox
+par3ptr                 mov     par3ptr,        par     ' adr of param3 mailbox
+par4ptr                 mov     par4ptr,        par     ' adr of param4 mailbox
 bufptr                  add     par1ptr,        #4      ' adr of output buffer (1K)
 outptr                  add     par2ptr,        #8      ' adr of current written pos in out-buf
+entryptr                add     par3ptr,        #12     ' adr of directoryEntryCache
+                        add     par4ptr,        #16     ' 
 count                   rdlong  bufptr,         par1ptr ' init adress of output buffer
 
                         call    #main                   ' call usermodule
@@ -76,26 +80,55 @@ fileext                 long
                         byte    "xml",0
 c1980                   long    1980
 pathptr                 long    $400 - $40      ' last 64 bytes buffer
-c1319                   long    -1'1319
+deptvalue               long    0
+Depth1                  long
+                        byte    "Dept"
+Depth2                  long
+                        byte    "h",0,0,0
+                        
+'c1319                   long    -1'1319
                         
 ''-------[ Main Program ]-----------------------------------------------------
 main                        
                         
-                        add     pathptr,        bufptr         ' now pathptr hubadress last 64 bytes buf
+                        add     pathptr,        bufptr         ' now pathptr hubadress last 64 bytes output-buf
+                        mov     tmp,            pathptr
+                        sub     tmp,            #4
+                        wrlong  zero,           tmp            ' write a long zero in front of it (null string in hub used later)
 
-getpath                 mov     cmdout,         #REQ_FILENAME  ' get string Filename
+                        mov     par1,           Depth1         ' get long Header "Depth:"
+                        mov     par2,           Depth2
+                        mov     cmdout,         #REQ_HEADER_NUMBER  ' get Header key numeric value
+                        call    #sendspincmd                   ' result is long in par1
+                        mov     deptvalue,      par1           ' 0 just dir itself, > zero content also
+                        cmp     par2,           #0 wz          ' header there at all?
+              if_z      add     deptvalue,      #1             ' no - assume depth 1           
+                                 
+                        mov     cmdout,         #REQ_FILENAME  ' get string Filename
                         call    #sendspincmd                   ' result is string in par1
-
                         mov     outptr,         pathptr        ' save path at end of buf                
-                        call    #strhub2hub                    ' copy path
-
-                        wrbyte  zero,           outptr         ' terminate string     
+                        call    #strhub2hub                    ' copy path                        
+                        wrbyte  zero,           outptr         ' terminate string
+                            
                         sub     outptr,         #1             ' check if path ends with "/"
                         cmp     outptr,         pathptr wz     ' but is not just 1 char ("/")
-              if_z      jmp     #changerootdir                 ' --> root 
-                        rdbyte  par1,           outptr
+              if_z      jmp     #changerootdir                 ' --> root
+              
+                        rdbyte  par1,           outptr         ' now 
                         cmp     par1,           #"/" wz                               
-              if_z      wrbyte  zero,           outptr         ' delete trailing "/" if there                       
+              if_z      wrbyte  zero,           outptr         ' delete trailing "/" if there              
+                        mov     tmp,            outptr         ' search next /  backwards to find dirname
+findpath                sub     tmp,            #1
+                        rdbyte  par1,           tmp
+                        cmp     par1,           #"/" wz
+              if_nz     jmp     #findpath                      
+                        add     tmp,            #1             ' now tmp is at 
+                        mov     par1,           tmp            ' start name
+                        mov     tmp2,           outptr         ' keep copy
+                        mov     outptr,         par3ptr        ' target param3 & param4
+                        call    #strhub2hub                    ' copy name
+                        wrbyte  zero,           outptr         ' terminate string
+                        mov     outptr,         tmp2           ' restore copy                 
                         mov     par1,           pathptr                                          
                         mov     cmdout,         #CHANGE_DIRECTORY
                         call    #sendspincmd                   ' change directory
@@ -105,17 +138,20 @@ getpath                 mov     cmdout,         #REQ_FILENAME  ' get string File
                         mov     par1,           #"/"
                         wrbyte  par1,           outptr         'now add one "/" and
                         add     outptr,         #1 
-                        wrbyte  zero,           outptr         ' terminate string                                 
+                        wrbyte  zero,           outptr         ' terminate string
+                        mov     tmp,            par3ptr        ' flag file/dirName is in param3 & param4                                 
                         jmp     #parsdone
+                        
 changerootdir           mov     par1,           pathptr                                          
                         mov     cmdout,         #CHANGE_DIRECTORY
-                        call    #sendspincmd                   ' change directory
+                        call    #sendspincmd                   ' change directory to root
+                        mov     tmp,            pathptr        ' flag Name is / ... root
 parsdone                mov     par1,           fileext        ' send file extension
                         mov     cmdout,         #SEND_FILE_EXT
                         call    #sendspincmd                   ' set file ext 
                         
                         mov     par2,           #1             ' set flag for multi-status
-                        mov     par1,           c1319 'minusone       ' size ' send packet size unknown
+                        mov     par1,           minusone       ' size ' send packet size unknown
                         mov     cmdout,         #SEND_SIZE_HEADER
                         call    #sendspincmd                   ' send Header and content type/size
 
@@ -125,28 +161,20 @@ parsdone                mov     par1,           fileext        ' send file exten
                         call    #cog2hub                       ' to Output Hub Buffer
                         call    #sendstringbuf                 ' send xml header
                         
-startrows               
-
-                        mov     outptr,         bufptr         
-                        movd    cog2hub,        #xmlres        ' copy empty xmlres
-                        mov     count,          #xmldirend-xmlres              
-                        call    #cog2hub                       ' to Output Hub Buffer                                    
-
-                        call    #sendstringbuf                 ' send start of row
-
-                        mov     outptr,         bufptr         
-                        movd    cog2hub,        #xmldirend     ' copy end dir res
-                        mov     count,          #xmlfileend-xmldirend              
-                        call    #cog2hub                       ' to Output Hub Buffer
-                                                        
-                        call    #sendstringbuf                 ' send end of row
-
-                        jmp     #sendfooter
-
-                        
-                        mov     cmdout,         #LIST_ENTRY_ADR
+startrows               mov     cmdout,         #LIST_ENTRY_ADR
                         call    #sendspincmd                   
                         mov     entryptr,       par1           ' get ptr to direntrycache
+
+                        cmp     tmp,            pathptr wz     ' check flag if root
+              if_z      mov     par1,           pathptr        ' display name of entry is root '/'          
+              if_nz     mov     par1,           par3ptr        ' display name of entry is par3ptr (param3 and param4 contain dirname)
+                        mov     par2,           pathptr        ' link name of entry
+                        sub     par2,           #4             ' is empty ... null string in hub
+                          
+                        call    #sendxmlrow                    ' send row  par1 disp-name par2 link-name
+
+                        cmp     deptvalue,      #0 wz
+              if_z      jmp     #sendfooter                    ' done - just root - no content
                         
                         mov     par1,           #"W"
                         mov     cmdout,         #LIST_ENTRIES
@@ -156,54 +184,69 @@ nextrow                 mov     tmp,            par1           ' get ptr to name
                         rdbyte  tmp,            tmp            ' get first byte
                         cmp     tmp,            zero wz        ' test for empty name
               if_z      jmp     #sendfooter                    ' and done with rows
+              
+                        cmp     tmp,            #"." wz        ' check for . and .. NO WEBDAV !
+              if_z      jmp     #listnextentry                 ' list next entry
 
-                        mov     outptr,         bufptr         
+                        mov     par2,           par1           ' use name ptr for for link    
+                        call    #sendxmlrow                    ' send row  par1 disp-name par2 link-name
+
+listnextentry           mov     par1,           #"N"
+                        mov     cmdout,         #LIST_ENTRIES
+                        call    #sendspincmd                   ' list next entry                                                                           
+                        jmp     #nextrow                       ' and do it again
+                       
+sendfooter              mov     outptr,         bufptr         
+                        movd    cog2hub,        #xmlfooter     ' Transfer footer into hub-buff
+                        mov     count,          #xmlfooter_end-xmlfooter       
+                        call    #cog2hub                       ' copy footer to Output Hub Buffer
+                        call    #sendstringbuf                 ' send footer
+
+                        mov     par2,           #"/"           ' string in par2
+                        mov     par1,           par2ptr        ' hubadr par2
+                        mov     cmdout,         #CHANGE_DIRECTORY
+                        call    #sendspincmd                   ' change directory
+
+main_ret                ret                                    ' done
+
+''-------[ Send xmlrow ]----------------------------------------------------
+'
+'sends one directory entry - par1 points to display-name par2 points to link-name
+'
+sendxmlrow              mov     outptr,         bufptr         
                         movd    cog2hub,        #xmlres        ' copy empty xmlres
                         mov     count,          #xmldirend-xmlres              
                         call    #cog2hub                       ' to Output Hub Buffer                                    
 
                         ' now patch values in Output Hub Buffer
-
- 
                                       
-writename               mov     par2,           par1           ' save for link    
-                        mov     outptr,         bufptr         ' copy filename to name
+                        mov     outptr,         bufptr         ' copy filename to display-name
                         add     outptr,         #(@xmlfirstname-@xmlres) ' offset in bytes !
                         call    #strhub2hub
 
-                        mov     outptr,         bufptr         ' copy path
-                        add     outptr,         #(@xmlfirstlink-@xmlres) ' offset in bytes !
-                        
+findlastcharname        sub     outptr,         #1             ' find end of name
+                        rdbyte  par1,           outptr
+                        cmp     par1,           #" " wz        ' still space?
+              if_z      jmp     #findlastcharname
+                        add     outptr,         #1             ' terminate name with <
+                        mov     par1,           #"<"
+                        wrbyte  par1,           outptr
 
-                        mov     cmdin,          outptr         ' tmp storage to check root
+                        mov     outptr,         bufptr         ' copy path  to link
+                        add     outptr,         #(@xmlfirstlink-@xmlres) ' offset in bytes !                        
+
+'                        mov     cmdin,          outptr         ' tmp storage to check root
                         
                         mov     par1,           pathptr
                         call    #strhub2hub                    ' write path
-{                      
-                        rdbyte  par1,           par2
-                        cmp     par1,           #"." wz        ' check for . and .. NO NAMe !
-              if_nz     jmp     #linkname                      ' else write link name
-              
-                        sub     outptr,         #1             ' remove last "/" of path
-                        wrbyte  space,          outptr         
-                        mov     par1,           par2           ' check for ..
-                        add     par1,           #1    
-                        rdbyte  par1,           par1
-                        cmp     par1,           #"." wz        ' check for .. NO NAMe !
-              if_nz     jmp     #getsize                       ' else done go getsize
-              
-searchparent            sub     outptr,         #1             ' search next /
-                        rdbyte  par1,           outptr
-                        cmp     par1,           #"/" wz
-              if_nz     wrbyte  space,          outptr
-              if_nz     jmp     #searchparent
 
-                        cmp     outptr,         cmdin wz, wc   ' tmp storage ... adr parameter
-              if_a      wrbyte  space,          outptr                      
-                        jmp     #getsize                       ' no linkname
-}
-linkname                mov     par1,           par2           ' name back   htm - link 
+                        mov     par1,           par2           ' name back   htm - link    linkname
                         call    #strhub2hub                    ' write link name
+
+findlastcharlink        sub     outptr,         #1             ' find end of link
+                        rdbyte  par1,           outptr
+                        cmp     par1,           #" " wz        ' still space?
+              if_z      jmp     #findlastcharlink
 
                    '    result or= (directoryEntryCache[12] & $10)
                         mov     isdir,          zero 
@@ -212,19 +255,19 @@ linkname                mov     par1,           par2           ' name back   htm
                         rdbyte  par1,           tmp
                         and     par1,           #$10
                         cmp     par1,           zero      wz   ' zero if no dir
-              if_z      jmp     #getsize
               
-                        mov     isdir,          #1             ' is a direcory
-
-findlastchar            sub     outptr,         #1             ' find end of name
-                        rdbyte  par1,           outptr
-                        cmp     par1,           #" " wz        ' still space?
-              if_z      jmp     #findlastchar
-                        add     outptr,         #1             ' now add "/"
-                        mov     par1,           #"/"           
+              if_nz     mov     isdir,          #1             ' is a direcory
+              if_nz     rdbyte  par1,           outptr         ' check if already '/'
+              if_nz     cmp     par1,           #"/" wz        ' yes - done           
+              if_nz     add     outptr,         #1             ' no  - add "/"
+              if_nz     mov     par1,           #"/"           
+              if_nz     wrbyte  par1,           outptr
+              
+                        add     outptr,         #1             ' terminate link with <
+                        mov     par1,           #"<"
                         wrbyte  par1,           outptr
-                                        
-getsize                 mov     outptr,         entryptr
+
+                        mov     outptr,         entryptr
                         add     outptr,         #28            ' get entry size
                         mov     count,          #4
                         mov     par1,           zero
@@ -265,25 +308,8 @@ readlong                rdbyte  tmp,            outptr
                         call    #cog2hub                       ' to Output Hub Buffer
                                                         
                         call    #sendstringbuf                 ' send end of row
-                       
 
-                        mov     par1,           #"N"
-                        mov     cmdout,         #LIST_ENTRIES
-                        call    #sendspincmd                   ' list next entry                                                                           
-                        'jmp     #nextrow                       ' and do it again
-                       
-sendfooter              mov     outptr,         bufptr         
-                        movd    cog2hub,        #xmlfooter     ' Transfer footer into hub-buff
-                        mov     count,          #xmlfooter_end-xmlfooter       
-sendusageschemaexit     call    #cog2hub                       ' copy footer to Output Hub Buffer
-                        call    #sendstringbuf                 ' send footer
-
-                        mov     par2,           #"/"           ' string in par2
-                        mov     par1,           par2ptr        ' hubadr par2
-                        mov     cmdout,         #CHANGE_DIRECTORY
-                        call    #sendspincmd                   ' change directory
-
-main_ret                ret                                    ' done
+sendxmlrow_ret          ret
 
 ''-------[ Send String bufptr ]----------------------------------------------------
 '
@@ -434,9 +460,8 @@ xmlheader               long
 xmlres                  long                                                                                                                              
                         byte    "<D:response>"
                         byte    "<D:href>http://192.168.1.117"
-xmlfirstlink            byte    "/"
-                        'byte    " "[76]
-                        byte    "</D:href>"
+xmlfirstlink            byte    " "[76]
+                        byte    " /D:href>"                                     ' "<" is set in code
                         byte    "<D:propstat>"
                         byte    "<D:status>HTTP/1.1 200 OK</D:status>"
                         byte    "<D:prop>"
@@ -444,23 +469,22 @@ xmlfirstlink            byte    "/"
                         byte    "<D:getlastmodified>"
 xmlmodified             byte    "Thu, 01 Aug 2013 01:17:40 GMT"
                         byte    "</D:getlastmodified>"
-                        byte    "<D:lockdiscovery/>"
+                        'byte    "<D:lockdiscovery/>"
                         byte    "<D:ishidden>0</D:ishidden>"
-                        byte    "<D:supportedlock >"
-                        byte    "<D:lockentry>"
-                        byte    "<D:lockscope><D:exclusive/></D:lockscope>"
-                        byte    "<D:locktype><D:write/></D:locktype>"
-                        byte    "</D:lockentry>"
+                        'byte    "<D:supportedlock >"
+                        'byte    "<D:lockentry>"
+                        'byte    "<D:lockscope><D:exclusive/></D:lockscope>"
+                        'byte    "<D:locktype><D:write/></D:locktype>"
+                        'byte    "</D:lockentry>"
                         'byte    "<D:lockentry>"
                         'byte    "<D:lockscope><D:shared/></D:lockscope>"
                         'byte    "<D:locktype><D:write/></D:locktype>"
                         'byte    "</D:lockentry>"
-                        byte    "</D:supportedlock>"
-                        'byte    "<D:getetag/>"
+                        'byte    "</D:supportedlock>"
+                        byte    "<D:getetag/>"
                         byte    "<D:displayname>"
-xmlfirstname            byte    "/"
-                       ' byte    " "[11]
-                        byte    "</D:displayname>"  
+xmlfirstname            byte    " "[12]
+                        byte    " /D:displayname>"                              ' "<" is set in code   
                         'byte    "<D:getcontentlanguage/>"
                         byte    "<D:creationdate>"
 xmlcreated              byte    "2013-01-01T00:00:00"
@@ -496,9 +520,8 @@ par1                    res     1
 par2                    res     1
 isdir                   res     1
 
-rownr                   res     1
 tmp                     res     1
-entryptr                res     1
+tmp2                    res     1
 
 LNDivideBuffer          res     1
 LNDivideCounter         res     1

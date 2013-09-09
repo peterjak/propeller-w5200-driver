@@ -13,7 +13,7 @@ MODIFICATION:
 
   8/31/2013     added option to set hostname. default is propnet as before
                 but after Init you can do SetHostname(string("MYPROP")) to chose another 
-
+                Michael Sommer (MSrobots)
 }
 '*********************************************************************************************
 CON
