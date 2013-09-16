@@ -17,7 +17,7 @@ CON
   SNTP_SOCK     = 2
   ATTEMPTS      = 5
   { Port Configuration }
-  HTTP_PORT     = 80
+  HTTP_PORT     =  5000 '80
   SNTP_PORT     = 123
 
   { SD IO }
@@ -44,7 +44,7 @@ CON
   {{ USA Daylight Time Zone Abbreviations  }}
   #-9, HDT,AtDT,PDT,MDT,CDT,EDT,AlDT
 
-  Zone = MST '<- Insert your timezone
+  Zone = EDT '<- Insert your timezone
 
   RTC_CHECK_DELAY = 4_000_000  '1_000_000 = ~4 minutes
     
@@ -53,9 +53,12 @@ VAR
   long  longHIGH, longLOW, MM_DD_YYYY, DW_HH_MM_SS 'Expected 4-contigous variables for SNTP  
   
 DAT
-  sntpIp        byte  64, 147, 116, 229 '<- This SNTP server is on the west coast
+'64, 147, 116, 229 '<- This SNTP server is on the west coast
+
+  sntpIp        byte  129, 6, 15, 30  '<- NIST, Gaithersburg, Maryland
   version       byte  "1.2", $0
   hasSd         byte  $00
+  approot       byte  "\", $0  
   _404          byte  "HTTP/1.1 404 OK", CR, LF,                                {
 }                     "Content-Type: text/html", CR, LF, CR, LF,                {
 }                     "<html>",                                                 {
@@ -191,7 +194,8 @@ PUB Init | i, t1
 
   'MAC (Source Hardware Address) must be unique
   'on the local network
-  wiz.SetMac($00, $08, $DC, $16, $F1, $32)
+  'wiz.SetMac($00, $08, $DC, $16, $F1, $32)  '<- My second Spinneret
+  wiz.SetMac($00, $08, $DC, $16, $EF, $22)   '<- Tutorial Spinneret
 
   'Invoke DHCP to retrived network parameters
   'This assumes the WizNet 5100 is connected 
@@ -249,7 +253,7 @@ PUB Init | i, t1
   pause(1000) 
   reboot
   
-PRI MultiSocketService | bytesToRead, sockId, fn, i
+PRI MultiSocketService | bytesToRead, sockId, fn, i, pathElements
   bytesToRead := sockId := i := 0
   repeat
      
@@ -290,13 +294,14 @@ PRI MultiSocketService | bytesToRead, sockId, fn, i
     sock[sockId].Receive(@buff, bytesToRead)
 
     'Display the request header
-    pst.str(@buff)
+    'pst.str(@buff)
 
     'Tokenize and index the header
     req.TokenizeHeader(@buff, bytesToRead)
- 
     fn := req.GetFileName
-    if(FileExists(fn))
+    pathElements := req.PathElements
+    
+    if(FileExists(fn, pathElements))
       RenderFile(sockId, fn)
     else
       ifnot(RenderDynamic(sockId))
@@ -326,7 +331,8 @@ PRI RenewDhcpLease | requestIp
     pst.char("0")
   pst.dec(dhcpRenew)
   pst.str(string(":00:00",CR))
- 
+  
+{{   Old root directory structure
 PRI BuildAndSendHeader(id, contentLength) | dest, src
   dest := @buff
   bytemove(dest, @_h200, strsize(@_h200))
@@ -352,6 +358,36 @@ PRI BuildAndSendHeader(id, contentLength) | dest, src
   byte[dest] := 0
 
   sock[id].send(@buff, strsize(@buff))  
+}}
+PRI BuildAndSendHeader(id, contentLength, ext) | dest, src
+  dest := @buff
+  bytemove(dest, @_h200, strsize(@_h200))
+  dest += strsize(@_h200)
+
+  src := GetContentType(GetExtension(ext))
+  bytemove(dest, src, strsize(src))
+  dest += strsize(src)
+
+  'Add content-length : value CR, LF
+  if(contentLength > 0)
+    bytemove(dest, @_contLen, strsize(@_contLen))
+    dest += strsize(@_contLen)
+    src := Dec(contentLength)
+    bytemove(dest, src, strsize(src))
+    dest += strsize(src)
+    bytemove(dest, @_newline, strsize(@_newline))
+    dest += strsize(@_newline)
+
+  'End the header with a new line
+  bytemove(dest, @_newline, strsize(@_newline))
+  dest += strsize(@_newline)
+  byte[dest] := 0
+
+  sock[id].send(@buff, strsize(@buff))
+
+
+PRI GetExtension(fn)  
+  return fn + (strsize(fn) - 3)
 
 
 PRI RenderDynamic(id)
@@ -359,20 +395,20 @@ PRI RenderDynamic(id)
   'Process pinstate
   if(strcomp(req.GetFileName, string("pinstate.xml")))
     BuildPinStateXml( req.Get(string("led")), req.Get(string("value")) )
-    BuildAndSendHeader(id, -1)
+    BuildAndSendHeader(id, -1, string("xml"))
     sock[id].Send(@xmlPinState, strsize(@xmlPinState))
     return true
 
   if(strcomp(req.GetFileName, string("p_encode.xml")))
     BuildPinEndcodeStateXml( req.Get(string("value")) )
-    BuildAndSendHeader(id, -1)
+    BuildAndSendHeader(id, -1, string("xml"))
     sock[id].Send(@xmlPinState, strsize(@xmlPinState))
     return true
 
   if(strcomp(req.GetFileName, string("time.xml")))
     FillTime(@xTime)
     FillDay(@xday)
-    BuildAndSendHeader(id, -1)
+    BuildAndSendHeader(id, -1, string("xml"))
     sock[id].Send(@xmlTime, strsize(@xmlTime))
     return true
 
@@ -380,13 +416,15 @@ PRI RenderDynamic(id)
     SyncSntpTime(SNTP_SOCK)
     FillTime(@xTime)
     FillDay(@xday) 
-    BuildAndSendHeader(id, -1)
+    BuildAndSendHeader(id, -1, string("xml"))
     sock[id].Send(@xmlTime, strsize(@xmlTime))
     ResetSntpSock(SNTP_SOCK) 
     return true  
 
   return false
+   
 
+  
 PRI BuildPinStateXml(strpin, strvalue) | pin, value, state, dir
   pin := StrToBase(strpin, 10)
   value := StrToBase(strvalue, 10)  
@@ -481,11 +519,11 @@ PRI ValidateParameters(pin, value)
 
   return true
 
-  
+ {{ Old root directory structure
 PRI RenderFile(id, fn) | fs, bytes
-{{
-  Render a static file from the SD Card
-}}
+
+ 'Render a static file from the SD Card
+
   mtuBuff := sock[id].GetMtu
 
   OpenFile(fn)
@@ -506,7 +544,31 @@ PRI RenderFile(id, fn) | fs, bytes
   
   sd.closeFile
   return
+ }} 
+PRI RenderFile(id, fn) | fs, bytes
+{{
+  Render a static file from the SD Card
+}}
+  mtuBuff := sock[id].GetMtu
 
+  OpenFile(fn)
+  fs := sd.getFileSize 
+  BuildAndSendHeader(id, fs, fn)
+
+  'pst.str(string(cr,"Render File",cr))
+  repeat until fs =< 0
+    'Writeline(string("Bytes Left"), fs)
+
+    if(fs < mtuBuff)
+      bytes := fs
+    else
+      bytes := mtuBuff
+
+    sd.readFromFile(@buff, bytes)
+    fs -= sock[id].Send(@buff, bytes)
+  
+  sd.closeFile
+  return
 
 PRI SyncSntpTime(sockId) | ptr
 
@@ -580,11 +642,12 @@ PRI OpenFile(filename) | rc
       if(rc == SUCCESS)
         return true
   return false
-
+  
+ {{     Single directory
 PRI FileExists(filename) | rc
-{{
-  Verify if the file exists
-}}
+
+  'Verify if the file exists
+
   ifnot(hasSd)
     return false
     
@@ -595,7 +658,41 @@ PRI FileExists(filename) | rc
         sd.closeFile
         return true
   return false  
+ }}
+ 
+PRI FileExists(filename, pathElements) | rc
+{{
+  Verify if the file exists
+}}
+  ifnot(hasSd)
+    return false
 
+  ChangeDirectory(pathElements)
+    
+  rc := sd.listEntry(filename)
+  if(rc == IO_OK)
+    rc := sd.openFile(filename, IO_READ)
+      if(rc == SUCCESS)
+        sd.closeFile
+        return true
+  return false
+
+PRI ChangeDirectory(pathElements) | i
+  sd.changeDirectory(@approot)
+  if(req.IsFileRequest)
+    pathElements--  
+  'Path elements include a file name
+  ' req.IsFileRequest = true if a file is explictly requested
+  if(pathElements =< 0)
+    'pst.str(string("Root request", CR, CR))
+    return
+  else
+    'pst.str(string("Sub dir request", CR, CR))
+    repeat i from 0 to pathElements-1
+      'pst.str( req.GetUrlPart(i) )
+      'pst.char(CR)
+      sd.changeDirectory(req.GetUrlPart(i))
+        
 PRI GetContentType(ext)
 {{
   Determine the content-type 
@@ -655,7 +752,7 @@ PRI InitNetworkParameters | i
 
   'Request an IP. The requested IP
   'might not be assigned by DHCP
-  'dhcp.SetRequestIp(192,168,1,130)
+  dhcp.SetRequestIp(192, 168, 1, 120)
 
   'Invoke the SHCP process
   repeat until dhcp.DoDhcp(true)
