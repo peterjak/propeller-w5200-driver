@@ -9,7 +9,7 @@ $LastChangedBy:: michael@msrobots.net                          $:  Last Change B
 $LastChangedDate:: 2013-08-03 09:31:28 +0200 (Sa, 03 Aug 2013) $:  Last Change Date
 $LastChangedRevision:: 170                                     $:  Last Change Revision
 
-AUTHOR: Mike Gebhard
+AUTHOR: Mike Gebhard / Michael Sommer
 COPYRIGHT: Parallax Inc.
 LAST MODIFIED: 8/31/2013
 VERSION 1.0
