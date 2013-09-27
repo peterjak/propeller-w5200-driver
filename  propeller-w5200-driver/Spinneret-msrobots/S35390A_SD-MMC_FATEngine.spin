@@ -24,7 +24,8 @@
 // v1.9 - Removed all hacks from the block driver and made it faster. The block driver now follows the SD/MMC card protocol
 //        exactly. Also, updated file system methods to reflect changes in the block driver - 3/10/2011.
 // v1.9.1 - Added get last error so aborts are easier to deal with; Mike Gebhard 12/8/2012
-// v1.9.2 - Addded function to access address of directoryEntryCache; Michael Sommer (@MSrobots) - 8/31/2013
+// v1.9.2 - Addded function to access address of directoryEntryCache; 
+//        - commented out unused methods to get object smaller; Michael Sommer (@MSrobots) - 9/15/2013
 //
 // For each included copy of this object only one spin interpreter should access it at a time.
 //
@@ -201,7 +202,7 @@ VAR long dataStructureAddress[0]
 'PUB fileTime
   'return readClock
 
-PUB GetADRdirectoryEntryCache
+PUB GetADDRdirectoryEntryCache
   return @directoryEntryCache
     
 PUB GetCogID
@@ -250,7 +251,7 @@ PUB readByte '' 35 Stack Longs
 '' ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   readData(@result, 1)
-
+{
 PUB readShort '' 35 Stack Longs
 
 '' ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -362,7 +363,7 @@ PUB writeString(stringPointer) '' 36 Stack Longs
 '' ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   writeData(stringPointer, strsize(stringPointer))
-
+}
 PUB readData(addressToPut, count) | stride '' 32 Stack Longs
 
 '' ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -901,7 +902,7 @@ PUB listSize '' 3 Stack Longs
   bytemove(@result, @directoryEntryCache[28], 4)
   if(result < 0)
     result := posx
-
+{
 PUB listCreationDay '' 3 Stack Longs
 
 '' ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1293,7 +1294,7 @@ PUB partitionFreeSectorCount(mode) '' 23 Stack Longs
 
     result *= sectorsPerCluster
   unlockFileSystem
- 
+} 
 PUB partitionError '' 3 Stack Longs
 
 '' ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1311,7 +1312,7 @@ PUB partitionMounted '' 3 Stack Longs
 '' ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   result or= mountedUnmountedFlag
-
+{
 PUB partitionWriteProtected '' 3 Stack Longs
 
 '' ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1327,7 +1328,7 @@ PUB partitionCardNotDetected '' 3 Stack Longs
 '' ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   result or= cardNotDetectedFlag
-{
+
 PUB bootPartition(filePathName) | bootSectors[64] '' 108 Stack Longs
 
 '' ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

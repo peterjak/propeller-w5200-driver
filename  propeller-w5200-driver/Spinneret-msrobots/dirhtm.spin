@@ -29,7 +29,7 @@ CON
   
   CHANGE_DIRECTORY = 21
   LIST_ENTRIES     = 22
-  LIST_ENTRY_ADR   = 23
+  LIST_ENTRY_ADDR  = 23
 
   PSE_CALL         = 91
   PSE_TRANSFER     = 92
@@ -54,27 +54,6 @@ count                   rdlong  bufptr,         par1ptr ' init adress of output 
                         wrlong  zero,           cmdptr  ' write exit to cmd mailbox
                         cogid   cmdin                   ' get own cogid
                         cogstop cmdin                   ' and shoot yourself ... done
-                        
-''-------[ Send Spin Cmds ]---------------------------------------------------                                     
-sendspincmd             wrlong  par2,           par2ptr ' write param2 value
-                        wrlong  par1,           par1ptr ' write param1 value
-                        wrlong  cmdout,         cmdptr  ' write cmd value                        
-sendspincmdwait         rdlong  cmdin,          cmdptr
-                        cmp     cmdin,          cmdout wz
-        if_z            jmp     #sendspincmdwait        ' wait for spin
-                        rdlong  par1,           par1ptr ' get answer param1
-                        rdlong  par2,           par2ptr ' get answer param2
-sendspincmd_ret         ret
-
-''-------[ data constants ]---------------------------------------------------
-zero                    long    0
-minusone                long    -1
-space                   long    32
-incDest1                long    1 << 9
-fileext                 long
-                        byte    "htm",0
-c1980                   long    1980
-pathptr                 long    $400 - $40      ' last 64 bytes buffer
                         
 ''-------[ Main Program ]-----------------------------------------------------
 main                        
@@ -137,7 +116,7 @@ tableheader             mov     outptr,         bufptr         ' copy htm table 
                         
 startrows               mov     rownr,          zero
               
-                        mov     cmdout,         #LIST_ENTRY_ADR
+                        mov     cmdout,         #LIST_ENTRY_ADDR
                         call    #sendspincmd                   
                         mov     entryptr,       par1           ' get ptr to direntrycache
                         
@@ -281,6 +260,27 @@ sendusageschemaexit     call    #cog2hub                       ' copy footer to 
 
 main_ret                ret                                    ' done
 
+''-------[ Send Spin Cmds ]---------------------------------------------------                                     
+sendspincmd             wrlong  par2,           par2ptr ' write param2 value
+                        wrlong  par1,           par1ptr ' write param1 value
+                        wrlong  cmdout,         cmdptr  ' write cmd value                        
+sendspincmdwait         rdlong  cmdin,          cmdptr
+                        cmp     cmdin,          cmdout wz
+        if_z            jmp     #sendspincmdwait        ' wait for spin
+                        rdlong  par1,           par1ptr ' get answer param1
+                        rdlong  par2,           par2ptr ' get answer param2
+sendspincmd_ret         ret
+
+''-------[ data constants ]---------------------------------------------------
+zero                    long    0
+minusone                long    -1
+space                   long    32
+incDest1                long    1 << 9
+fileext                 long
+                        byte    "htm",0
+c1980                   long    1980
+pathptr                 long    $400 - $40      ' last 64 bytes buffer
+                        
 ''-------[ Send String bufptr ]----------------------------------------------------
 '
 'sends String from Hub Buffer bufptr to the socket/browser

@@ -54,6 +54,11 @@ CON
   ROUTER_IP           = 03
   DOMAIN_NAME_SERVER  = 06
   HOST_NAME           = 12
+  DOMAIN_NAME         = 15
+  NTP_SERVER_IP     = 42
+  WINS_NB_NAME_SERVER = 44
+  WINS_NB_NODE_TYPE   = 46
+  WINS_NB_SCOPE_ID    = 47
   REQUEST_IP          = 50
   IP_LEASE_TIME       = 51
   MESSAGE_TYPE        = 53
@@ -91,7 +96,7 @@ DAT
   requestIp       byte  00, 00, 00, 00
   errorCode       byte  $00
   magicCookie     byte  $63, $82, $53, $63
-  paramReq        byte  $01, $03, $06, $2A ' Paramter Request; mask, router, domain name server, network time
+  paramReq        byte  SUBNET_MASK, ROUTER_IP, DOMAIN_NAME_SERVER, NTP_SERVER_IP ' Paramter Request; mask, router, domain name server, network time
   hostName        byte  "propnet", $0
   leaseTime       byte  $00, $00, $00, $00
   optionPtr       long  $F0
@@ -100,8 +105,9 @@ DAT
   null            long  $00_00_00_00
   errors          long  @noErr, @errDis, @erroff, @errReq, @errAck, @errDunno
   hostptr         long  0       ' Holds pointer to hostname
-  _dhcpServer      byte  $00, $00, $00, $00
-  _router          byte  $00, $00, $00, $00 
+  _ntpServer      byte  64, 147, 116, 229 '<- This SNTP server is on the west coast. If your DHCP server provides a NTP-Server-IP it will get overridden.
+  _dhcpServer     byte  $00, $00, $00, $00
+  _router         byte  $00, $00, $00, $00 
   
 
    
@@ -148,6 +154,24 @@ PRI IsRequestIp
 PUB GetRequestIP
   return @requestIp
  
+PUB SetRouter(source)
+  bytemove(@_router, source, 4)
+  
+PUB GetRouter
+  return @_router
+
+PUB SetDhcpServer(source)
+  bytemove(@_dhcpServer, source, 4)
+
+PUB GetDhcpServer
+  return  @_dhcpServer
+
+PUB SetNtpServer(source)
+  bytemove(@_ntpServer, source, 4)
+
+PUB GetNtpServer
+  return  @_ntpServer
+
 PUB DoDhcp(resetIp)
  
   errorCode := 0
@@ -268,7 +292,12 @@ PRI Offer | ptr
   ptr := ReadDhcpOption(DHCP_SERVER_IP)
   SetDhcpServer(ptr+1) 
 
-  ptr := ReadDhcpOption(MESSAGE_TYPE)
+  'Set the NTP server IP
+  ptr := ReadDhcpOption(NTP_SERVER_IP)
+  ifnot ptr == -1
+'    SetNtpServer(ptr+1) 
+
+  ptr := ReadDhcpOption(MESSAGE_TYPE)                   '?
   
   'Reset the pointer
   buffPtr -= UPD_HEADER_LEN
@@ -382,19 +411,6 @@ PRI EndDhcpOptions | len
   return DHCP_PACKET_LEN
 
 
-
-PUB SetRouter(source)
-  bytemove(@_router, source, 4)
-  
-PUB GetRouter
-  return @_router
-
-
-PUB SetDhcpServer(source)
-  bytemove(@_dhcpServer, source, 4)
-
-PUB GetDhcpServer
-  return  @_dhcpServer
 
 {  
 PRI SendReceive(buffer, len) | bytesToRead, ptr, tryagain 

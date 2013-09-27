@@ -5,4 +5,9 @@
 		added propfind.spin - pasm propfind handler (not complete yet) - (compile to binary rename propfind.pse and put on sd-root)
 		added dirhtm.spin - pasm demo - (compile to binary rename dirhtm.psx and put on sd-root)
 		added dirxml.spin - pasm demo - (compile to binary rename dirxml.psx and put on sd-root)
+9/26/2013	commented out alot of unused methods
+		commented sourcecode and added some spindoc comments
+		added netbios to main program
+		did some optimisation for size ... running out of space ...
+
 

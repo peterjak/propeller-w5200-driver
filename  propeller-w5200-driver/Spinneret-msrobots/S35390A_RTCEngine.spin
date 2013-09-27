@@ -13,6 +13,7 @@
 // Update History:
 //
 // v1.0 - Original release - 3/23/2011.
+//      - commented out unused methods to get object smaller; Michael Sommer (@MSrobots) - 9/15/2013
 //
 // For each included copy of this object only one spin interpreter should access it at a time.
 //
@@ -225,7 +226,7 @@ PUB writeTime(second, minute, hour, day, date, month, year) | index, information
       result and= transmitPacket(convertTime(information[index]))
 
     stopDataTransfer
-
+{
 PUB INT1Shutdown '' 18 Stack Longs
 
 '' ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -409,7 +410,7 @@ PUB INT1ClockFrequency '' 18 Stack Longs
 '' ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   return modifyRegister(1, $F0, $10)
-
+}
 PUB readFreeRegister '' 11 Stack Longs
 
 '' ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -429,7 +430,7 @@ PUB writeFreeRegister(value) '' 19 Stack Longs
 '' ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   return modifyRegister(7, $FF, (value >< 8))
-
+{
 PUB pauseForSeconds(number) '' 4 Stack Longs
 
 '' ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -455,7 +456,7 @@ PUB pauseForMilliseconds(number) '' 4 Stack Longs
   repeat number
     result += (clkfreq / 1_000)
     waitcnt(result)
-
+}
 PUB RTCEngineStart(dataPinNumber, clockPinNumber, lockNumberToUse) '' 9 Stack Longs
 
 '' ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -482,7 +483,7 @@ PUB RTCEngineStop '' 3 Stack Longs
 '' ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   bytefill(@time, 0, 8)
-
+{
 PRI clearAlarmInterrupt(command, data) ' 9 Stack Longs
 
   startDataTransfer
@@ -506,7 +507,7 @@ PRI setAlarmInterrupt(command, week, hour, minute) | temporary ' 12 Stack Longs
   result and= transmitPacket(convertTime((minute <# 59) #> 0) | ((minute <> -1) & 1))
 
   stopDataTransfer
-
+}
 PRI modifyRegister(command, mask, data) | temporary ' 15 Stack Longs
 
   temporary := readRegister(command)

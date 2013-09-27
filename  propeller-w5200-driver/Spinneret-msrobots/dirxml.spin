@@ -41,7 +41,7 @@ Pub getPasmADR
 return @cmdptr
 ''=======[ Assembly Cog ]=====================================================
 Dat
-''-------[ Start and Stop ]----------------------------------------------------
+''-------[ Start ]------------------------------------------------------------
                         org     0
                         
 cmdptr                  mov     cmdptr,         par     ' adr of cmd mailbox
@@ -200,6 +200,8 @@ sendusageschemaexit     call    #cog2hub                       ' copy footer to 
                         call    #sendspincmd                   ' change directory
 
 main_end                                                       ' done
+
+''-------[ Stop ]-------------------------------------------------------------
 
                         wrlong  zero,           cmdptr  ' write exit to cmd mailbox
                         cogid   cmdin                   ' get own cogid
