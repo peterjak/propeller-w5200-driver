@@ -1,34 +1,33 @@
-'*********************************************************************************************
-{
-AUTHOR: Mike Gebhard
-COPYRIGHT: Parallax Inc.
-LAST MODIFIED: 8/31/2013
-VERSION 1.0
-LICENSE: MIT (see end of file)
-
-DESCRIPTION:     
-The HttpHeader object
-
-MODIFIED: Michael Sommer (@MSrobots)
-
-this version DOES NOT tokenize the Filename inside TokenizeHeader
-so '/' is allowed in Filename and in POST/GET parameters
-
-but for RESTful Interfaces you can call TokenizeFilename after TokenizeHeader did its job
-to provide url_parts as values.
-
-So before calling TokenizeFilename
-
-GetFileName will return the path and filename
-
-and after calling TokenizeFilename
-
-GetFileName will just return the filename without path
-GetUrlPart(index) will work as desired (enumerating each part of the path & filename )
-
-}                                            
-'*********************************************************************************************
-CON
+'':::::::[ HttpHeader ]:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+{{
+''
+''AUTHORS           Mike Gebhard / Michael Sommer
+''COPYRIGHT:        Parallax Inc. - See LICENCE (MIT)
+''LAST MODIFIED:    10/04/2013
+''VERSION:          1.0
+''LICENSE:          MIT (see end of file)
+''
+''
+''DESCRIPTION:   
+''                  The HttpHeader object
+''
+''MODIFICATIONS:
+'' 8/31/2013        this version DOES NOT tokenize the Filename inside TokenizeHeader
+''                  so '/' is allowed in Filename and in POST/GET parameters
+''                  for RESTful Interfaces you can call TokenizeFilename after TokenizeHeader
+''                  to provide url_parts as values
+''                  So before calling TokenizeFilename
+''                  - GetFileName will return the path and filename
+''                  And after calling TokenizeFilename
+''                  - GetFileName will just return the filename without path
+''                  - GetUrlPart(index) will work as desired and will
+''                    enumerate each part of the path & filename
+''10/04/2013        added minimal spindoc comments
+''                  Michael Sommer (MSrobots)
+}}                                           
+CON                                                     
+''
+''=======[ Global CONstants ... ]=========================================================
   
   CR    = $0D
   LF    = $0A
@@ -39,8 +38,8 @@ CON
 
   #0, STATUS_LINE, HEADER_LINES, BODY, URL_PARTS
 
-VAR
-
+''     
+''=======[ Global DATa ]==================================================================
 DAT
   ext             long
                   byte  $0[3], $0               ' needs to be long alignt
@@ -55,6 +54,8 @@ DAT
   isToken         long  $0
   t1              long  $0
 
+''
+''=======[ PUBlic Spin Methods]===========================================================
 PUB Get(key) | i
   repeat i from 0 to sectionTokenCnt[STATUS_LINE]-1
     if(strcomp(key, tokenPtr[i]))
@@ -260,6 +261,9 @@ PUB TokenizeFilename
     
     sectionTokenCnt[URL_PARTS] := tokens
     
+
+''
+''=======[ PRIvate Spin Methods ... ]=====================================================
 PRI FindBody(value, len)
   repeat len
     if(byte[value] == CR AND byte[value+1] == LF AND byte[value+2] == CR AND byte[value+3] == LF)
@@ -311,7 +315,9 @@ PRI DecodeString(source) | char, inPlace, outPlace
     
   byte[source][outPlace-1] := 0 ' terminate the string at it's new shorter size
 
-'-------------[ Debug ]------------------------------------
+
+''
+''=======[ PUB Debug Stuff ... ]==========================================================
 PUB GetStatusLine
   return headerSections[STATUS_LINE]
 
@@ -329,21 +335,29 @@ PUB GetHeaderLinesTokenCount
 
 PUB GetBodyTokenCount
   return  sectionTokenCnt[BODY] - sectionTokenCnt[HEADER_LINES]
-CON
-{{
- ______________________________________________________________________________________________________________________________
-|                                                   TERMS OF USE: MIT License                                                  |                                                            
-|______________________________________________________________________________________________________________________________|
-|Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation    |     
-|files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,    |
-|modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software|
-|is furnished to do so, subject to the following conditions:                                                                   |
-|                                                                                                                              |
-|The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.|
-|                                                                                                                              |
-|THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE          |
-|WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR         |
-|COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,   |
-|ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                         |
- ------------------------------------------------------------------------------------------------------------------------------ 
+
+''
+''=======[ MIT License ]==================================================================
+CON                                                     'MIT License
+{{{
+ ______________________________________________________________________________________
+|                            TERMS OF USE: MIT License                                 |                                                            
+|______________________________________________________________________________________|
+|Permission is hereby granted, free of charge, to any person obtaining a copy of this  |
+|software and associated documentation files (the "Software"), to deal in the Software |
+|without restriction, including without limitation the rights to use, copy, modify,    |
+|merge, publish, distribute, sublicense, and/or sell copies of the Software, and to    |
+|permit persons to whom the Software is furnished to do so, subject to the following   |
+|conditions:                                                                           |
+|                                                                                      |
+|The above copyright notice and this permission notice shall be included in all copies |
+|or substantial portions of the Software.                                              |
+|                                                                                      |
+|THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,   |
+|INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A         |
+|PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT    |
+|HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF  |
+|CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE  |
+|OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                         |
+|______________________________________________________________________________________|
 }}

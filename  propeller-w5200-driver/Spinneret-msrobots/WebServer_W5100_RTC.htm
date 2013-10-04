@@ -1,0 +1,1913 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<style type="text/css">
+	body {
+		background: #404066;
+		color: #000000;
+		font: 10pt verdana, geneva, lucida, 'lucida grande', arial, helvetica, sans-serif;
+		margin: 5px 10px 10px 10px;
+		padding: 0px;
+		overflow: hidden;
+	}
+	h1 {
+		color: darkblue;
+		font :bold 16pt verdana,geneva,lucida,'lucida grande',arial,helvetica,sans-serif;
+		margin-top: 0
+	}
+	.title {
+		text-align: center;
+	}
+	h2 {
+		color:darkblue;
+		font:bold 14pt verdana,geneva,lucida,'lucida grande',arial,helvetica,sans-serif
+	}
+	h3 {
+		color:darkblue;
+		font:bold 12pt verdana,geneva,lucida,'lucida grande',arial,helvetica,sans-serif
+	}
+	h4 {
+		color:#b73235;
+		font:bold 10pt verdana,geneva,lucida,'lucida grande',arial,helvetica,sans-serif
+	}
+	pre {
+		font: 10pt parallax,courier,monospaced;
+		line-height: 97%;
+	}	
+	.source {
+		margin-left: 20px;
+		border: 1px solid #ccc;
+		overflow: auto;
+		display: none;
+		background: #f8f8e8;
+		margin-top: 12pt;
+		width: 95%;
+		padding-top: 5px;
+		padding-left: 10px;
+		max-height: 600px;
+		letter-spacing: 0px;
+	}
+	var {
+		color: #000080;
+		font-style: normal;
+		font-weight: bold;
+		letter-spacing: -1px;
+	}
+	a {
+		font-weight: bold;
+		font-size: 6pt;
+		text-decoration: none;
+		color: #0000cc;
+	}
+	.toc1 {
+		font-size: 12pt;
+		font-weight: bold;
+		vertical-align: baseline;
+		text-align: center;
+		color: #d7d0ff;
+	}		
+	.toc2 {
+		font-size: 95%;
+		font-weight: bold;
+		vertical-align: baseline;
+		color: white;
+		text-decoration: none;
+	}		
+	.toc3 {
+		font-size: 90%;
+		font-weight: normal;
+		vertical-align: baseline;
+		margin-left: 10px;
+		color: white;
+		text-decoration: none;
+	}		
+	.toc4 {
+		font-size: 85%;
+		font-weight: normal;
+		font-style: italic;
+		vertical-align: baseline;
+		margin-left: 20px;
+		color: #d7d0ff;
+		text-decoration: none;
+	}
+	.tocgrp {
+		display: none
+	}
+  hr {
+  	border: 0;
+    color: #b73235;
+    background-color: #b73235;
+    height: 1px;
+  }
+	</style>
+	<script language="JavaScript">
+		window.onload = resize;
+		window.onresize = resize;
+		var show=0;
+		function ShowHide(divId) {
+			if (document.getElementById(divId).style.display!='block') {
+				document.getElementById(divId).style.display='block';
+				if (divId.substring(0, 3) == 'toc') {
+					window.location = '#lbl' + divId.substring(3);
+				}
+			} else {
+				document.getElementById(divId).style.display='none';
+			}
+		};
+    function resize() {
+      var myWidth = 0, myHeight = 0;
+      if(typeof(window.innerWidth) == 'number') {
+        //Non-IE
+        myWidth = window.innerWidth;
+        myHeight = window.innerHeight;
+      } else if(document.documentElement && (document.documentElement.clientWidth || document.documentElement.clientHeight)) {
+        //IE 6+ in 'standards compliant mode'
+        myWidth = document.documentElement.clientWidth;
+        myHeight = document.documentElement.clientHeight;
+      } else if(document.body && (document.body.clientWidth || document.body.clientHeight)) {
+        //IE 4 compatible
+        myWidth = document.body.clientWidth;
+        myHeight = document.body.clientHeight;
+      }
+      document.getElementById("text").style.height = (myHeight - 10) + "px";
+      document.getElementById("text").style.width = (Math.min(myWidth - 250, 800)) + "px";
+      document.getElementById("toc").style.height = (myHeight - 10) + "px";
+     }	
+    function selectall(source) { 
+	    var selection, range, doc, win; 
+	    if ( (doc = source.ownerDocument)
+	    	&& (win = doc.defaultView)
+	    	&& typeof win.getSelection != 'undefined'
+	    	&& typeof doc.createRange != 'undefined' 
+	    	&& (selection = window.getSelection())
+	    	&& typeof selection.removeAllRanges != 'undefined'
+	    ) { 
+	       range = doc.createRange(); 
+	       range.selectNode(source); 
+	       selection.removeAllRanges(); 
+	       selection.addRange(range); 
+	    } else if (document.body && typeof document.body.createTextRange != 'undefined' && (range = document.body.createTextRange())) { 
+	       range.moveToElementText(source); 
+	       range.select(); 
+	    } 
+		}
+  </script>
+</head>
+<body style = "margin: 0 0 0 0;">
+<div align=center>
+<table cellpadding=0 cols=2 border=0>
+	<tr><td valign="top">
+	<div id="toc" style= "width: 200px; height: 600px; overflow: auto; background-color: #222255; border-left: solid #ffffe0"><br/>
+		<div style="background-color:#222255; width: 100%; text-align: center">
+		<img src="data:image/gif;base64,
+			R0lGODlhrwBFALMAABAIPyIiVRwQYDUrcjQmSkwnSk9OW2wrQp1PYKgxMU1KiKCeqvv7++Tk58rJ
+			0G5niiwAAAAArwBFAAAI/gADCBxIsKDBgwgTKlzIsKHDhxAjSpxIsaLFixgzatzIsaPHjyAfEhhJ
+			cmSBkyhTqlzJsqXLlzBjypxJs2bJkRhL1tzJs6fPn0BhlqyoM6jRo0iTAiUpsajKA1CjSp1KtarV
+			q1izat3KtatXqCuZOnSK0mqCs2jTql3Ltq3bt3Djyp1L123VlDgbknwqta7fv4ADCx5sF2XehXtT
+			Rl2LoLHjx5AjS55MubLly5gza97c+OwBwwQQmywLNW3jB6hTq17NurXr17Bjy55Nu7Zt1QgSfD55
+			GOHok4vPIkitoLjx48iTK1/OvLnz59CjS59u/EHu3bwV/i4QfPgD4wPC/osfT768+fPo06tfz769
+			+/fhFVjXjT2079+lhX9XMF6A//8ABijggAQWaOCBCCao4IIMxnddfQnhl99w/IXH4IUYZqjhhhwK
+			6CB9ht1H2gH6VdjhiSimqGKDAyiQm24hHiRhiRauaOONOHb4IYgF2FfQjAlQaCEARBZppJEKHqkk
+			kggCAKCTOf4HJZQMUhngklYKsCNYPcpIAGlnfWchAQaUaeaZaGZ5JZlotmmmmk+SGYB/ABhAQJQA
+			yDkSnAUGYKeAfrppwJz+bbmbjwMBKeYAAhCwAAOQRiqppA08wGedDkyqaaSVXupoAwYQaYADC/DZ
+			YZ4LgLqAA6Em+UAD/6U+aUADm7IKpaHZ/fglcCQKOUCemTYg7LDEDstApwJiCmmxzAp7rKXJEpAp
+			A5YC8MCxpm6IKqQPPApqtnS+ykCsUo7qwLnoktqqli2+yCWiAo02oYnAUivomcFCW+60495rprf6
+			0iltpNVe2wC4GNbL7cDfGmgtrQvceWWeNxFA5H+4dvkjmAmIKXCmoWJZ5KgMOGDxx8dyK3KRjpZ8
+			sgAKq2wttitum7KlJDc84MPjviylowsELfQCD0jMroueHWrQrtzRiPK6BdZ5bKv1VkprwATWKSzV
+			DD+QacE074zwmgB/LWqwUEspbsRqzrypzhnDG8Cu89ZYb9o7EzA1kf5dD4x13lvzPW3RZs988M6o
+			EZqgzZaaDXPOafNsMpx5rjY4lXEvzWuYJsI8MN7Jehtq1/X+nazBo+cLQACFG9y2tA0YfeC2nQLg
+			+ONoTynu5A4XubaVmW/MHYkd8/czyCsT+ei4VVfrd/JulzowtYJTb3jbszIge9QtW2879fvuLbnP
+			Dv8eYPAEcewxyqQO7f6qkEY8PaxCQ9r++0PHP9K09Ad9NZGuS1YBaLU9sS2vf6kCX7loBars8a5J
+			5jtfu5KWq/RtrniMQtmmNiU/fm3wg5Sy0/I2CLbDXWmA2ptd90iYJa2N61EPnF32quWhCfIIXkzL
+			z/o8l6n74U9oq/4Llg+DZr8f5q9k0xpiAkvYNhQWME7LU+L/kmWAiFWRfFH7HZMKZcN3CW94QXpA
+			jXjIgJAlj3RHel7yxCUzI6kxgCckYNQAsLxqHel2slpAmdjWpOwdi1gPRF+8wDScMd4tW81T0/Mc
+			Nj3TvTFsT3Ji1ugYv7bhMVwQgyEWT9esBtiKi0i74RdLU8gMkhF0PwMYnBaZte59MkCPNGEk5Rit
+			OlLukuNz4CafVCc3+UyQcyOkGE15yFaqkkCsrGWkXgmgWGKPllBUWdbwKLmQ6TJbgWrTL7uoNILk
+			sFfDPF4ZKdcyZCHzkqmMX+AE5MwlEYCASGLcxXZ2u/FNyYEFuP/Uq5r1SmB+M4yG/NzrjlmgZDaz
+			jqPSWTNbNzU3iesBZ5qbLU31PWi5MIaPoxVGpeStdE1rXf4UZkCRF7pngeudCnySLWel0P888o/N
+			WhaxiCYzhxXumlTU6CZnJj+SkPRo7upmokRKTEdtFGapMl3oWopJ553riQFIlTU9CMJIEc2cDpPq
+			RVGZUZe18FrkItJPQ7q5UsLyiQIbG8U8RaU9tbKtFSNJ9uxEEr6NzXNbRSRO1ca8/7BunKAMagUH
+			WdZwRumwrYQnh+rFzKg50Eo8pdJfQcrNwQazsGNErGbp5ETobTFAUW2sw0ZFLjqNCmrWCmRlNTZU
+			zJpys5p1IdH+aMPVud01rdFq4TZD6UVvEhW2sM0Trao6qaMCF0BkBaNZj6vZ0Hr0uR5dgOKYW0Pe
+			xqi1yjUsdQ/rWSVtl0DhmQ+MLPvPjmX2u+hNb4FaNB8usZawYMSgeudLX+TKh4LkVZ/xFkQejPXH
+			v2P8L7v6Ix7kvnbABS4PeAMsYP8imME1Mg+L7ntDHOr3wAdaFboeIACvOcCTDuCwABTwYU9ymMTo
+			WgB/0CWsBQxgVSIeMaley2JPDsDDnlRxgBSwKhNryaMxlrED5HOuYZ04VZ5UgAA0nC4lK4i97gLN
+			KIm3QwQNoIfBks+x4OeAFmH5WFoeV6ZcXESiXXlc/1EAmDH+VmYxeovLACIxEp+l5hcey5QKEBaP
+			txy0Fc+5ATz+cBGdbGX24ve98NXhfhN05u9c7VpD9taLSxaeR9E00pSGmHyUPOY0r/k/EEONki09
+			6QYACNKMsrSaK4XqNOsZhqnpMKVvPMxJdxnDC5aPYHskt/JW+UBndlYDbizTSi0ZzbIOsf0gNoDh
+			QkwAnfbPqgktAGej2VtGBpClYQbpOjtrAXF+dbEnDe4rwbBBxdk1rzV3wV8bKNikUrLBephqZIP1
+			WiUjmpbiJx9GRXvEn/aPpr9z7HNRWtvj+lW3tywu/jhc3CEuTsH9gxo6nfvJhqZPfeQWgAvz92un
+			LpmcwW3/sO98rdWFil+L/F0yURtstozStMRV/ez/4Nvk41q1o6llaVTDEDw6bzhSS8bo+IjXvb2x
+			YHzdvd5/J1vWgJ70MondZTZTSs6cwjfBqn31bUsaYyOkdJ2nnmerHltS4A67i4fugEJD+dBiMYjH
+			F9QtavOYwzfWcd7NrCW+23xoYuyW0Nw8NHkDvkV6r3uABC/Gvg8+gzzme+SF5mTG41nf642Prg+9
+			bt+0u0LtMXCAkesh0efotQ0u1IDOi2sMF5iL6CkOatASFSlHqCycAz18ds/73vv+9/Cpjng1DhqO
+			Y5fKoqaO8pfP/OY7f/mpeVHSNm587BZAOJzJvva3z/3ugntf+sQvPkPwQ5jym//86A+MVPCS9Pt8
+			Mzjpj7/8518Xqqgk7qJh2oi+wv/++///APh/YYF/45cYKxGACJiACriAd+ESBDgWBqgUEjiBFHgU
+			N0EUZFGBGriBHFh8DzgRcRWCIjiCJFiCJniCKJiCKoiCIdGCLviCMBiDMjiDNAiDAQEAOw==
+		">
+		</div>
+		<div style="font: bold 11pt verdana,geneva,lucida,'lucida grande',arial,helvetica,sans-serif;color:white; text-align: center; margin-bottom: 10px; margin-top: 10px">WEBSERVER_W5100_RTC</div>
+		<p class = "toc1">Table of Contents</p>
+		<div style = "text-align: left; margin-left: 10px;">
+			<a href= "#lbl1" class = "toc2">Preface</a><br/>
+<a onclick ="javascript:ShowHide('toc2')" href="javascript:;" class = "toc2">Global CONstants ... </a><br />
+<div id= "toc2" class = "tocgrp">
+<a href= "#lbl3" class = "toc3">Hardware Configuration </a><br/>
+<a href= "#lbl5" class = "toc3">Web Server Configuration </a><br/>
+<a onclick ="javascript:ShowHide('toc7')" href="javascript:;" class = "toc3">PSX/PSE CMDS ... </a><br />
+<div id= "toc7" class = "tocgrp">
+</div>
+<a onclick ="javascript:ShowHide('toc9')" href="javascript:;" class = "toc3">Other constants&nbsp;&nbsp;... </a><br />
+<div id= "toc9" class = "tocgrp">
+</div>
+</div>
+<a href= "#lbl11" class = "toc2">Global DATa </a><br/>
+<a href= "#lbl13" class = "toc2">Used OBJects </a><br/>
+<a href= "#lbl15" class = "toc2">PUBlic Spin Methods</a><br/>
+<a href= "#lbl16" class = "toc4">RunServer</a><br/>
+<a onclick ="javascript:ShowHide('toc18')" href="javascript:;" class = "toc2">PRIvate Spin Methods ... </a><br />
+<div id= "toc18" class = "tocgrp">
+<a href= "#lbl19" class = "toc4">Server</a><br/>
+<a onclick ="javascript:ShowHide('toc21')" href="javascript:;" class = "toc3">Response Handler ... </a><br />
+<div id= "toc21" class = "tocgrp">
+<a href= "#lbl22" class = "toc4">BuildStatusHeader</a><br/>
+<a href= "#lbl24" class = "toc4">FileHandler</a><br/>
+<a href= "#lbl26" class = "toc4">OptionsHandler</a><br/>
+<a href= "#lbl28" class = "toc4">PutHandler</a><br/>
+<a href= "#lbl30" class = "toc4">PsxHandler</a><br/>
+<a href= "#lbl32" class = "toc4">PseHandler</a><br/>
+<a href= "#lbl34" class = "toc4">RenderDynamic</a><br/>
+</div>
+<a onclick ="javascript:ShowHide('toc36')" href="javascript:;" class = "toc3">Subs for RenderDynamic ... </a><br />
+<div id= "toc36" class = "tocgrp">
+<a href= "#lbl37" class = "toc4">strEndsWith</a><br/>
+<a href= "#lbl39" class = "toc4">BuildPinStateXml</a><br/>
+<a href= "#lbl41" class = "toc4">ReadDirState</a><br/>
+<a href= "#lbl43" class = "toc4">ReadPinState</a><br/>
+<a href= "#lbl45" class = "toc4">SetPinState</a><br/>
+<a href= "#lbl47" class = "toc4">BuildPinEndcodeStateXml</a><br/>
+<a href= "#lbl49" class = "toc4">ReadEncodedDirState</a><br/>
+<a href= "#lbl51" class = "toc4">ReadEncodedPinState</a><br/>
+<a href= "#lbl53" class = "toc4">SetEncodedPinState</a><br/>
+<a href= "#lbl55" class = "toc4">ValidateParameters</a><br/>
+</div>
+<a onclick ="javascript:ShowHide('toc57')" href="javascript:;" class = "toc3">DHCP Handling ... </a><br />
+<div id= "toc57" class = "tocgrp">
+<a href= "#lbl58" class = "toc4">RenewDhcpLease                                      'renews DHCP lease</a><br/>
+<a href= "#lbl60" class = "toc4">SetDhcpRenew                                        'sets TimeOut for DHCP renewal - not happy with this</a><br/>
+<a href= "#lbl62" class = "toc4">DoDhcp</a><br/>
+<a href= "#lbl64" class = "toc4">InvokeDhcp</a><br/>
+</div>
+<a onclick ="javascript:ShowHide('toc66')" href="javascript:;" class = "toc3">SNTP Handling ... </a><br />
+<div id= "toc66" class = "tocgrp">
+<a href= "#lbl67" class = "toc4">SyncSntpTime</a><br/>
+<a href= "#lbl69" class = "toc4">SntpSendReceive</a><br/>
+<a href= "#lbl71" class = "toc4">DisplayHumanTime                                    'prints Day and Time</a><br/>
+<a href= "#lbl73" class = "toc4">FillTime</a><br/>
+<a href= "#lbl75" class = "toc4">FillDay</a><br/>
+<a href= "#lbl77" class = "toc4">FillTimeHelper</a><br/>
+</div>
+<a onclick ="javascript:ShowHide('toc79')" href="javascript:;" class = "toc3">Common Subs ... </a><br />
+<div id= "toc79" class = "tocgrp">
+<a href= "#lbl80" class = "toc4">GetVersion</a><br/>
+<a href= "#lbl82" class = "toc4">FileOpen</a><br/>
+<a href= "#lbl84" class = "toc4">FileWriteBlock</a><br/>
+<a href= "#lbl86" class = "toc4">FileReadBlock</a><br/>
+<a href= "#lbl88" class = "toc4">GetContentType</a><br/>
+<a href= "#lbl90" class = "toc4">Dec</a><br/>
+<a href= "#lbl92" class = "toc4">StrToBase</a><br/>
+<a href= "#lbl94" class = "toc4">Pause</a><br/>
+</div>
+<a onclick ="javascript:ShowHide('toc96')" href="javascript:;" class = "toc3">Output Buffer Handling ... </a><br />
+<div id= "toc96" class = "tocgrp">
+<a href= "#lbl97" class = "toc4">SendBytes</a><br/>
+<a href= "#lbl99" class = "toc4">SendBytesCRLF</a><br/>
+<a href= "#lbl101" class = "toc4">SendStr</a><br/>
+<a href= "#lbl103" class = "toc4">SendStrCRLF</a><br/>
+<a href= "#lbl105" class = "toc4">SendCRLF</a><br/>
+<a href= "#lbl107" class = "toc4">SendFlushOutBuf</a><br/>
+<a href= "#lbl109" class = "toc4">SendFlushOKorERR</a><br/>
+</div>
+<a onclick ="javascript:ShowHide('toc111')" href="javascript:;" class = "toc3">Print (debug) Handling ... </a><br />
+<div id= "toc111" class = "tocgrp">
+<a href= "#lbl112" class = "toc4">PrintStatus</a><br/>
+<a href= "#lbl114" class = "toc4">PrintAllStatuses</a><br/>
+<a href= "#lbl116" class = "toc4">nbDebug</a><br/>
+<a href= "#lbl118" class = "toc4">DisplayUdpHeader</a><br/>
+<a href= "#lbl120" class = "toc4">PrintIp</a><br/>
+<a href= "#lbl122" class = "toc4">PrintIpCR</a><br/>
+<a href= "#lbl124" class = "toc4">PrintStrIP</a><br/>
+<a href= "#lbl126" class = "toc4">PrintStrIPCR</a><br/>
+<a href= "#lbl128" class = "toc4">PrintStrDec</a><br/>
+<a href= "#lbl130" class = "toc4">PrintStrStr</a><br/>
+<a href= "#lbl132" class = "toc4">PrintStrDecStr</a><br/>
+<a href= "#lbl134" class = "toc4">PrintChar</a><br/>
+<a href= "#lbl136" class = "toc4">PrintDec</a><br/>
+<a href= "#lbl138" class = "toc4">PrintStr</a><br/>
+<a href= "#lbl140" class = "toc4">PrintHex</a><br/>
+<a href= "#lbl142" class = "toc4">InputAvailableBytes</a><br/>
+</div>
+</div>
+<a href= "#lbl144" class = "toc2">MIT License </a><br/>
+
+		</div>
+	</div>
+	</td>
+	<td>
+		<div id="text" style= "text-align: left; padding-left: 20px; padding-right: 20px; width: 800px; height: 600px; background-color: #ffffe0; overflow: auto">
+			<h1 id = "lbl1" class = "title">Server_W5100_RTC </h1>
+
+<br /><br />
+AUTHORS:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Mike Gebhard / Michael Sommer<br />
+COPYRIGHT:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Parallax Inc.<br />
+LAST MODIFIED:&nbsp;&nbsp;&nbsp;&nbsp;10/04/2013<br />
+VERSION:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1.0<br />
+LICENSE:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MIT (see end of file)<br /><br />
+DESCRIPTION:<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The MAIN webserver object for spinneret<br />
+<br />
+NOTE:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Please change MAC address below at top of the first<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CON section to the number on the back of your spinneret.<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;You also may need to change the hostname and workgroup at top of the<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DAT section if you need more then one spineret in the same network.<br />
+<br />
+MODIFICATIONS:<br />
+ 8/31/2013&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;added support for OPTIONS,HEAD,PUT,MKCOL,DELETE (minimal PROPFIND)<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;added SetHostname to DHCP<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;added support for dynamic PASM pages/responses (and some demos)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br />
+ 9/26/2013&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;commented out alot of unused methods<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;commented sourcecode and added some spindoc comments<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;added netbios<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;did some optimisation for size ... running out of space ...<br />
+ 9/30/2013&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;replaced PST by fullDuplexSerial4port<br />
+10/04/2013&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;added spindoc comments<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Michael Sommer (MSrobots)<br />
+
+<br />
+<h2 id = "lbl2">Global CONstants </h2><br />
+ YOU MUST CHANGE MAC_1 TO MAC_6 HERE TO AVOID CONFLICTS IN YOUR NETWORK<br />
+ please change MAC address below to the numbers on the back of your spinneret.<br />
+<br />
+
+<h3 id = "lbl3">Hardware Configuration </h3>
+<br /><a onclick ="javascript:ShowHide('lbl4')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl4>  <var>_clkmode</var>          = xtal1 + pll16x     
+  <var>_xinfreq</var>          = 5_000_000
+  
+  'wiz.SetMac($00, $08, $DC, $16, $F1, $32)             'MAC Mike G
+
+  MAC_1             = $00                               'MAC MSrobots          ' 
+  MAC_2             = $08
+  MAC_3             = $DC
+  MAC_4             = $16
+  MAC_5             = $F0
+  MAC_6             = $4F
+
+  { Serial IO PINs } 
+  USB_Rx            = 31
+  USB_Tx            = 30
+
+</pre>
+<hr /><h3 id = "lbl5">Web Server Configuration </h3>
+<br /><a onclick ="javascript:ShowHide('lbl6')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl6>  SOCKETS           = 4                                 '4 w5100 8 w5200
+
+  MULTIUSE_SOCK     = SOCKETS -1                        'sock 3   (7) used for DHCP, NETBIOS and SNTP
+  HTTPSOCKETS       = MULTIUSE_SOCK -1                  'sock 0-2 (6) used for http
+  ATTEMPTS          = 5
+
+  { Port Configuration }
+  HTTP_PORT         = 80
+  SNTP_PORT         = 123
+
+  { SD IO }
+  DISK_PARTION      = 0 
+  SUCCESS           = -1
+  IO_OK             = 0
+  IO_READ           = "r"
+  IO_WRITE          = "w"
+  IO_APPEND         = "a"
+
+  { Content Types }
+  #0, CSS, GIF, HTML, ICO, JPG, JS, PDF, PNG, TXT, XML, ZIP
+  
+  { USA Standard Time Zone Abbreviations}
+  #-10, HST,AtST,_PST,MST,CST,EST,AlST
+
+  GMT               = 0
+  AZ_TIME           = 1
+              
+  { USA Daylight Time Zone Abbreviations   }
+  #-9, HDT,AtDT,PDT,MDT,CDT,EDT,AlDT
+
+  Zone = MST        '&lt;- Insert your timezone
+
+</pre>
+<hr /><h3 id = "lbl7">PSX/PSE CMDS </h3>
+<br /><a onclick ="javascript:ShowHide('lbl8')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl8>  { PSX CMDS }    
+  REQ_PARA_STRING   = 1
+  REQ_PARA_NUMBER   = 2
+  REQ_FILENAME      = 3
+  REQ_HEADER_STRING = 4
+  REQ_HEADER_NUMBER = 5
+  
+  SEND_FILE_EXT     = 11
+  SEND_SIZE_HEADER  = 12
+  SEND_DATA         = 13
+  SEND_STRING       = 14
+  SEND_FLUSH        = 15
+  SEND_FILE_CONTENT = 16        
+  
+  CHANGE_DIRECTORY  = 21
+  LIST_ENTRIES      = 22
+  LIST_ENTRY_ADDR   = 23        
+  CREATE_DIRECTORY  = 24        ' todo (MKcol already there)
+  DELETE_ENTRY      = 25        ' todo (Delete already there)      
+  FILE_WRITE_BLOCK  = 26        
+  FILE_READ_BLOCK   = 27        
+  
+  PSE_CALL          = 91
+  PSE_TRANSFER      = 92
+
+</pre>
+<hr /><h3 id = "lbl9">Other constants&nbsp;&nbsp;</h3>
+<br /><a onclick ="javascript:ShowHide('lbl10')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl10>  TCP_MTU           = 1460
+  BUFFER_3K         = $C00
+  BUFFER_LOG        = $80
+  BUFFER_WS         = $20
+  BUFFER_SNTP       = 48+8 
+  
+  CR                = $0D
+  LF                = $0A
+
+  RTC_CHECK_DELAY   = 4_000_000  '1_000_000 = ~4 minutes
+
+</pre>
+<hr /><h2 id = "lbl11">Global DATa </h2><br />
+ YOU MAY NEED TO CHANGE hostname AND workgroup HERE TO AVOID CONFLICTS IN YOUR NETWORK<br />
+<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl12')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl12>                                                     
+  hostname      <var>byte</var>  "PROPNET",0 '&lt;- you need to change this if you have more then one spineret
+  'workgroup     byte  "WORKGROUP", 0
+  workgroup     <var>byte</var>  "MSROBOTS", 0
+  
+  version       <var>byte</var>  "1.2", $0
+  
+  time          <var>byte</var>  "00/00/0000 00:00:00", 0
+  hasSd         <var>byte</var>  $00
+  wizver        <var>byte</var>  $00
+  dhcpRenew     <var>byte</var>  $00
+
+  divider       <var>byte</var>  CR, "-----------------------------------------------", CR, $0
+
+  _404          <var>byte</var>  "HTTP/1.1 404 OK", CR, LF,                                {
+}                     "Content-Type: text/html", CR, LF, CR, LF,                {
+}                     "&lt;html&gt;",                                                 {
+}                     "&lt;head&gt;",                                                 {
+}                     "&lt;title&gt;<var>Not</var> Found&lt;/title&gt;&lt;head&gt;",                         {
+}                     "&lt;body&gt;",                                                 {
+}                     "Page <var>not</var> found!",                                        {                                                                                                       
+}                     "&lt;/body&gt;",                                                {
+}                     "&lt;/html&gt;", CR, LF
+  _404end       <var>byte</var>  0
+  xmlPinState   <var>byte</var>  "&lt;root&gt;", CR, LF, "  &lt;pin&gt;" 
+  pinNum        <var>byte</var>  $30, $30, "&lt;/pin&gt;", CR, LF, "  &lt;value&gt;"
+  pinState      <var>byte</var>  $30, $30, "&lt;/value&gt;", CR, LF, "  &lt;dir&gt;" 
+  pinDir        <var>byte</var>  $30, $30, "&lt;/dir&gt;", CR, LF,                               {
+}                     "&lt;/root&gt;", 0
+
+  xmlTime       <var>byte</var>  "&lt;root&gt;", CR, LF, "  &lt;time&gt;" 
+  xtime         <var>byte</var>  "00/00/0000 00:00:00&lt;/time&gt;", CR, LF, "  &lt;day&gt;"
+  xday          <var>byte</var>  "---","&lt;/day&gt;", CR, LF, "&lt;/root&gt;", $0
+
+  _optallow     <var>byte</var>  "Allow:"
+  _optallowend
+  _optpublic    <var>byte</var>  "Public:"
+  _optpublicend  
+  _options      <var>byte</var>  " OPTIONS, HEAD, GET, POST, PUT, MKCOL, DELETE, PROPFIND"
+                'byte  "Allow: OPTIONS, HEAD, GET, POST, PUT, MKCOL, DELETE, PROPFIND, PROPPATCH, COPY, MOVE, LOCK, UNLOCK", CR, LF
+                'byte  "Public: OPTIONS, HEAD, GET, POST, PUT, MKCOL, DELETE, PROPFIND", CR, LF
+                'byte  "DAV: 1",CR, LF           ' ,2,3
+                'byte  "MS-Author-Via: DAV", CR, LF
+'                byte  "Content-Length: 0", CR, LF
+  _optionsend   
+  
+  _h100         <var>byte</var>  "HTTP/1.1 100 Continue"
+  _h100end      <var>byte</var>  $0      
+  _h200         <var>byte</var>  "HTTP/1.1 200 OK"
+  _h200end      <var>byte</var>  $0    
+  _h201         <var>byte</var>  "HTTP/1.1 201 Created"
+  _h201end      <var>byte</var>  $0   
+  _h207         <var>byte</var>  "HTTP/1.1 207 Multi-Status"
+  _h207end      <var>byte</var>  $0      
+  _h403         <var>byte</var>  "HTTP/1.1 403 Forbidden"
+  _h403end      <var>byte</var>  $0  
+'  _h404         byte  "HTTP/1.1 404 Not Found", CR, LF
+'  _h404end      byte  $0 
+  _h409         <var>byte</var>  "HTTP/1.1 409 Conflict"
+  _h409end      <var>byte</var>  $0
+  
+  _css          <var>byte</var>  "Content-Type: text/css", $0
+  _gif          <var>byte</var>  "Content-Type: image/gif", $0
+  _html         <var>byte</var>  "Content-Type: text/html", $0
+  _ico          <var>byte</var>  "Content-Type: image/x-icon", $0
+  _jpg          <var>byte</var>  "Content-Type: image/jpeg", $0
+  _js           <var>byte</var>  "Content-Type: application/javascript", $0
+  _pdf          <var>byte</var>  "Content-Type: application/pdf", $0
+  _png          <var>byte</var>  "Content-Type: image/png", $0 
+  _txt          <var>byte</var>  "Content-Type: text/plain; charset=utf-8", $0  
+  _xml          <var>byte</var>  "Content-Type: text/xml", $0
+  _zip          <var>byte</var>  "Content-Type: application/zip", $0
+  _contLen      <var>byte</var>  "Content-Length: "
+  _contlenend   <var>byte</var>  $0          
+  _newline      <var>byte</var>  CR, LF
+  _newlineend   <var>byte</var>  $0
+
+' now all long aligned
+  outBufPtr     <var>long</var>  0 ' used for delayed writing
+
+  pse           <var>long</var>
+                <var>byte</var> "PSE",0
+  psx           <var>long</var>
+                <var>byte</var> "PSX",0
+
+  buff          <var>long</var>
+                <var>byte</var>  $0[BUFFER_3K]
+  sntpBuff      <var>byte</var>  $0[BUFFER_SNTP]
+  workSpace     <var>byte</var>  $0[BUFFER_WS]
+  logBuf        <var>byte</var>  $0[BUFFER_LOG]
+  null          <var>long</var>  $00
+  
+  contentType   <var>long</var>  @_css, @_gif, @_html, @_ico, @_jpg, @_js, @_pdf, @_png, @_txt, @_xml, @_zip, $0
+  mtuBuff       <var>long</var>  TCP_MTU
+  
+  longHIGH      <var>long</var>  0         'Expected 4-contigous variables for SNTP
+  longLOW       <var>long</var>  0
+  MM_DD_YYYY    <var>long</var>  0
+  DW_HH_MM_SS   <var>long</var>  0
+
+</pre>
+<hr /><br />
+<h2 id = "lbl13">Used OBJects </h2>
+<br /><a onclick ="javascript:ShowHide('lbl14')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl14>                                                    
+  ser               : "fullDuplexSerial4port" 
+  rtc               : "S35390A_RTCEngine" 
+  sd                : "S35390A_SD-MMC_FATEngineWrapper"
+  wiz               : "W5100"                           
+  sock[SOCKETS]     : "Socket"
+  dhcp              : "Dhcp"
+  netbios           : "NetBios"
+  req               : "HttpHeader"
+  sntp              : "SNTP Simple Network Time Protocol v2.01"
+
+</pre>
+<hr /><br />
+<h2 id = "lbl15">PUBlic Spin Methods</h2>
+<hr /><h4 id = "lbl16">RunServer
+</h4>
+
+<br />RunServer:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;STARTUP Server<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl17')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl17><var>PUB</var> RunServer : value                                   'Run Server
+  '---------------------------------------------------
+  'Reset wiznet
+  '---------------------------------------------------
+  wiz.HardReset(WIZ#WIZ_RESET)                          'A hardware reset can take 1.5 seconds before the Sockets are ready to Send/Receive                           
+  pause(500)
+  '---------------------------------------------------
+  'Start the 4-port Serial driver              (1 cog)
+  '---------------------------------------------------
+  ser.Init                                              'so we can start some driver before we proceed ... first start Serial
+  ser.AddPort(0,USB_Rx,USB_Tx,ser#PINNOTUSED,ser#PINNOTUSED,ser#DEFAULTTHRESHOLD,ser#NOMODE,ser#BAUD115200)
+  ser.Start
+  pause(500)
+  '---------------------------------------------------
+  'Initialize the Realtime clock library
+  '--------------------------------------------------- 
+  rtc.RTCEngineStart(29, 28, -1)                        'needed? sd should do this or not ?
+  '---------------------------------------------------
+  'Start the SD Driver and Mount the SD card   (1 cog) 
+  '--------------------------------------------------- 
+  sd.Start                                              'next start sd driver
+  pause(500)
+  value := sd.mount(DISK_PARTION)                       'and try to mount first partition
+  hasSd := <var>strcomp</var>(value, string("OK"))                 'set hasSd flag if mounted  
+  '--------------------------------------------------- 
+  'Start the WizNet SPI driver                 (1 cog)
+  '--------------------------------------------------- 
+  wiz.Start(WIZ#SPI_CS, WIZ#SPI_SCK, WIZ#SPI_MOSI, WIZ#SPI_MISO)
+  wizver := GetVersion                                  'Verify SPI connectivity by reading the WizNet 5100 version register
+  <var>if</var>(wizver == 0)
+    PrintStr(string(CR, CR, "SPI communication <var>to</var> WizNet failed!", CR, "Check connections", CR))
+    <var>return</var>                                              'ERROR - DONE!
+  wiz.SetMac(MAC_1,MAC_2,MAC_3,MAC_4,MAC_5,MAC_6)       'MAC (Source Hardware Address) must be unique on the local network
+  '---------------------------------------------------
+  'Display Version and Cog Usage
+  '--------------------------------------------------- 
+  PrintStrStr(string(CR,"Init RTC: "),FillTime(@time))
+  PrintStrStr(string(CR, "COG[0]: Spinneret Web Server v"),@version)
+  PrintStr(string(CR, "COG[1]: Parallax Serial Terminal"))
+  PrintStrDecStr(string(CR, "COG["), sd.GetCogId, string("]: SD Driver - "))
+  PrintStr(value) 
+  PrintStrDecStr(string(CR, "COG["), wiz.GetCogId, string("]: Started W5100 SPI Driver - "))   
+  PrintStrDec(string("WizNet 5100 Connected; Reg(0x19) = "), wizver)    
+  PrintStr(string(CR, "COG[n]: 4 COGs in Use"))   
+  PrintStr(@divider)  
+  '--------------------------------------------------- 
+  'Invoke DHCP to retrive network parameters            
+  '---------------------------------------------------
+  <var>ifnot</var> DoDhcp(<var>false</var>)                                   'This assumes the WizNet 5100 is connected to a router with DHCP support
+    <var>return</var>                                              'ERROR - DONE! 
+  '--------------------------------------------------- 
+  'Invoke NetBios to register hostname and group
+  '---------------------------------------------------
+  PrintStr(string(CR, "Register with NetBios ... ")) 
+  value := netbios.Init(@Buff, MULTIUSE_SOCK, @hostname, @workgroup)
+  <var>if</var> value &gt; 0                                          'if you end up here the name could not be registered
+    PrintStrDec(string("NetBios Error ID: "), value)    ' most common is name conflict of hostname - rename hostname at top of first dat section
+    nbDebug(3,<var>true</var>)
+    <var>return</var>                                              'ERROR - DONE! ?
+  <var>else</var>
+    PrintStrStr(@hostname, string(" registered", CR))   'now we can be found by NetBios name!
+  '--------------------------------------------------- 
+  'Snyc the RTC using SNTP
+  '---------------------------------------------------
+  PrintStrStr(string(CR, "Sync RTC with Time Server"), @divider)                                                   
+  <var>if</var>(SyncSntpTime)
+    PrintStr(string("NTP Server IP....."))
+    PrintIpCR(dhcp.GetNtpServer)
+    PrintStr(string("Web time.........."))
+    DisplayHumanTime
+  <var>else</var>
+    PrintStr(string(CR, "Sync failed"))
+  '--------------------------------------------------- 
+  ' Set DHCP renew -&gt; (Current hour + 12) // 24
+  '---------------------------------------------------
+  SetDhcpRenew
+  '--------------------------------------------------- 
+  'Start up the app server
+  '---------------------------------------------------
+  PrintStrStr(string(CR, "Initialize Sockets"), @divider)
+  <var>repeat</var> value <var>from</var> 0 <var>to</var> HTTPSOCKETS                    'Do this for all HTTPSOCKETS
+    sock[value].Init(value, WIZ#TCP, HTTP_PORT)         ' Init Socket as HTTP
+    sock[value].Open                                    ' Open and start Listen
+    PrintStrDec(string(CR, "Socket "), value)
+    <var>if</var>(sock[value].Listen)                              ' if ok report status
+      PrintStrDec(string(": Port="), sock[value].GetPort)
+      PrintStrDec(string("; MTU="), sock[value].GetMtu)
+      PrintStrDec(string("; TTL="), sock[value].GetTtl)
+    <var>else</var>                                                ' if not
+      PrintStr(string(": Listener failed"))             '   report failure           
+  mtuBuff := sock[0].GetMtu                             'get current mtu and save in setting  
+  '--------------------------------------------------- 
+  'Run Server - catch exceptions
+  '---------------------------------------------------
+  PrintStr(string(CR, "Start Server", CR))
+  value :=  \Server                                     'now run Server/ ... ex. MultiSocketService
+  '--------------------------------------------------- 
+  'Handle exceptions
+  '---------------------------------------------------
+  PrintStrDec(string(CR, "Fatal Error!!! "), value)     'if we are here something went way wrong
+  <var>if</var> (<var>strsize</var>(value)&lt;200)                               'is tmp maybe string?
+    PrintStr(value)                                     '  well try out and see
+  PrintStr(string(CR, "Rebooting..."))
+  pause(1000) 
+  reboot                                                'ERROR - DONE!
+
+</pre>
+<hr /> <br />
+<h2 id = "lbl18">PRIvate Spin Methods </h2>
+<hr /><h4 id = "lbl19">Server
+</h4>
+
+<br />Server:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Main Program Loop (Spin cog 0)<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl20')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl20><var>PRI</var> Server : handled | bytesToRead, sockId, rtcDelay, JustHeader, filename, ticks 'Main Program Loop (Spin cog 0)
+  bytesToRead := sockId := rtcDelay := 0                'Init local vars
+  <var>repeat</var>    '                                           'Repeat forever or until an exception kills us
+    <var>repeat</var>                                              'Cycle through the sockets one at a time looking for a connections
+      handled := netbios.CheckSocket                    '  run netbios loop
+      nbDebug(handled,<var>false</var>)                            '  just for debug ... Request data still in Buffer                                
+      <var>if</var>(++rtcDelay//RTC_CHECK_DELAY == 0)              '  check for timeout of DHCP renewal
+        rtc.readTime
+        <var>if</var>(rtc.clockHour == dhcpRenew)                  '  if needed 
+          RenewDhcpLease                                '    renew DHCP 
+        rtcDelay~                                       '  reset timeout
+
+        <var>if</var> InputAvailableBytes(0) &gt; 0                                
+          bytesToRead := 0 ' do nothing yet, debug      todo
+        
+      sockId := ++sockId // constant(HTTPSOCKETS+1)     '  check next socket 
+    <var>until</var> sock[sockId].Connected                        'until any (sockID) socket is connected
+        
+    PrintStrDecStr(string(CR, CR, "sockID: "), sockId, @divider)'now handle this request on the socket sockID
+    ticks := <var>cnt</var>
+    <var>repeat</var> <var>until</var> bytesToRead := sock[sockId].Available  'Repeat until we have data in the buffer
+    <var>if</var>(bytesToRead =&lt; 0)                                'Check for a timeout error
+      PrintStrDec(string(CR, "Timeout: "), bytesToRead) ' print out error message and request size
+      PrintAllStatuses                                  ' and Status - done with this request!
+    <var>else</var>
+      sock[sockId].Receive(@buff, bytesToRead)          'Move the Rx buffer into HUB memory
+      PrintStr(@buff)                                   'Display the request header      
+      req.TokenizeHeader(@buff, bytesToRead)            'Tokenize and index the header
+      filename := req.GetFileName                       'get request pathfilename
+      PrintStr(filename)                                'Display request pathfilename
+      handled := <var>false</var>                                  'preset not found
+      JustHeader := <var>false</var>                               'preset not just header (HEAD verb)
+      outBufPtr := @Buff                                'used for delayed writing (global)
+     
+      <var>ifnot</var> <var>strcomp</var>(@buff, string("GET"))               'if GET verb just move on ...
+        handled := <var>true</var>                                 'preset found (done with this request)
+        <var>if</var> <var>strcomp</var>(@buff, string("PROPFIND"))           'if PROPFIND verb 
+          handled := PseHandler(sockId, string("/PROPFIND.PSE"), <var>false</var>) ' run PASM extension for PROPFIND
+        <var>elseif</var> <var>strcomp</var>(@buff, string("MKCOL"))          'if MKOL verb create directory and report result - done with this request!       
+          handled := SendFlushOKorERR(sockId, <var>not</var> (sd.newDirectory(filename) == <var>true</var>),@_h201, constant(@_h201end-@_h201), @_h409, constant(@_h409end-@_h409))
+        <var>elseif</var> <var>strcomp</var>(@buff, string("DELETE"))         'if DELETE verb delete file/directory and report result - done with this request!   
+          handled := SendFlushOKorERR(sockId, <var>not</var> (sd.deleteEntry(filename) == <var>true</var>),@_h200, constant(@_h200end-@_h200), @_h409, constant(@_h409end-@_h409))
+        <var>elseif</var> OptionsHandler(sockId, filename)         'if OPTIONS verb handle it and report result - done with this request!   
+        <var>elseif</var> PutHandler(sockId, filename)             'if PUT verb handle it and report result - done with this request!
+        <var>else</var>
+          handled := <var>false</var>                              'preset not found - not handled yet
+          <var>if</var> (<var>strcomp</var>(@buff, string("HEAD")))           'if HEAD verb
+            JustHeader := <var>true</var>                          '  set JustHeader flag
+                      
+      <var>ifnot</var> handled                                     'if request not handled
+        <var>if</var> PsxHandler(sockId, filename, JustHeader)     'if psx/pse run PASM pages/requests (also propfind) - done with this request!
+        <var>elseif</var> FileHandler(sockId, filename, JustHeader, <var>false</var>)'if file on sd send it - done with this request!
+        <var>elseif</var> RenderDynamic(sockId, JustHeader)        'if RenderDynamic send it  - done with this request! 
+        <var>else</var>
+          sock[sockId].Send(@_404, constant(@_404end - @_404)) ' if all fail send 404  - done with this request! 
+    sock[sockId].Disconnect                             'reset just USED socket - and leave all other sockets alone - all done!  
+    'sock[sockId].Close                                 'Close the socket, reset the interupt register and reopen listener
+    'sock[sockId].SetSocketIR($FF)                       '?needed?
+    sock[sockId].Open
+    sock[sockId].Listen
+    ticks :=  <var>cnt</var>-ticks
+    PrintStrDec(string(CR, "Ticks: "), ticks)
+    PrintStrDec(string(" ms: "), ticks / (clkfreq / 1_000))
+                                                        'wash rinse repeat with next socket
+
+</pre>
+<hr /><h3 id = "lbl21">Response Handler </h3>
+<hr /><h4 id = "lbl22">BuildStatusHeader(sockID, status, contentLength)
+</h4>
+
+<br />BuildStatusHeader: write HEADER into outBuf<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl23')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl23><var>PRI</var> BuildStatusHeader(sockID, status, contentLength) | src 'write HEADER into outBuf
+  SendStrCRLF(sockID, status)                           'write Status
+  SendStrCRLF(sockID, GetContentType(req.GetFileNameExtension)) 'write ContentType
+  <var>if</var>(contentLength &gt; -1)                                'if &gt;-1 Add content-length : value CR, LF
+    SendBytes(sockID, @_contLen, constant(@_contlenend-@_contLen))
+    SendStrCRLF(sockID, Dec(contentLength))
+  SendCRLF(sockID)                                      'End the header with a new line
+
+</pre>
+<hr /><h4 id = "lbl24">FileHandler(sockID, fn, JustHeader, NoHeader)
+</h4>
+
+<br />FileHandler:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Handle static File Requests<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl25')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl25><var>PRI</var> FileHandler(sockID, fn, JustHeader, NoHeader) | fs, bytes 'Handle static File Requests
+  <var>if</var> FileOpen(fn, IO_READ)                              'Render a static file from the SD Card
+    mtuBuff := sock[sockID].GetMtu                      'get mtu of socket
+    fs := sd.getFileSize                                'and get size
+    <var>ifnot</var> NoHeader
+      BuildStatusHeader(sockID, @_h200, fs)             'amd create header
+    SendFlushOutBuf(sockID)                           '  flush out
+    <var>ifnot</var> JustHeader                                    'if request was HEAD
+      <var>repeat</var>                                            'the offset is just used on the first chunk
+        <var>if</var>(fs &lt; mtuBuff)                                'if it fits into the buffer
+          bytes := fs                                   '  we are done!
+        <var>else</var>                                            
+          bytes := mtuBuff                              'else send mtu bytes
+        sd.readFromFile(@buff, bytes)                   'read (remaining) bytes into buffer
+        fs -= sock[sockID].Send(@buff, bytes)           'send buffer and subtract size send
+      <var>until</var> fs =&lt; 0        
+    sd.closeFile
+    outBufPtr := @Buff                                  'reset bufptr   
+    <var>RESULT</var> := <var>true</var>                                      'we are done! 
+
+</pre>
+<hr /><h4 id = "lbl26">OptionsHandler(sockID, fn)
+</h4>
+
+<br />OptionsHandler:&nbsp;&nbsp;&nbsp;Handle OPTIONS Requests<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl27')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl27><var>PRI</var> OptionsHandler(sockID, fn) | options                'Handle OPTIONS Requests
+  <var>if</var> <var>strcomp</var>(@buff, string("OPTIONS"))                  'is it OPTIONS verb?
+    SendBytesCRLF(sockID, @_h200, constant(@_h200end-@_h200))       'send 200 OK
+    SendBytes(sockID, @_optallow, constant(@_optallowend-@_optallow)) 'allow:
+    SendBytesCRLF(sockID, @_options, constant(@_optionsend-@_options)) 'send _options
+    SendBytes(sockID, @_optpublic, constant(@_optpublicend-@_optpublic))'public:
+    SendBytesCRLF(sockID, @_options, constant(@_optionsend-@_options)) 'send _options 
+    SendBytes(sockID, @_contLen, constant(@_contlenend-@_contLen))
+    SendStrCRLF(sockID, Dec(0))
+    SendCRLF(sockID)                                    'send _newline
+    SendFlushOutBuf(sockID)                             'flush out
+    <var>RESULT</var> := <var>true</var>                                      'we are done!
+
+</pre>
+<hr /><h4 id = "lbl28">PutHandler(sockID, fn)
+</h4>
+
+<br />PutHandler:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Handle PUT Requests<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl29')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl29><var>PRI</var> PutHandler(sockID, fn) | bytesToRead, size , status, noerr 'Handle PUT Requests
+  <var>if</var> <var>strcomp</var>(@buff, string("PUT"))                      'is it PUT verb?
+    status :=  @_h201                                   '201 created
+    size := StrToBase(req.Header(string("Content-Length")) , 10)
+    <var>if</var> FileOpen(fn, IO_READ)                            'if file already there
+      status :=  @_h200                                 '   200 OK ( or 202 no Content?)
+      sd.closeFile                                   
+      \sd.deleteEntry(fn)                               '   delete file
+    \sd.newFile(fn)                                     'new file
+    sd.closeFile                                        
+    noerr := sd.OpenFile(fn, IO_WRITE)                                 
+    <var>ifnot</var> (noerr == <var>true</var>)                               'now open file write
+      status :=  @_h409                                 '409 Conflict   
+    <var>else</var>
+      SendBytesCRLF(sockID, @_h100, constant(@_h100end-@_h100)) 'send 100 continue
+      SendCRLF(sockID)                                  'send _newline   
+      SendFlushOutBuf(sockID)
+      <var>repeat</var> 
+        <var>repeat</var> <var>until</var> bytesToRead := sock[sockID].Available 'Repeat until we have data in the buffer                          
+        <var>if</var>(bytesToRead &lt; 1)                             'Check for a timeout error  
+          size := -1 'timeout / end
+        <var>else</var>       
+          sock[sockID].Receive(@buff, bytesToRead)      'Move the Rx buffer into HUB memory  
+          size -= bytesToRead
+          sd.writeData(@buff, bytesToRead)              'now write file         
+      <var>until</var> size&lt;1                                      'expecting size bytes
+      sd.closeFile                                      'now close file
+    <var>RESULT</var> := SendFlushOKorERR(sockID,<var>false</var>,status, <var>strsize</var>(status),0,0) ' send 409 Conflict 201 Created or 200 OK                           
+
+</pre>
+<hr /><h4 id = "lbl30">PsxHandler(sockID, fn, JustHeader)
+</h4>
+
+<br />PsxHandler:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Handle PSX Requests<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl31')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl31><var>PRI</var> PsxHandler(sockID, fn, JustHeader) | ext            'Handle PSX Requests
+  ext := <var>long</var>[req.GetFileNameExtension] &amp; (!$202020)    'convert to upper case
+  <var>if</var> ext==psx '(ext==psx1) OR (ext==psx2)               'if psx extension
+    <var>RESULT</var> := PseHandler(sockID, fn, JustHeader)        ' execute
+  <var>elseif</var> ext==pse '(ext==pse1) OR (ext==pse2)           'if pse extension
+    <var>RESULT</var> := SendFlushOKorERR(sockID,<var>true</var>,0, 0, @_h403, constant(@_h403end-@_h403)) ' send 403 Forbidden (no direct call allowed for pse)
+
+</pre>
+<hr /><h4 id = "lbl32">PseHandler(sockID, fn, JustHeader)
+</h4>
+
+<br />PseHandler:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Handle PSE Requests<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl33')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl33><var>PRI</var> PseHandler(sockID, fn, JustHeader) | daisy, fs, psmptr, bufptr, cog, cmd, param1, param2 , param3, param4, param5, param6 'Handle PSE Requests
+  cmd := param1 := param2 := param3 := param4 := param5 := param6 := 0
+  <var>repeat</var>                             
+    <var>RESULT</var>:= <var>false</var>                                                                        
+    daisy := 0                                          'no DaisyChain yet
+    <var>if</var> FileOpen(fn, IO_READ)                            'load PASM to end of Buffer
+      fs := sd.getFileSize - 28                         'we just need Pasm block
+      <var>if</var> fs&gt;0 <var>and</var> fs&lt;1985
+        bufptr := (@buff+constant(BUFFER_3K-$400)) &amp; $FFFFFC' last 1 kb buffer
+        psmptr := (@buff-fs+BUFFER_3K) &amp; $FFFFFC        'end buffer minus pasm size
+        sd.readFromFile(bufptr, 24)                     'load fist 24 bytes and discard
+        sd.readFromFile(psmptr, fs)                     'load pasm to end of buffer
+      <var>else</var>
+        fs := -1                                        'no pasm/wrong size
+      sd.closeFile
+      <var>if</var> fs&gt;0                                           'if no error yet
+        cmd := -1                                       'idle
+        param1 := bufptr                                'output area for pasm at init      
+        param2 := 0                                          
+        cog := <var>cognew</var>(psmptr, @cmd) + 1                 'run pasm
+        <var>if</var> cog                                          'if started
+          PrintStrDecStr(string(CR, "using COG["), cog-1, string("].."))' show cog used and filename
+          PrintStr(fn)                                  
+          <var>repeat</var> 
+            <var>case</var> cmd                                    'commands from PASM cog to spin
+              REQ_PARA_STRING:                          'PASM request Param as String
+                param1 := req.Get(@param1)              'Param1-4 CONTAIN string up to 15 letter+0
+                param2 := <var>strsize</var>(param1)               'Param2 returns string size
+                cmd := -1                               'Param1 returns address of string
+              REQ_PARA_NUMBER:                          'PASM request Param as Number
+                param2 := req.Get(@param1)              'Param1-4 CONTAIN string up to 15 letter+0
+                param1 := StrToBase(param2 , 10)        'Param1 returns value as long
+                param2 := <var>strsize</var>(param2)               'Param2 returns string size
+                cmd := -1                                    
+              REQ_FILENAME:                             'PASM request org. Filename
+                param1 := req.GetFileName               '(used by propfind)
+                cmd := -1                               'Param1 returns address of string   
+              REQ_HEADER_STRING:                        'PASM request Header as string (used by propfind)
+                param1 := req.Header(@param1)           'Param1-4 CONTAIN key up to 15 letter+0
+                param2 := <var>strsize</var>(param1)               'Param2 returns string size
+                cmd := -1                               'return address of string in Param1
+              REQ_HEADER_NUMBER:                        'PASM request Header as number (used by propfind)
+                param2 := req.Header(@param1)           'Param1-4 CONTAIN string up to 15 letter+0
+                param1 := StrToBase(param2 , 10)        'Param1 returns value as long
+                param2 := <var>strsize</var>(param2)               'Param2 returns string size
+                cmd := -1                               'return value as long in Param1                
+              SEND_FILE_EXT:
+                <var>if</var> param1&gt;0                             'PASM sends ext.
+                  <var>Bytemove</var>(req.GetFileNameExtension,@param1,3) 'Param1 contains string up to 3 letter+0
+                cmd := -1                               'idle - back to PASM
+              SEND_SIZE_HEADER:                         'PASM sends size or -1
+                <var>if</var> (param2==1)                          
+                  BuildStatusHeader(sockID, @_h207, param1) 'send header 207 Multi-Status    
+                <var>else</var>
+                  BuildStatusHeader(sockID, @_h200, param1) 'send header 200 OK    
+                <var>if</var> JustHeader                           'if request is HEAD
+                  daisy := 0
+                  cmd := 0                              '     exit 
+                <var>else</var>
+                  cmd := -1                             'idle - back to PASM
+              SEND_DATA:                                'PASM sends data in bufptr
+                SendBytes(sockID, param1, param2)       'param2 bytes at address param1
+                cmd := -1                               'idle - back to PASM
+              SEND_STRING:                              'PASM sends string in bufptr
+                param2 := <var>strsize</var>(param1)               'returns aize in param2                  
+                SendBytes(sockID, param1, param2)       'strsize bytes at address param1
+                cmd := -1                               'idle - back to PASM
+              SEND_FLUSH:
+                SendFlushOutBuf(sockID)                 'send buffered output manual if needed
+                cmd := -1                               'idle - back to PASM
+              SEND_FILE_CONTENT:                        'param1 addr string path filename, param2 NoHeader 
+                param1 := FileHandler(sockID, param1, <var>false</var>, param2)
+                cmd := -1                               'idle - back to PASM
+              CHANGE_DIRECTORY:                         'Change Directory param1 path
+                param1 := sd.changeDirectory(param1)    'param1 addr string path
+                sd.listEntry(string("."))               '? bug? needed or sd.listEntries wont work ?
+                cmd := -1                               'idle - back to PASM   
+              LIST_ENTRIES:                             'List Directory param1 "W" or "N"
+                param1 := sd.listEntries(@param1)       'param1 contains string up to 3 letter+0
+                cmd := -1                               'idle - back to PASM
+              LIST_ENTRY_ADDR:                          'PASM needs sd directoryEntryCache    
+                param1 := sd.GetADDRdirectoryEntryCache 'addr EntryCache
+                cmd := -1                               'idle - back to PASM
+              FILE_WRITE_BLOCK:                         'param1-4 filename, position, addressToGet, count
+                param1 := FileWriteBlock(param1, param2, param3, param4)
+                cmd := -1                               'idle - back to PASM
+              FILE_READ_BLOCK:                          'param1-4 filename, position, addressToPut, count 
+                param1 := FileReadBlock(param1, param2, param3, param4)
+                cmd := -1                               'idle - back to PASM
+                
+              PSE_CALL:                                 'call pse
+                SendFlushOutBuf(sockID)                 'flush out if not done yet
+                fs := <var>strsize</var>(bufptr)                   'size request
+                <var>bytemove</var>(@buff,bufptr,fs)               'move to buff
+                req.TokenizeHeader(@buff, fs)           'tokenize
+                param1:=PseHandler(sockID, req.GetFileName, <var>false</var>) ' call self with sub modul (new cog)
+                cmd := -1                               'idle - back to PASM   
+              PSE_TRANSFER:                             'dasychain pse
+                SendFlushOutBuf(sockID)                 'flush out if not done yet
+                fs := <var>strsize</var>(bufptr)                   'size request
+                <var>bytemove</var>(@buff,bufptr,fs)               'move to buff                               
+                req.TokenizeHeader(@buff, fs)           'tokenize
+                fn := req.GetFileName                   'get pse filename
+                daisy := 1                              'run in same cog
+                cmd := 0                                'exit
+          <var>until</var> cmd==0                                  '0 is exit                                              
+
+          SendFlushOutBuf(sockID)                       'flush out if not done yet
+                                      
+          <var>if</var> cog                                        'shut down PASM cog (if still running?) and report it     
+            PrintStrDecStr(string("..COG["), cog-1, string("] finished."))
+            <var>cogstop</var>(cog~ - 1)
+          <var>RESULT</var> := <var>true</var>                                'return succsess
+  <var>until</var> (Daisy == 0)
+
+</pre>
+<hr /><h4 id = "lbl34">RenderDynamic(id, JustHeader)
+</h4>
+
+<br />RenderDynamic:&nbsp;&nbsp;&nbsp;&nbsp;Handle RenderDynamic Requests <br />
+
+<br /><a onclick ="javascript:ShowHide('lbl35')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl35><var>PRI</var> RenderDynamic(id, JustHeader)                       'Handle RenderDynamic Requests
+  'req.TokenizeFilename                                  ' now ready for RESTful stuff
+  
+  'Process pinstate
+  
+  <var>if</var>(strEndsWith(req.GetFileName, string("pinstate.xml")))
+    BuildPinStateXml( req.Get(string("led")), req.Get(string("value")) )
+    BuildStatusHeader(id, @_h200, -1)
+    SendBytes(id, @xmlPinState, <var>strsize</var>(@xmlPinState))
+    SendFlushOutBuf(id)
+    <var>return</var> <var>true</var>
+
+  <var>if</var>(strEndsWith(req.GetFileName, string("p_encode.xml")))
+    BuildPinEndcodeStateXml( req.Get(string("value")) )
+    BuildStatusHeader(id, @_h200, -1)
+    SendBytes(id, @xmlPinState, <var>strsize</var>(@xmlPinState))
+    SendFlushOutBuf(id)
+    <var>return</var> <var>true</var>
+
+  <var>if</var>(strEndsWith(req.GetFileName, string("time.xml")))
+    FillTime(@xTime)
+    FillDay(@xday)
+    BuildStatusHeader(id, @_h200, -1)
+    SendBytes(id, @xmlTime, <var>strsize</var>(@xmlTime))
+    SendFlushOutBuf(id)
+    <var>return</var> <var>true</var>
+               
+  <var>if</var>(strEndsWith(req.GetFileName, string("sntptime.xml")))
+    SyncSntpTime
+    FillTime(@xTime)
+    FillDay(@xday) 
+    BuildStatusHeader(id, @_h200, -1)
+    SendBytes(id, @xmlTime, <var>strsize</var>(@xmlTime))
+    SendFlushOutBuf(id)
+    <var>return</var> <var>true</var>  
+
+  <var>return</var> <var>false</var>
+
+</pre>
+<hr /><h3 id = "lbl36">Subs for RenderDynamic </h3>
+<hr /><h4 id = "lbl37">strEndsWith(str1,str2)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl38')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl38><var>PRI</var> strEndsWith(str1,str2) | lenmin, len1, len2, pos1, pos2 'checks if str1 ends with str2
+  <var>RESULT</var> := <var>true</var>
+  lenmin := len1 := <var>strsize</var>(str1)
+  len2 := <var>strsize</var>(str2)  
+  <var>if</var> len2 &lt; lenmin
+    lenmin := len2
+  pos1 := str1 + len1
+  pos2 := str2 + len2  
+  <var>repeat</var> lenmin-1
+    <var>if</var> (<var>byte</var>[--pos1] &lt;&gt; <var>byte</var>[--pos2])    
+      <var>RESULT</var> := <var>false</var>
+
+</pre>
+<hr /><h4 id = "lbl39">BuildPinStateXml(strpin, strvalue)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl40')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl40><var>PRI</var> BuildPinStateXml(strpin, strvalue) | pin, value, state, dir
+  pin := StrToBase(strpin, 10)
+  value := StrToBase(strvalue, 10)  
+
+  SetPinState(pin, value)
+  state := ReadPinState(pin)
+
+  'Write the pin number to the XML doc
+  <var>if</var>(<var>strsize</var>(strpin) &gt; 1)
+    <var>bytemove</var>(@pinNum,strpin, 2)
+  <var>else</var>
+    <var>byte</var>[@pinNum] := $30
+    <var>byte</var>[@pinNum][1] := <var>byte</var>[strpin]
+
+  'Write the pin value
+  value := Dec(ReadPinState(pin))
+  <var>if</var>(<var>strsize</var>(value) &gt; 1)
+    <var>bytemove</var>(@pinState, value, 2)
+  <var>else</var>
+    <var>byte</var>[@pinState] := $30
+    <var>byte</var>[@pinState][1] := <var>byte</var>[value]
+
+  'Write Pin direction
+  dir := Dec(ReadDirState(pin))
+  <var>if</var>(<var>strsize</var>(dir) &gt; 1)
+    <var>bytemove</var>(@pinDir, value, 2)
+  <var>else</var>
+    <var>byte</var>[@pinDir] := $30
+    <var>byte</var>[@pinDir][1] := <var>byte</var>[dir]
+
+</pre>
+<hr /><h4 id = "lbl41">ReadDirState(pin)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl42')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl42><var>PRI</var> ReadDirState(pin)
+  <var>return</var> <var>dira</var>[pin]
+
+</pre>
+<hr /><h4 id = "lbl43">ReadPinState(pin)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl44')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl44><var>PRI</var> ReadPinState(pin)
+  <var>return</var> <var>outa</var>[pin] | <var>ina</var>[pin]
+
+</pre>
+<hr /><h4 id = "lbl45">SetPinState(pin, value)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl46')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl46><var>PRI</var> SetPinState(pin, value)
+  <var>if</var>(value == -1)
+    <var>return</var>
+  <var>if</var>(pin &lt; 23 <var>or</var> pin &gt; 27)
+    <var>return</var>
+      
+  <var>dira</var>[pin]~~
+  <var>outa</var>[pin] := value  
+
+</pre>
+<hr /><h4 id = "lbl47">BuildPinEndcodeStateXml(strvalue)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl48')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl48><var>PRI</var> BuildPinEndcodeStateXml(strvalue) | value, state, dir
+  value := StrToBase(strvalue, 10)  
+
+  'pst.dec(value)
+  
+  <var>if</var>(value &gt; -1)
+    SetEncodedPinstate(value)
+    state := ReadEncodedPinState
+
+  'Write the pin number to the XML doc
+  <var>bytemove</var>(@pinNum,string("$F"), 2)
+
+  'Write the pin value
+  value := Dec(ReadEncodedPinState)
+  <var>if</var>(<var>strsize</var>(value) &gt; 1)
+    <var>bytemove</var>(@pinState, value, 2)
+  <var>else</var>
+    <var>byte</var>[@pinState] := $30
+    <var>byte</var>[@pinState][1] := <var>byte</var>[value]
+
+  'Write Pin direction
+  dir := Dec(ReadEncodedDirState)
+  <var>if</var>(<var>strsize</var>(dir) &gt; 1)
+    <var>bytemove</var>(@pinDir, value, 2)
+  <var>else</var>
+    <var>byte</var>[@pinDir] := $30
+    <var>byte</var>[@pinDir][1] := <var>byte</var>[dir]
+
+</pre>
+<hr /><h4 id = "lbl49">ReadEncodedDirState
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl50')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl50><var>PRI</var> ReadEncodedDirState
+  <var>return</var> <var>dira</var>[27..24]
+
+</pre>
+<hr /><h4 id = "lbl51">ReadEncodedPinState
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl52')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl52><var>PRI</var> ReadEncodedPinState
+  <var>return</var> <var>outa</var>[27..24] | <var>ina</var>[27..24]
+
+</pre>
+<hr /><h4 id = "lbl53">SetEncodedPinState(value)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl54')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl54><var>PRI</var> SetEncodedPinState(value)
+  <var>dira</var>[27..24]~~
+  <var>outa</var>[27..24] := value   
+
+</pre>
+<hr /><h4 id = "lbl55">ValidateParameters(pin, value)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl56')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl56><var>PRI</var> ValidateParameters(pin, value)
+  <var>if</var>(pin &lt; 23 <var>or</var> pin &gt; 27)
+    <var>return</var> <var>false</var>
+  <var>if</var>(value &gt; 1 <var>or</var> value &lt; -1)
+    <var>return</var> <var>false</var>
+
+  <var>return</var> <var>true</var>
+
+</pre>
+<hr /><h3 id = "lbl57">DHCP Handling </h3>
+<hr /><h4 id = "lbl58">RenewDhcpLease                                      'renews DHCP lease
+</h4>
+
+<br />RenewDhcpLease:&nbsp;&nbsp;&nbsp;Renews DHCP lease<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl59')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl59><var>PRI</var> RenewDhcpLease                                      'renews DHCP lease
+  netbios.DisconnectSocket
+  DoDhcp(<var>true</var>)  
+  rtc.readTime
+  SetDhcpRenew
+  netbios.ReInitSocket
+
+</pre>
+<hr /><h4 id = "lbl60">SetDhcpRenew                                        'sets TimeOut for DHCP renewal - not happy with this
+</h4>
+
+<br />SetDhcpRenew:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Sets TimeOut for DHCP renewal - not happy with this<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl61')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl61><var>PRI</var> SetDhcpRenew                                        'sets TimeOut for DHCP renewal - not happy with this
+  dhcpRenew := (rtc.clockHour + 12) // 24
+  PrintStr(string("DHCP Renew........"))
+  <var>if</var>(dhcpRenew &lt; 10)
+    PrintChar("0")
+  PrintDec(dhcpRenew)
+  PrintStr(string(":00:00",CR))
+
+</pre>
+<hr /><h4 id = "lbl62">DoDhcp(setRequestIp)
+</h4>
+
+<br />DoDhcp:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Runs DHCP request. Prints Result<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl63')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl63><var>PRI</var> DoDhcp(setRequestIp)                                'runs DHCP request. Prints Result
+  PrintStrStr(string(CR,"Retrieving Network Parameters...Please Wait"), @divider)           
+  <var>if</var>(InvokeDhcp(setRequestIp))                             
+    PrintStrIPCR(string("Assigned IP......."), dhcp.GetIp)
+    PrintStrDecStr(string("Lease Time........"), dhcp.GetLeaseTime,string(" (seconds)",CR))
+    PrintStrIPCR(string("DNS Server........"), wiz.GetDns)
+    PrintStrIPCR(string("NTP Server........"), dhcp.GetNtpServer)
+    PrintStrIPCR(string("DHCP Server......."), dhcp.GetDhcpServer)
+    PrintStrIPCR(string("Router............"), dhcp.GetRouter)
+    PrintStrIPCR(string("Gateway..........."), wiz.GetGatewayIp)
+    <var>RESULT</var> := <var>true</var>
+  <var>else</var>
+    <var>if</var>(dhcp.GetErrorCode &gt; 0)
+      PrintStrDec(string(CR, CR, "Error Code: "), dhcp.GetErrorCode)
+      PrintChar(CR)
+      PrintStr(dhcp.GetErrorMessage)
+      PrintChar(CR)
+
+</pre>
+<hr /><h4 id = "lbl64">InvokeDhcp(setRequestIp)
+</h4>
+
+<br />InvokeDhcp:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Runs DHCP request. if setRequestIp == true then try to get old IP<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl65')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl65><var>PRI</var> InvokeDhcp(setRequestIp) | requestIp, i             'runs DHCP request. if setRequestIp == true then try to get old IP
+  dhcp.Init(@buff, MULTIUSE_SOCK)                       'initialize the DHCP object
+  dhcp.SetHostname(@hostname)                           'hostname defined at top of first DAT section
+  <var>if</var> setRequestIp                                       
+    requestIp := dhcp.GetIp                             'Request an IP. The requested IP might not be assigned by DHCP
+    dhcp.SetRequestIp(<var>byte</var>[requestIp][0],<var>byte</var>[requestIp][1],<var>byte</var>[requestIp][2],<var>byte</var>[requestIp][3])  
+  i := 0 
+  <var>repeat</var> <var>until</var> dhcp.DoDhcp(<var>true</var>)                        'Invoke the SHCP process
+    <var>if</var>(++i &gt; ATTEMPTS)
+      <var>return</var> <var>false</var>  
+  <var>return</var> <var>true</var>
+
+</pre>
+<hr /><h3 id = "lbl66">SNTP Handling </h3>
+<hr /><h4 id = "lbl67">SyncSntpTime
+</h4>
+
+<br />SyncSntpTime:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Runs SNTP request and if success set the RTC<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl68')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl68><var>PRI</var> SyncSntpTime | ptr                                  'runs SNTP request and if success set the RTC
+  netbios.DisconnectSocket                              'free up MultiUseSocket
+  ptr := dhcp.GetNtpServer                              'get addr of NtpServer IP
+  sock[MULTIUSE_SOCK].Init(MULTIUSE_SOCK, WIZ#UDP, SNTP_PORT) 'Initialize the socket
+  sock[MULTIUSE_SOCK].RemoteIp(<var>byte</var>[ptr][0], <var>byte</var>[ptr][1], <var>byte</var>[ptr][2], <var>byte</var>[ptr][3])
+  sock[MULTIUSE_SOCK].RemotePort(SNTP_PORT)
+  sntp.CreateUDPtimeheader(@sntpBuff)                   'create request
+  ptr := SntpSendReceive(@sntpBuff, 48)                 'send and wait for answer
+  <var>if</var>(ptr == @null)
+    <var>RESULT</var> := <var>false</var>                                     'no answer - DONE!
+  <var>else</var>
+    'Set the time
+    SNTP.GetTransmitTimestamp(Zone,@sntpBuff,@LongHIGH,@LongLOW)
+    'PUB writeTime(second, minute, hour, day, date, month, year)                      
+    rtc.writeTime(<var>byte</var>[@DW_HH_MM_SS][0],      { Seconds
+                } <var>byte</var>[@DW_HH_MM_SS][1],      { Minutes
+                } <var>byte</var>[@DW_HH_MM_SS][2],      { Hour
+                } <var>byte</var>[@DW_HH_MM_SS][3],      { Day of week
+                } <var>byte</var>[@MM_DD_YYYY][2],       { Day
+                } <var>byte</var>[@MM_DD_YYYY][3],       { Month
+                } <var>word</var>[@MM_DD_YYYY][0])       { Year}
+    <var>RESULT</var> := <var>true</var>                                      'success - DONE!
+  netbios.ReInitSocket                                  'use socket for netbios again
+
+</pre>
+<hr /><h4 id = "lbl69">SntpSendReceive(buffer, len)
+</h4>
+
+<br />SntpSendReceive:&nbsp;&nbsp;Sends SNTP request and waits for answer<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl70')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl70><var>PRI</var> SntpSendReceive(buffer, len) | bytesToRead          'sends SNTP request and waits for answer
+  <var>RESULT</var> := @null
+  sock[MULTIUSE_SOCK].Open                              'Open socket and Send Message
+  sock[MULTIUSE_SOCK].Send(buffer, len)
+  pause(500)                                            'needed?
+  bytesToRead := sock[MULTIUSE_SOCK].Available
+  <var>if</var>(bytesToRead =&lt; 0 )                                 'Check for a timeout
+    bytesToRead~
+  <var>else</var>
+    <var>RESULT</var> := sock[MULTIUSE_SOCK].Receive(buffer, bytesToRead) 'Get the Rx buffer
+  sock[MULTIUSE_SOCK].Disconnect
+
+</pre>
+<hr /><h4 id = "lbl71">DisplayHumanTime                                    'prints Day and Time
+</h4>
+
+<br />DisplayHumanTime: Prints Day and Time<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl72')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl72><var>PRI</var> DisplayHumanTime                                    'prints Day and Time
+    <var>if</var> <var>byte</var>[@MM_DD_YYYY][3]&lt;10
+       PrintChar("0")
+    PrintDec(<var>byte</var>[@MM_DD_YYYY][3])
+    PrintChar("/")
+    <var>if</var> <var>byte</var>[@MM_DD_YYYY][2]&lt;10
+       PrintChar("0")
+    PrintDec(<var>byte</var>[@MM_DD_YYYY][2])
+    PrintChar("/")
+    PrintDec(<var>word</var>[@MM_DD_YYYY][0])                    
+    PrintChar($20)
+    <var>if</var> <var>byte</var>[@DW_HH_MM_SS][2]&lt;10
+       PrintChar("0")
+    PrintDec(<var>byte</var>[@DW_HH_MM_SS][2])
+    PrintChar(":")
+    <var>if</var> <var>byte</var>[@DW_HH_MM_SS][1]&lt;10
+       PrintChar("0")
+    PrintDec(<var>byte</var>[@DW_HH_MM_SS][1])
+    PrintChar(":")
+    <var>if</var> <var>byte</var>[@DW_HH_MM_SS][0]&lt;10
+       PrintChar("0")
+    PrintDec(<var>byte</var>[@DW_HH_MM_SS][0])
+    PrintStr(string("(GMT "))
+    <var>if</var> Zone&lt;0
+       PrintChar("-")
+    <var>else</var>
+       PrintChar("+")
+    PrintStr(string(" ",||Zone+48,":00) ",CR))
+
+</pre>
+<hr /><h4 id = "lbl73">FillTime(addressToPut)
+</h4>
+
+<br />FillTime:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Outputs rtc time to addressToPut (00/00/0000 00:00:00)<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl74')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl74><var>PRI</var> FillTime(addressToPut)                              'outputs rtc time to addressToPut (00/00/0000 00:00:00)
+  rtc.readTime
+  FillTimeHelper(rtc.clockMonth, addressToPut)
+  addressToPut += 3
+  FillTimeHelper(rtc.clockDate, addressToPut)
+  addressToPut += 3
+  FillTimeHelper(rtc.clockYear, addressToPut)
+  addressToPut += 5
+  FillTimeHelper(rtc.clockHour , addressToPut)
+  addressToPut += 3
+  FillTimeHelper(rtc.clockMinute , addressToPut)
+  addressToPut += 3
+  FillTimeHelper(rtc.clockSecond, addressToPut)
+  <var>return</var> addressToPut-17
+
+</pre>
+<hr /><h4 id = "lbl75">FillDay(addressToPut)
+</h4>
+
+<br />FillDay:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Outputs first 3 chars of rtc.getDayString to addressToPut<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl76')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl76><var>PRI</var> FillDay(addressToPut)                               'outputs first 3 chars of rtc.getDayString to addressToPut
+  rtc.readTime
+  <var>bytemove</var>(addressToPut, rtc.getDayString, 3)
+  <var>return</var> addressToPut
+
+</pre>
+<hr /><h4 id = "lbl77">FillTimeHelper(value, addressToPut)
+</h4>
+
+<br />FillTimeHelper:&nbsp;&nbsp;&nbsp;Outputs a numeric value as string, min 2 digits to addressToPut<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl78')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl78><var>PRI</var> FillTimeHelper(value, addressToPut) | t1            'outputs a numeric value as string, min 2 digits to addressToPut
+  <var>if</var>(value &lt; 10)
+    <var>byte</var>[addressToPut++] := "0"
+  t1 := Dec(value)
+  <var>bytemove</var>(addressToPut, t1, <var>strsize</var>(t1))
+
+</pre>
+<hr /><h3 id = "lbl79">Common Subs </h3>
+<hr /><h4 id = "lbl80">GetVersion
+</h4>
+
+<br />GetVersion:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Get Version from wizNet driver<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl81')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl81><var>PRI</var> GetVersion | i                                      'get Version from wizNet driver
+  i := 0
+  <var>result</var> := 0
+  <var>repeat</var> <var>until</var> <var>result</var> &gt; 0
+    <var>result</var> := wiz.GetVersion
+    <var>if</var>(i++ &gt; ATTEMPTS*5)
+      <var>return</var> 0
+    pause(250)
+
+</pre>
+<hr /><h4 id = "lbl82">FileOpen(filename, action)
+</h4>
+
+<br />OpenFile:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Open file for read return success<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl83')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl83><var>PRI</var> FileOpen(filename, action) | rc                     'open file for read return success
+  <var>if</var>(hasSd)
+    rc := sd.listEntry(filename)
+    <var>if</var>(rc == IO_OK)
+      rc := sd.OpenFile(filename, action)
+        <var>if</var>(rc == SUCCESS)
+          <var>RESULT</var> := <var>true</var>
+
+</pre>
+<hr /><h4 id = "lbl84">FileWriteBlock(filename, position, addressToGet, count)
+</h4>
+
+<br />FileWriteBlock:&nbsp;&nbsp;&nbsp;Open File filename<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Write count bytes from addressToGet to position in file<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Close File<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;NOTE: If file not there it will be created. Position &lt;0 will append to file<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl85')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl85><var>PRI</var> FileWriteBlock(filename, position, addressToGet, count)'Write count bytes from addressToGet to position in file
+  <var>if</var>(hasSd)
+    <var>if</var> position&lt;0
+      <var>RESULT</var> := FileOpen(filename, IO_APPEND)
+    <var>else</var>
+      <var>RESULT</var> := FileOpen(filename, IO_WRITE)
+    <var>ifnot</var> <var>RESULT</var>
+      sd.newFile(filename)                              'new file
+      sd.closeFile                                                                       
+      <var>if</var>(sd.OpenFile(filename, IO_WRITE) == SUCCESS)
+          <var>RESULT</var> := <var>true</var>
+    <var>if</var> <var>RESULT</var>
+      <var>if</var> position &gt; 0
+        <var>RESULT</var> := sd.fileSeek(position)                 'todo result now position ?   or exeception
+      sd.writeData(addressToGet, count)
+      sd.closeFile
+
+</pre>
+<hr /><h4 id = "lbl86">FileReadBlock(filename, position, addressToPut, count)
+</h4>
+
+<br />FileReadBlock:&nbsp;&nbsp;&nbsp;&nbsp;Open File filename<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Read count bytes from position in file to addressToPut<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Close File<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl87')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl87><var>PRI</var> FileReadBlock(filename, position, addressToPut, count) 'Read count bytes from position in file to addressToPut
+  <var>if</var>(hasSd)
+    <var>if</var> FileOpen(filename, IO_READ)
+      <var>if</var> position &gt; 0
+        <var>RESULT</var> := sd.fileSeek(position)                 'todo result now position ?   or exeception
+      sd.readFromFile(addressToPut, count)
+      sd.closeFile
+
+</pre>
+<hr /><h4 id = "lbl88">GetContentType(ext)
+</h4>
+
+<br />GetContentType:&nbsp;&nbsp;&nbsp;Returns addr of content type string depending on ext&nbsp;&nbsp;<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl89')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl89><var>PRI</var> GetContentType(ext)                                 'returns addr of content type string depending on ext
+  <var>if</var>(<var>strcomp</var>(ext, string("css")) <var>OR</var> <var>strcomp</var>(ext, string("CSS")))
+    <var>return</var> @@contentType[CSS]
+    
+  <var>if</var>(<var>strcomp</var>(ext, string("gif")) <var>OR</var> <var>strcomp</var>(ext, string("GIF")))
+    <var>return</var> @@contentType[GIF]
+    
+  <var>if</var>(<var>strcomp</var>(ext, string("htm")) <var>OR</var> <var>strcomp</var>(ext, string("HTM")))
+    <var>return</var> @@contentType[HTML]
+    
+  <var>if</var>(<var>strcomp</var>(ext, string("ico")) <var>OR</var> <var>strcomp</var>(ext, string("ICO")))
+    <var>return</var> @@contentType[ICO]
+    
+  <var>if</var>(<var>strcomp</var>(ext, string("jpg")) <var>OR</var> <var>strcomp</var>(ext, string("JPG")))
+    <var>return</var> @@contentType[JPG]
+    
+  <var>if</var>(<var>strcomp</var>(ext, string("js")) <var>OR</var> <var>strcomp</var>(ext, string("JS")))
+    <var>return</var> @@contentType[JS]
+    
+  <var>if</var>(<var>strcomp</var>(ext, string("pdf")) <var>OR</var> <var>strcomp</var>(ext, string("PDF")))
+    <var>return</var> @@contentType[PDF]
+    
+  <var>if</var>(<var>strcomp</var>(ext, string("png")) <var>OR</var> <var>strcomp</var>(ext, string("PNG")))
+    <var>return</var> @@contentType[PNG]
+    
+  <var>if</var>(<var>strcomp</var>(ext, string("txt")) <var>OR</var> <var>strcomp</var>(ext, string("TXT")))
+    <var>return</var> @@contentType[TXT]
+    
+  <var>if</var>(<var>strcomp</var>(ext, string("xml")) <var>OR</var> <var>strcomp</var>(ext, string("XML")))
+    <var>return</var> @@contentType[XML]
+    
+  <var>if</var>(<var>strcomp</var>(ext, string("zip")) <var>OR</var> <var>strcomp</var>(ext, string("ZIP")))
+    <var>return</var> @@contentType[ZIP]
+    
+  <var>return</var> @@contentType[HTML]
+
+</pre>
+<hr /><h4 id = "lbl90">Dec(value)
+</h4>
+
+<br />Dec:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Converts value to zero terminated string representation. (base 10) <br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Note: This source came from the Parallax Serial Terminal library<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl91')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl91><var>PRI</var> Dec(value) | i, x, j                                'encode value into string (base 10)
+  j := 0
+  x := value == <var>NEGX</var>                                    'Check for max negative
+  <var>if</var> value &lt; 0
+    value := ||(value+x)                                'If negative, make positive; adjust for max negative and output sign
+
+  i := 1_000_000_000                                    'Initialize divisor
+
+  <var>repeat</var> 10                                             'Loop for 10 digits
+    <var>if</var> value =&gt; i
+      workspace[j++] := value / i + "0" + x*(i == 1)    'If non-zero digit, output digit; adjust for max negative
+      value //= i                                       'and digit from value
+      <var>result</var>~~                                          'flag non-zero found
+    <var>elseif</var> <var>result</var> <var>or</var> i == 1
+      workspace[j++] := "0"                             'If zero digit (or only digit) output it
+    i /= 10
+    
+  workspace[j] := 0
+  <var>return</var> @workspace
+
+</pre>
+<hr /><h4 id = "lbl92">StrToBase(addressToGet, base)
+</h4>
+
+<br />StrToBase:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Converts a zero terminated string representation of a number to a<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;value in the designated base. Ignores all non-digit characters<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(except negative (-) when base is decimal (10)).<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl93')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl93><var>PRI</var> StrToBase(addressToGet, base) : value | chr, index  'decode string into value
+  value := index := 0
+  <var>repeat</var> <var>until</var> ((chr := <var>byte</var>[addressToGet][index++]) == 0)
+    chr := -15 + --chr &amp; %11011111 + 39*(chr &gt; 56)      'Make "0"-"9","A"-"F","a"-"f" be 0 - 15, others out of range                             
+    <var>if</var> (chr &gt; -1) <var>and</var> (chr &lt; base)                      'Accumulate valid values into result; ignore others
+      value := value * base + chr                                                  
+  <var>if</var> (base == 10) <var>and</var> (<var>byte</var>[addressToGet] == "-")       'If decimal, address negative sign; ignore otherwise
+    value := - value
+
+</pre>
+<hr /><h4 id = "lbl94">Pause(Duration)
+</h4>
+
+<br />Pause:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Pause duration milliseconds<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl95')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl95><var>PRI</var> Pause(Duration)                                     'pause duration milliseconds
+  <var>waitcnt</var>(((clkfreq / 1_000 * Duration - 3932) #&gt; 381) + <var>cnt</var>)
+
+</pre>
+<hr /><h3 id = "lbl96">Output Buffer Handling </h3>
+<hr /><h4 id = "lbl97">SendBytes(sockID, addressToGet, count)
+</h4>
+
+<br />SendBytes:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Buffered output of count BYTES from address addressToGet on socket sockID<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl98')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl98><var>PRI</var> SendBytes(sockID, addressToGet, count)              'write count BYTES from addressToGet into outBuf
+  <var>if</var> (outBufPtr + count - @Buff) &gt; mtuBuff              'and flush to Wiznet if needed 
+    SendFlushOutBuf(sockID)
+  <var>bytemove</var>(outBufPtr, addressToGet, count)
+  outBufPtr += count
+
+</pre>
+<hr /><h4 id = "lbl99">SendBytesCRLF(sockID, addressToGet, count)
+</h4>
+
+<br />SendBytesCRLF:&nbsp;&nbsp;&nbsp;&nbsp;Buffered output of count BYTES from address addressToGet followed by CRLF<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl100')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl100><var>PRI</var> SendBytesCRLF(sockID, addressToGet, count)          'write count BYTES from addressToGet into outBuf followed by CRLF
+  SendBytes(sockID, addressToGet, count)                'and flush to Wiznet if needed
+  SendCRLF(sockID)
+
+</pre>
+<hr /><h4 id = "lbl101">SendStr(sockID, addressToGet)
+</h4>
+
+<br />SendStr:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Buffered output of string at address addressToGet on socket sockID<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl102')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl102><var>PRI</var> SendStr(sockID, addressToGet)                       'write STRING at addressToGet into outBuf
+  SendBytes(sockID, addressToGet, <var>strsize</var>(addressToGet)) 'and flush to Wiznet if needed
+
+</pre>
+<hr /><h4 id = "lbl103">SendStrCRLF(sockID, addressToGet)
+</h4>
+
+<br />SendStrCRLF:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Buffered output of string at address addressToGet followed by CRLF<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl104')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl104><var>PRI</var> SendStrCRLF(sockID, addressToGet)                   'write STRING at addressToGet into outBuf followed by CRLF
+  SendBytesCRLF(sockID, addressToGet, <var>strsize</var>(addressToGet)) 'and flush to Wiznet if needed
+
+</pre>
+<hr /><h4 id = "lbl105">SendCRLF(sockID)
+</h4>
+
+<br />SendCRLF:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Buffered output of CRLF on socket sockID<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl106')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl106><var>PRI</var> SendCRLF(sockID)                                    'write CRLF into outBuf
+  SendBytes(sockID, @_newline, constant(@_newlineend-@_newline)) 'and flush to Wiznet if needed 
+
+</pre>
+<hr /><h4 id = "lbl107">SendFlushOutBuf(sockID)
+</h4>
+
+<br />SendFlushOutBuf:&nbsp;&nbsp;Flush outBuf to socket if some data there<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl108')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl108><var>PRI</var> SendFlushOutBuf(sockID) | ptr, size                 'flush outBuf to socket if some data there
+  <var>ifnot</var> outBufPtr == @Buff                              'flush needed?
+    size := outBufPtr - @Buff
+    sock[sockID].Send(@Buff,size)                       'rest of buff
+  outBufPtr := @Buff                                    'reset outBufPtr
+
+</pre>
+<hr /><h4 id = "lbl109">SendFlushOKorERR(sockID, iserr, okaddr, oksize, erraddr, errsize)
+</h4>
+
+<br />SendFlushOKorERR: Send one of two responses depending on iserr and flush out to socket<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl110')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl110><var>PRI</var> SendFlushOKorERR(sockID, iserr, okaddr, oksize, erraddr, errsize) 'send one of two responses depending on iserr and flush out to socket
+  <var>ifnot</var> iserr
+    SendBytes(sockID, okaddr, oksize)                   'send ok-message           
+  <var>else</var>
+    SendBytes(sockID, erraddr, errsize)                 'send err-message
+  SendCRLF(sockID)                                      'send _newline
+  SendFlushOutBuf(sockID)                               'and flush out
+  <var>return</var> <var>true</var>
+
+</pre>
+<hr /><h3 id = "lbl111">Print (debug) Handling </h3>
+<hr /><h4 id = "lbl112">PrintStatus(sockID)
+</h4>
+
+<br />PrintStatus:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Debug output one HttpSockets<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl113')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl113><var>PRI</var> PrintStatus(sockID)                                 'Debug output one HttpSockets
+  PrintStrDecStr(string("Status ("),sockID, string(")......."))
+  PrintHex(wiz.GetSocketStatus(sockID), 2)
+  PrintChar(13)
+
+</pre>
+<hr /><h4 id = "lbl114">PrintAllStatuses
+</h4>
+
+<br />PrintAllStatuses: Debug output all HttpSockets<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl115')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl115><var>PRI</var> PrintAllStatuses | i                                'Debug output all HttpSockets
+  PrintStr(string(CR, "Socket Status", CR))
+  <var>repeat</var> i <var>from</var> 0 <var>to</var> HTTPSOCKETS
+    PrintDec(i)
+    PrintStr(string("  "))
+  PrintChar(CR)
+  <var>repeat</var> i <var>from</var> 0 <var>to</var> HTTPSOCKETS
+    PrintHex(wiz.GetSocketStatus(i), 2)
+    PrintChar($20)
+  PrintChar(CR)
+
+</pre>
+<hr /><h4 id = "lbl116">nbDebug(nbs, showdata)
+</h4>
+
+<br />nbDebug:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Debug output NetBios CheckSocket<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl117')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl117><var>PRI</var> nbDebug(nbs, showdata)                              'Debug output NetBios CheckSocket
+  <var>if</var> (nbs&gt;netbios#CHECKSOCKET_NOTHING)
+    PrintStrDec(string(CR,"NB size "), netbios.GetLastReadSize)
+    PrintStr(string(" op "))    
+    PrintHex((<var>byte</var>[@buff+constant(netbios#FLAGS+8)]&gt;&gt;3),2) ' what op?
+    PrintStr(string(" typ "))    
+    PrintHex(wiz.DeserializeWord(@buff + constant(netbios#NB_1+8)),4) ' what typ?
+    <var>case</var> nbs
+      netbios#CHECKSOCKET_NB_SEND:
+        PrintStr(string(" send PosQueryResp  "))
+      netbios#CHECKSOCKET_NBSTAT_SEND:
+        PrintStr(string(" send StatQueryResp "))
+      netbios#CHECKSOCKET_OTHER:
+        PrintStr(string(" <var>other</var> "))
+    netbios.DecodeLastNameInplace
+    PrintStrStr(netbios.GetLastName, string(" Request <var>from</var>: "))
+    PrintIp(@buff)
+    PrintChar(":")
+    PrintDec(wiz.DeserializeWord(@buff + 4))
+    PrintStrDecStr(string(" ("), wiz.DeserializeWord(@buff + 6), string(")"))
+    <var>if</var> showdata
+      DisplayUdpHeader(@Buff)    
+
+</pre>
+<hr /><h4 id = "lbl118">DisplayUdpHeader(buffer)
+</h4>
+
+<br />DisplayUdpHeader: Debug output UDP package<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl119')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl119><var>PRI</var> DisplayUdpHeader(buffer)                            'Debug output UDP package
+  PrintStr(string(CR, "Message <var>from</var>:......."))
+  PrintIp(buffer)
+  PrintChar(":")
+  PrintDec(wiz.DeserializeWord(buffer + 4))
+  PrintStrDec(string(" Size:"), wiz.DeserializeWord(buffer + 6))
+  PrintChar(CR)  
+  <var>repeat</var> 30
+    PrintIpCR( buffer)
+    buffer += 4
+
+</pre>
+<hr /><h4 id = "lbl120">PrintIp(addressToGet)
+</h4>
+
+<br />PrintIp:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Print IP address<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl121')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl121><var>PRI</var> PrintIp(addressToGet) | i                           'Print IP address
+  <var>repeat</var> i <var>from</var> 0 <var>to</var> 3
+    PrintDec(<var>byte</var>[addressToGet][i])
+    <var>if</var>(i &lt; 3)
+      PrintChar($2E)
+
+</pre>
+<hr /><h4 id = "lbl122">PrintIpCR(addressToGet)
+</h4>
+
+<br />PrintIpCR:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Print IP address followed by CR<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl123')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl123><var>PRI</var> PrintIpCR(addressToGet)                             'Print IP address followed by CR
+  PrintIp(addressToGet)
+  PrintChar(CR)
+
+</pre>
+<hr /><h4 id = "lbl124">PrintStrIP(addressToGet1, addressToGet2)
+</h4>
+
+<br />PrintStrIP:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Print String followed by IP address<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl125')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl125><var>PRI</var> PrintStrIP(addressToGet1, addressToGet2)            'Print String followed by IP address
+  PrintStr(addressToGet1)                               
+  PrintIp(addressToGet2)
+
+</pre>
+<hr /><h4 id = "lbl126">PrintStrIPCR(addressToGet1, addressToGet2)
+</h4>
+
+<br />PrintStrIPCR:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Print String followed by IP address followed by CR<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl127')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl127><var>PRI</var> PrintStrIPCR(addressToGet1, addressToGet2)          'Print String followed by IP address followed by CR
+  PrintStrIP(addressToGet1, addressToGet2)
+  PrintChar(CR)
+
+</pre>
+<hr /><h4 id = "lbl128">PrintStrDec(addressToGet, value)
+</h4>
+
+<br />PrintStrDec:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Print String followed by Decimal<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl129')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl129><var>PRI</var> PrintStrDec(addressToGet, value)                    'Print String followed by Decimal
+  PrintStr(addressToGet)
+  PrintDec(value)
+
+</pre>
+<hr /><h4 id = "lbl130">PrintStrStr(addressToGet1, addressToGet2)
+</h4>
+
+<br />PrintStrStr:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Print String followed by String<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl131')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl131><var>PRI</var> PrintStrStr(addressToGet1, addressToGet2)           'Print String followed by String
+  PrintStr(addressToGet1)
+  PrintStr(addressToGet2)
+
+</pre>
+<hr /><h4 id = "lbl132">PrintStrDecStr(addressToGet1, value, addressToGet2)
+</h4>
+
+<br />PrintStrDecStr:&nbsp;&nbsp;&nbsp;Print String followed by Decimal followed by String<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl133')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl133><var>PRI</var> PrintStrDecStr(addressToGet1, value, addressToGet2) 'Print String followed by Decimal followed by String
+  PrintStrDec(addressToGet1, value)
+  PrintStr(addressToGet2)
+
+</pre>
+<hr /><h4 id = "lbl134">PrintChar(value)
+</h4>
+
+<br />PrintChar:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Print Character<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl135')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl135><var>PRI</var> PrintChar(value)                                    'wrapper for Serial - above this point Serial is not used directly (except ser.start)
+  ser.tx(0,value)                                                          
+
+</pre>
+<hr /><h4 id = "lbl136">PrintDec(value)
+</h4>
+
+<br />PrintDec:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Print Decimal<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl137')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl137><var>PRI</var> PrintDec(value)                                     'wrapper for Serial
+  ser.decl(0,value,10,0)                                                
+
+</pre>
+<hr /><h4 id = "lbl138">PrintStr(addressToGet)
+</h4>
+
+<br />PrintStr:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Print String<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl139')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl139><var>PRI</var> PrintStr(addressToGet)                              'wrapper for Serial
+  ser.str(0,addressToGet)                                 
+
+</pre>
+<hr /><h4 id = "lbl140">PrintHex(value, digits)
+</h4>
+
+<br />PrintHex:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Print Hex<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl141')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl141><var>PRI</var> PrintHex(value, digits)                             'wrapper for Serial
+  ser.hex(0,value, digits)
+
+</pre>
+<hr /><h4 id = "lbl142">InputAvailableBytes(port)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl143')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl143><var>PRI</var> InputAvailableBytes(port)
+  <var>RESULT</var> := ser.rxHowFull(port)
+
+{            
+  'PST.dec(netbios.SendQuery(string("MSROBOTS"),0,false))   ' trans id
+'  netbios.SendQuery(string("MSROBOTS"),0,true)
+'  netbios.SendQuery(string("PAVILION"),netbios#SPACE,0,true)
+'  netbios.SendQuery(string("*"),0,true)
+'  nbDebug(3,true) 
+
+  <var>repeat</var>
+    t1 := netbios.CheckSocket
+    t2 := netbios.GetLastReadSize
+    <var>if</var> t2
+      'if t1 == 3
+        
+        PST.dec(t2)
+        pst.char(CR)
+     '   PST.str(netbios.GetLastName)
+      '  pst.char(CR)
+        PrintIpCR(netbios.GetLastIP)
+        pst.char(CR)
+      nbDebug(t1,<var>true</var>)
+  <var>until</var> t2 == 0
+}
+
+</pre>
+<hr /><br />
+<h2 id = "lbl144">MIT License </h2>
+<br /><a onclick ="javascript:ShowHide('lbl145')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl145>                                                    'MIT License
+
+</pre>
+<hr /><pre>
+ ______________________________________________________________________________________
+|                            TERMS OF USE: MIT License                                 |                                                            
+|______________________________________________________________________________________|
+|Permission is hereby granted, free of charge, to any person obtaining a copy of this  |
+|software and associated documentation files (the "Software"), to deal in the Software |
+|without restriction, including without limitation the rights to use, copy, modify,    |
+|merge, publish, distribute, sublicense, and/or sell copies of the Software, and to    |
+|permit persons to whom the Software is furnished to do so, subject to the following   |
+|conditions:                                                                           |
+|                                                                                      |
+|The above copyright notice and this permission notice shall be included in all copies |
+|or substantial portions of the Software.                                              |
+|                                                                                      |
+|THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,   |
+|INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A         |
+|PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT    |
+|HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF  |
+|CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE  |
+|OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                         |
+|______________________________________________________________________________________|
+</pre>
+<br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br />
+		</div>
+	</td></tr>
+</table>
+</div>
+</body>
+</html>	

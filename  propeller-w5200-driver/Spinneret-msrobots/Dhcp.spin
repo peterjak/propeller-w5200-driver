@@ -1,22 +1,26 @@
-'*********************************************************************************************
-{
-AUTHOR: Mike Gebhard
-COPYRIGHT: Parallax Inc.
-LAST MODIFIED: 10/30/2012
-VERSION 1.0
-LICENSE: MIT (see end of file)
-
-DESCRIPTION:
-The DHCP object
-
-MODIFICATION:
-
-  8/31/2013     added option to set hostname. default is propnet as before
-                but after Init you can do SetHostname(string("MYPROP")) to chose another 
-                Michael Sommer (MSrobots)
-}
-'*********************************************************************************************
+'':::::::[ DHCP ]:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+{{
+''
+''AUTHOR:           Mike Gebhard
+''COPYRIGHT:        Parallax Inc.
+''LAST MODIFIED:    10/04/2013
+''VERSION:          1.0
+''LICENSE:          MIT (see end of file)
+''
+''
+''DESCRIPTION:
+''                  The DHCP object
+''
+''MODIFICATIONS:
+'' 8/31/2013        added option to set hostname. default is propnet as before
+''                  but after Init you can do SetHostname(string("MYPROP")) to chose another
+''10/04/2013        added minimal spindoc comments
+''                  Michael Sommer (MSrobots)
+}}
 CON
+''
+''=======[ Global CONstants ... ]=========================================================
+
   BUFFER_2K         = $800
   BUFFER_16         = $10
   
@@ -55,7 +59,7 @@ CON
   DOMAIN_NAME_SERVER  = 06
   HOST_NAME           = 12
   DOMAIN_NAME         = 15
-  NTP_SERVER_IP     = 42
+  NTP_SERVER_IP       = 42
   WINS_NB_NAME_SERVER = 44
   WINS_NB_NODE_TYPE   = 46
   WINS_NB_SCOPE_ID    = 47
@@ -82,10 +86,8 @@ CON
   HOST_PORT           = 68
   REMOTE_PORT         = 67
       
-                        
-       
-VAR
-
+''     
+''=======[ Global DATa ]==================================================================
 DAT
   noErr           byte  "Success", 0
   errDis          byte  "Discover Error", 0
@@ -107,14 +109,16 @@ DAT
   hostptr         long  0       ' Holds pointer to hostname
   _ntpServer      byte  64, 147, 116, 229 '<- This SNTP server is on the west coast. If your DHCP server provides a NTP-Server-IP it will get overridden.
   _dhcpServer     byte  $00, $00, $00, $00
-  _router         byte  $00, $00, $00, $00 
-  
+  _router         byte  $00, $00, $00, $00    
 
-   
+''
+''=======[ Used OBJects ]=================================================================
 OBJ
   sock          : "Socket"
   wiz           : "W5100" 
  
+''
+''=======[ PUBlic Spin Methods]===========================================================
 PUB Init(buffer, socket)
 
   buffPtr := buffer
@@ -202,6 +206,29 @@ PUB RenewDhcp
   sock.Close 
   return true
   
+PUB SendReceive(buffer, len) | bytesToRead              'Send request and waits for answer
+{{
+''SendReceive:      Send request and waits for answer
+}}
+  RESULT := @null
+  bytesToRead := 0
+  sock.Open                                             'Open socket and Send Message
+  sock.Send(buffer, len)
+  bytesToRead := sock.Available
+  if(bytesToRead =< 0 )                                 'Check for a timeout
+    bytesToRead~
+  else  
+    RESULT := sock.Receive(buffer, bytesToRead)         'Get the Rx buffer
+  sock.Disconnect
+  
+PUB UpdRxLen(buffer)                                    '?debug?
+{{
+''UpdRxLen:         ?debug?
+}}
+  return sock.DeserializeWord(buffer + 6)
+
+''
+''=======[ PRIvate Spin Methods ... ]=====================================================
 PRI DiscoverOffer | ptr
 
   InitRequest
@@ -374,7 +401,6 @@ PRI FillServerIp
 PRI FillMagicCookie
   bytemove(buffPtr+DHCP_MAGIC_COOKIE, @magicCookie, MAGIC_COOKIE_LEN)
 
-
 PRI WriteDhcpOption(option, len, data)
   byte[optionPtr++] := option
   byte[optionPtr++] := len
@@ -386,7 +412,7 @@ PRI WriteDhcpOption(option, len, data)
     
   optionPtr += len
 
-PRI ReadDhcpOption(option) | ptr
+PRI ReadDhcpOption(option) | ptr                        '
   'Init pointer to options
   ptr := DHCP_OPTIONS + buffPtr
 
@@ -405,86 +431,32 @@ PRI ReadDhcpOption(option) | ptr
 
   return -1  
     
-  
-PRI EndDhcpOptions | len
+PRI EndDhcpOptions | len                                '?
   byte[optionPtr] := DHCP_END
   return DHCP_PACKET_LEN
 
-
-
-{  
-PRI SendReceive(buffer, len) | bytesToRead, ptr, tryagain 
-  
-  bytesToRead := 0
-  tryagain := false
-  'Open socket and Send Message 
-  sock.Open
-  sock.Send(buffer, len)
-
-  repeat
-     bytesToRead += sock.Available
-      
-     'Check for a timeout
-     if(bytesToRead =< 0 )
-       bytesToRead~
-       return @null
- 
-     if(bytesToRead > 0)
-       'Get the Rx buffer    
-       ifnot(tryagain) 
-         ptr := sock.Receive(buffer, bytesToRead)
-       else
-         sock.Receive(buffer, bytesToRead)
-       'Retry if we did not receive all expected
-       'bytes as read from the UDP header  
-       ifnot(UpdRxLen(ptr-8) == bytesToRead-8)         
-         buffer += bytesToRead
-         tryagain := true
-       else
-         quit
-
-  sock.Disconnect
-  return ptr
-}
-PUB SendReceive(buffer, len) | bytesToRead, ptr 
-  
-  bytesToRead := 0
-
-  'Open socket and Send Message 
-  sock.Open
-  sock.Send(buffer, len)
-
-  bytesToRead := sock.Available
-   
-  'Check for a timeout
-  if(bytesToRead =< 0 )
-    bytesToRead~
-    return @null
-
-  if(bytesToRead > 0) 
-    'Get the Rx buffer  
-    ptr := sock.Receive(buffer, bytesToRead)
-
-  sock.Disconnect
-  return ptr
-  
-PUB UpdRxLen(buffer)
-  return sock.DeserializeWord(buffer + 6)
-CON
-{{
- ______________________________________________________________________________________________________________________________
-|                                                   TERMS OF USE: MIT License                                                  |                                                            
-|______________________________________________________________________________________________________________________________|
-|Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation    |     
-|files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,    |
-|modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software|
-|is furnished to do so, subject to the following conditions:                                                                   |
-|                                                                                                                              |
-|The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.|
-|                                                                                                                              |
-|THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE          |
-|WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR         |
-|COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,   |
-|ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                         |
- ------------------------------------------------------------------------------------------------------------------------------ 
+''
+''=======[ MIT License ]==================================================================
+CON                                                     'MIT License 
+{{{
+ ______________________________________________________________________________________
+|                            TERMS OF USE: MIT License                                 |                                                            
+|______________________________________________________________________________________|
+|Permission is hereby granted, free of charge, to any person obtaining a copy of this  |
+|software and associated documentation files (the "Software"), to deal in the Software |
+|without restriction, including without limitation the rights to use, copy, modify,    |
+|merge, publish, distribute, sublicense, and/or sell copies of the Software, and to    |
+|permit persons to whom the Software is furnished to do so, subject to the following   |
+|conditions:                                                                           |
+|                                                                                      |
+|The above copyright notice and this permission notice shall be included in all copies |
+|or substantial portions of the Software.                                              |
+|                                                                                      |
+|THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,   |
+|INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A         |
+|PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT    |
+|HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF  |
+|CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE  |
+|OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                         |
+|______________________________________________________________________________________|
 }}

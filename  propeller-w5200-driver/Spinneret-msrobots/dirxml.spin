@@ -1,22 +1,30 @@
-'':::::::[ directory as DataTable ]:::::::::::::::::::::::::::::::::
-{{{
-AUTHOR: Michael Sommer (@MSrobots)
-LAST MODIFIED: 9/1/2013
-VERSION 1.0
-LICENSE: MIT (see end of file)
-
-DESCRIPTION:
-        outputs  XML showing directory
-        can output XSD xml schema document describing xml DataSet      
-        compile and save output as dirxml.binary.
-        rename to dirxml.psx and save to sd
-        call in webrowser as dirxml.psx[?p=/path]
-        call in webrowser as dirxml.psx?x=xsd to get xml schema 
-        shows xml without parameter
+'':::::::[ directory as DataTable ]:::::::::::::::::::::::::::::::::::::::::::::::::::::::
+{{
+''
+''AUTHOR:           Michael Sommer (@MSrobots)
+''COPYRIGHT:        See LICENCE (MIT)    
+''LAST MODIFIED:    10/04/2013
+''VERSION:          1.0
+''LICENSE:          MIT (see end of file)
+''
+''
+''DESCRIPTION:
+''                  outputs  XML showing directory
+''                  can output XSD xml schema document describing xml DataSet      
+''                  compile and save output as dirxml.binary.
+''                  rename to dirxml.psx and save to sd
+''                  call in webrowser as dirxml.psx[?p=/path]
+''                  call in webrowser as dirxml.psx?x=xsd to get xml schema 
+''                  shows xml without parameter
+''
+''MODIFICATIONS:
+''10/04/2013        added spindoc comments
+''                  Michael Sommer (MSrobots)
 }}
-''=======[ Global CONstants ]=================================================
-CON                                                    
-  {{ PSX CMDS }}  
+CON
+''
+''=======[ Global CONstants ... ]=========================================================
+  { PSX CMDS }  
   REQ_PARA_STRING  = 1
   REQ_PARA_NUMBER  = 2
   REQ_FILENAME     = 3
@@ -31,17 +39,19 @@ CON
   
   CHANGE_DIRECTORY = 21
   LIST_ENTRIES     = 22
-  LIST_ENTRY_ADR   = 23
+  LIST_ENTRY_ADDR  = 23
 
   PSE_CALL         = 91
   PSE_TRANSFER     = 92
 
-''=======[ PUBlic Spin Methods]===============================================
-Pub getPasmADR
+''
+''=======[ PUBlic Spin Methods]===========================================================
+Pub getPasmADDR
 return @cmdptr
-''=======[ Assembly Cog ]=====================================================
+''=======[ Assembly Cog ]=================================================================
 Dat
-''-------[ Start ]------------------------------------------------------------
+''-------[ Start ]------------------------------------------------------------------------
+                        org     0
                         org     0
                         
 cmdptr                  mov     cmdptr,         par     ' adr of cmd mailbox
@@ -51,7 +61,7 @@ bufptr                  add     par1ptr,        #4      ' adr of output buffer (
 outptr                  add     par2ptr,        #8      ' adr of current written pos in out-buf
 count                   rdlong  bufptr,         par1ptr ' init adress of output buffer
 
-''-------[ Main Program ]-----------------------------------------------------
+''-------[ Main Program ]-----------------------------------------------------------------
                         
 usageflag               mov     usageflag,      zero 
 
@@ -101,7 +111,7 @@ sendXmlHeader           mov     outptr,         bufptr         ' else copy heade
                         
 startrows               mov     rownr,          #0
           
-                        mov     cmdout,         #LIST_ENTRY_ADR
+                        mov     cmdout,         #LIST_ENTRY_ADDR
                         call    #sendspincmd                   
                         mov     entryptr,       par1           ' get ptr to direntrycache
 
@@ -201,13 +211,16 @@ sendusageschemaexit     call    #cog2hub                       ' copy footer to 
 
 main_end                                                       ' done
 
-''-------[ Stop ]-------------------------------------------------------------
+''-------[ Stop ]-------------------------------------------------------------------------
 
                         wrlong  zero,           cmdptr  ' write exit to cmd mailbox
                         cogid   cmdin                   ' get own cogid
                         cogstop cmdin                   ' and shoot yourself ... done
                         
-''-------[ Send Spin Cmds ]---------------------------------------------------                                     
+''-------[ Send Spin Cmds ]---------------------------------------------------------------
+{{
+''sendspincmd:          call spin cog with command and wait for response
+}}                     
 sendspincmd             wrlong  par2,           par2ptr ' write param2 value
                         wrlong  par1,           par1ptr ' write param1 value
                         wrlong  cmdout,         cmdptr  ' write cmd value                        
@@ -218,7 +231,7 @@ sendspincmdwait         rdlong  cmdin,          cmdptr
                         rdlong  par2,           par2ptr ' get answer param2
 sendspincmd_ret         ret
 
-''-------[ data constants ]---------------------------------------------------
+''-------[ data constants ]---------------------------------------------------------------
 zero                    long    0
 minusone                long    -1
 space                   long    32
@@ -228,28 +241,28 @@ fileext                 long
 c1980                   long    1980
                         
 
-''-------[ Send String bufptr ]----------------------------------------------------
-'
-'sends String from Hub Buffer bufptr to the socket/browser
-'
+''-------[ Send String bufptr ]-----------------------------------------------------------
+{{
+''sendstringbuf:        sends String from Hub Buffer bufptr to the socket/browser
+}}
 sendstringbuf           mov     par1,           bufptr         ' send string from Output hub-buff 
                         mov     cmdout,         #SEND_STRING
                         call    #sendspincmd                   
 sendstringbuf_ret       ret
-''-------[ Copy Cog to Hub ]----------------------------------------------------
-'
-'copy count longs from Cog to Hub
-'
+''-------[ Copy Cog to Hub ]--------------------------------------------------------------
+{{
+''cog2hub:              copy count longs from Cog to Hub
+}}
 cog2hub                 wrlong  0-0,            outptr
                         add     cog2hub,        incDest1
                         add     outptr,         #4
                         djnz    count,          #cog2hub
 cog2hub_ret             ret
 
-''-------[ Copy Hub to Hub ]----------------------------------------------------
-'
-'copy strsize bytes from Hub to Hub
-'
+''-------[ Copy Hub to Hub ]--------------------------------------------------------------
+{{
+''strhub2hub:           copy strsize bytes from Hub to Hub
+}}
 strhub2hub              rdbyte  tmp,            par1
                         cmp     tmp,            zero wz
               if_z      jmp     #strhub2hub_ret
@@ -258,7 +271,10 @@ strhub2hub              rdbyte  tmp,            par1
                         add     outptr,         #1
                         jmp     #strhub2hub
 strhub2hub_ret          ret
-''-------[ time out ]----------------------------------------------------
+''-------[ time out ]---------------------------------------------------------------------
+{{
+''timeout:              Decodes FAT time value to string
+}}
 '  return (directoryEntryCache[23] >> 3)    mod hour
 '  return (directoryEntryCache[15] >> 3) create hour
 '  return (((directoryEntryCache[23] & $7) << 3) | (directoryEntryCache[22] >> 5)) mod minute
@@ -295,7 +311,10 @@ timeout                 rdbyte  par2,           outptr
                         call    #decoutback                    ' output decimal  seconds
 timeout_ret             ret
 
-''-------[ date out ]----------------------------------------------------
+''-------[ date out ]---------------------------------------------------------------------
+{{
+''dateout:              Decodes FAT date value to string
+}}
 ' return ((directoryEntryCache[25] >> 1) + 1_980) mod year
 ' return ((directoryEntryCache[19] >> 1) + 1_980)  access year
 ' return ((directoryEntryCache[17] >> 1) + 1_980)   create year
@@ -331,8 +350,11 @@ dateout                 rdbyte  par2,           outptr         ' get entry day/m
                         call    #decoutback                    ' output decimal day
 dateout_ret             ret
                             
-''-------[ decimal out ]----------------------------------------------------
-' outputs par1 as decimal. starting at offset outptr with last num decrementing outptr
+''-------[ decimal out ]------------------------------------------------------------------
+{{
+''decoutback:           outputs par1 as decimal. starting at offset outptr with last 
+''                      digit, decrementing outptr
+}}
 decoutback              add     outptr,                 bufptr
                         mov     LNDivideDividend,       par1
 decoutloop              sub     outptr,                 #1
@@ -345,12 +367,13 @@ decoutloop              sub     outptr,                 #1
               if_nz     jmp     #decoutloop                        
 decoutback_ret          ret
 
-''-------[ Unsigned Divide ]----------------------------------------------------
-' Just put the thing you want to divide in the dividend and
-' the thing you want to divide by in the divisor.
-' Then the result will appear in the quotient and
-' the remainder will appear in the dividend
-
+''-------[ Unsigned Divide ]--------------------------------------------------------------
+{{
+''LNDivide:             Just put the thing you want to divide in the dividend
+''                      and the thing you want to divide by in the divisor.
+''                      Then the result will appear in the quotient and
+''                      the remainder will appear in the dividend.
+}}
 LNDivide                mov     LNDivideQuotient,       #0                           ' Setup to divide.
                         mov     LNDivideBuffer,         #0                           '
                         mov     LNDivideCounter,        #32                          '
@@ -369,7 +392,7 @@ LNDivideLoopPost        cmpsub  LNDivideDividend,       LNDivideBuffer wc       
                         djnz    LNDivideCounter,        #LNDivideLoopPost            '
                         
 LNDivide_ret            ret                                                          ' Return. Remainder in dividend on exit.
-''-------[ Data Constants ]--------------------------------------------------
+''-------[ Data Constants ]---------------------------------------------------------------
 xmlschema               long
                         byte    "<?xml version=",34,"1.0",34,"?>",13,10,"<xs:schema id=",34
                         byte    "ds"                        
@@ -420,7 +443,7 @@ xmlfooter               long
                         byte    "</ds>", 0
 xmlfooter_end           long
                         
-''-------[ Variables ]---------------------------------------------------
+''-------[ Variables ]--------------------------------------------------------------------
 cmdin                   res     1
 
 
@@ -428,21 +451,28 @@ cmdin                   res     1
                         ' res 1                    ' still 1 long free !
                         fit     496
 
-CON
-{{
- ______________________________________________________________________________________________________________________________
-|                                                   TERMS OF USE: MIT License                                                  |                                                            
-|______________________________________________________________________________________________________________________________|
-|Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation    |     
-|files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,    |
-|modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software|
-|is furnished to do so, subject to the following conditions:                                                                   |
-|                                                                                                                              |
-|The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.|
-|                                                                                                                              |
-|THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE          |
-|WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR         |
-|COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,   |
-|ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                         |
- ------------------------------------------------------------------------------------------------------------------------------ 
+''
+''=======[ MIT License ]==================================================================
+CON                                                     'MIT License
+{{{
+ ______________________________________________________________________________________
+|                            TERMS OF USE: MIT License                                 |                                                            
+|______________________________________________________________________________________|
+|Permission is hereby granted, free of charge, to any person obtaining a copy of this  |
+|software and associated documentation files (the "Software"), to deal in the Software |
+|without restriction, including without limitation the rights to use, copy, modify,    |
+|merge, publish, distribute, sublicense, and/or sell copies of the Software, and to    |
+|permit persons to whom the Software is furnished to do so, subject to the following   |
+|conditions:                                                                           |
+|                                                                                      |
+|The above copyright notice and this permission notice shall be included in all copies |
+|or substantial portions of the Software.                                              |
+|                                                                                      |
+|THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,   |
+|INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A         |
+|PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT    |
+|HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF  |
+|CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE  |
+|OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                         |
+|______________________________________________________________________________________|
 }}

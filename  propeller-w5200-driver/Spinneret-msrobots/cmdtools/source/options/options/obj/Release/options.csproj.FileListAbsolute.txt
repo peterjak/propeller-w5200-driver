@@ -1,0 +1,5 @@
+C:\Projekte\options\options\bin\Release\options.exe
+C:\Projekte\options\options\bin\Release\options.pdb
+C:\Projekte\options\options\obj\Release\ResolveAssemblyReference.cache
+C:\Projekte\options\options\obj\Release\options.exe
+C:\Projekte\options\options\obj\Release\options.pdb

@@ -1,0 +1,5 @@
+C:\Projekte\head\head\bin\Release\head.exe
+C:\Projekte\head\head\bin\Release\head.pdb
+C:\Projekte\head\head\obj\Release\ResolveAssemblyReference.cache
+C:\Projekte\head\head\obj\Release\head.exe
+C:\Projekte\head\head\obj\Release\head.pdb

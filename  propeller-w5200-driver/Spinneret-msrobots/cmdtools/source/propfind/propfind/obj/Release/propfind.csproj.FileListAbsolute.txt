@@ -1,0 +1,5 @@
+C:\Projekte\propfind\propfind\obj\Release\ResolveAssemblyReference.cache
+C:\Projekte\propfind\propfind\bin\Release\propfind.exe
+C:\Projekte\propfind\propfind\bin\Release\propfind.pdb
+C:\Projekte\propfind\propfind\obj\Release\propfind.exe
+C:\Projekte\propfind\propfind\obj\Release\propfind.pdb

@@ -1,0 +1,5 @@
+C:\Projekte\mkcol\mkcol\bin\Release\mkcol.exe
+C:\Projekte\mkcol\mkcol\bin\Release\mkcol.pdb
+C:\Projekte\mkcol\mkcol\obj\Release\ResolveAssemblyReference.cache
+C:\Projekte\mkcol\mkcol\obj\Release\mkcol.exe
+C:\Projekte\mkcol\mkcol\obj\Release\mkcol.pdb

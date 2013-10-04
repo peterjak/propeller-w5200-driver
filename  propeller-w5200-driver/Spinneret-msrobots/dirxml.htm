@@ -1,0 +1,741 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<style type="text/css">
+	body {
+		background: #404066;
+		color: #000000;
+		font: 10pt verdana, geneva, lucida, 'lucida grande', arial, helvetica, sans-serif;
+		margin: 5px 10px 10px 10px;
+		padding: 0px;
+		overflow: hidden;
+	}
+	h1 {
+		color: darkblue;
+		font :bold 16pt verdana,geneva,lucida,'lucida grande',arial,helvetica,sans-serif;
+		margin-top: 0
+	}
+	.title {
+		text-align: center;
+	}
+	h2 {
+		color:darkblue;
+		font:bold 14pt verdana,geneva,lucida,'lucida grande',arial,helvetica,sans-serif
+	}
+	h3 {
+		color:darkblue;
+		font:bold 12pt verdana,geneva,lucida,'lucida grande',arial,helvetica,sans-serif
+	}
+	h4 {
+		color:#b73235;
+		font:bold 10pt verdana,geneva,lucida,'lucida grande',arial,helvetica,sans-serif
+	}
+	pre {
+		font: 10pt parallax,courier,monospaced;
+		line-height: 97%;
+	}	
+	.source {
+		margin-left: 20px;
+		border: 1px solid #ccc;
+		overflow: auto;
+		display: none;
+		background: #f8f8e8;
+		margin-top: 12pt;
+		width: 95%;
+		padding-top: 5px;
+		padding-left: 10px;
+		max-height: 600px;
+		letter-spacing: 0px;
+	}
+	var {
+		color: #000080;
+		font-style: normal;
+		font-weight: bold;
+		letter-spacing: -1px;
+	}
+	a {
+		font-weight: bold;
+		font-size: 6pt;
+		text-decoration: none;
+		color: #0000cc;
+	}
+	.toc1 {
+		font-size: 12pt;
+		font-weight: bold;
+		vertical-align: baseline;
+		text-align: center;
+		color: #d7d0ff;
+	}		
+	.toc2 {
+		font-size: 95%;
+		font-weight: bold;
+		vertical-align: baseline;
+		color: white;
+		text-decoration: none;
+	}		
+	.toc3 {
+		font-size: 90%;
+		font-weight: normal;
+		vertical-align: baseline;
+		margin-left: 10px;
+		color: white;
+		text-decoration: none;
+	}		
+	.toc4 {
+		font-size: 85%;
+		font-weight: normal;
+		font-style: italic;
+		vertical-align: baseline;
+		margin-left: 20px;
+		color: #d7d0ff;
+		text-decoration: none;
+	}
+	.tocgrp {
+		display: none
+	}
+  hr {
+  	border: 0;
+    color: #b73235;
+    background-color: #b73235;
+    height: 1px;
+  }
+	</style>
+	<script language="JavaScript">
+		window.onload = resize;
+		window.onresize = resize;
+		var show=0;
+		function ShowHide(divId) {
+			if (document.getElementById(divId).style.display!='block') {
+				document.getElementById(divId).style.display='block';
+				if (divId.substring(0, 3) == 'toc') {
+					window.location = '#lbl' + divId.substring(3);
+				}
+			} else {
+				document.getElementById(divId).style.display='none';
+			}
+		};
+    function resize() {
+      var myWidth = 0, myHeight = 0;
+      if(typeof(window.innerWidth) == 'number') {
+        //Non-IE
+        myWidth = window.innerWidth;
+        myHeight = window.innerHeight;
+      } else if(document.documentElement && (document.documentElement.clientWidth || document.documentElement.clientHeight)) {
+        //IE 6+ in 'standards compliant mode'
+        myWidth = document.documentElement.clientWidth;
+        myHeight = document.documentElement.clientHeight;
+      } else if(document.body && (document.body.clientWidth || document.body.clientHeight)) {
+        //IE 4 compatible
+        myWidth = document.body.clientWidth;
+        myHeight = document.body.clientHeight;
+      }
+      document.getElementById("text").style.height = (myHeight - 10) + "px";
+      document.getElementById("text").style.width = (Math.min(myWidth - 250, 800)) + "px";
+      document.getElementById("toc").style.height = (myHeight - 10) + "px";
+     }	
+    function selectall(source) { 
+	    var selection, range, doc, win; 
+	    if ( (doc = source.ownerDocument)
+	    	&& (win = doc.defaultView)
+	    	&& typeof win.getSelection != 'undefined'
+	    	&& typeof doc.createRange != 'undefined' 
+	    	&& (selection = window.getSelection())
+	    	&& typeof selection.removeAllRanges != 'undefined'
+	    ) { 
+	       range = doc.createRange(); 
+	       range.selectNode(source); 
+	       selection.removeAllRanges(); 
+	       selection.addRange(range); 
+	    } else if (document.body && typeof document.body.createTextRange != 'undefined' && (range = document.body.createTextRange())) { 
+	       range.moveToElementText(source); 
+	       range.select(); 
+	    } 
+		}
+  </script>
+</head>
+<body style = "margin: 0 0 0 0;">
+<div align=center>
+<table cellpadding=0 cols=2 border=0>
+	<tr><td valign="top">
+	<div id="toc" style= "width: 200px; height: 600px; overflow: auto; background-color: #222255; border-left: solid #ffffe0"><br/>
+		<div style="background-color:#222255; width: 100%; text-align: center">
+		<img src="data:image/gif;base64,
+			R0lGODlhrwBFALMAABAIPyIiVRwQYDUrcjQmSkwnSk9OW2wrQp1PYKgxMU1KiKCeqvv7++Tk58rJ
+			0G5niiwAAAAArwBFAAAI/gADCBxIsKDBgwgTKlzIsKHDhxAjSpxIsaLFixgzatzIsaPHjyAfEhhJ
+			cmSBkyhTqlzJsqXLlzBjypxJs2bJkRhL1tzJs6fPn0BhlqyoM6jRo0iTAiUpsajKA1CjSp1KtarV
+			q1izat3KtatXqCuZOnSK0mqCs2jTql3Ltq3bt3Djyp1L123VlDgbknwqta7fv4ADCx5sF2XehXtT
+			Rl2LoLHjx5AjS55MubLly5gza97c+OwBwwQQmywLNW3jB6hTq17NurXr17Bjy55Nu7Zt1QgSfD55
+			GOHok4vPIkitoLjx48iTK1/OvLnz59CjS59u/EHu3bwV/i4QfPgD4wPC/osfT768+fPo06tfz769
+			+/fhFVjXjT2079+lhX9XMF6A//8ABijggAQWaOCBCCao4IIMxnddfQnhl99w/IXH4IUYZqjhhhwK
+			6CB9ht1H2gH6VdjhiSimqGKDAyiQm24hHiRhiRauaOONOHb4IYgF2FfQjAlQaCEARBZppJEKHqkk
+			kggCAKCTOf4HJZQMUhngklYKsCNYPcpIAGlnfWchAQaUaeaZaGZ5JZlotmmmmk+SGYB/ABhAQJQA
+			yDkSnAUGYKeAfrppwJz+bbmbjwMBKeYAAhCwAAOQRiqppA08wGedDkyqaaSVXupoAwYQaYADC/DZ
+			YZ4LgLqAA6Em+UAD/6U+aUADm7IKpaHZ/fglcCQKOUCemTYg7LDEDstApwJiCmmxzAp7rKXJEpAp
+			A5YC8MCxpm6IKqQPPApqtnS+ykCsUo7qwLnoktqqli2+yCWiAo02oYnAUivomcFCW+60495rprf6
+			0iltpNVe2wC4GNbL7cDfGmgtrQvceWWeNxFA5H+4dvkjmAmIKXCmoWJZ5KgMOGDxx8dyK3KRjpZ8
+			sgAKq2wttitum7KlJDc84MPjviylowsELfQCD0jMroueHWrQrtzRiPK6BdZ5bKv1VkprwATWKSzV
+			DD+QacE074zwmgB/LWqwUEspbsRqzrypzhnDG8Cu89ZYb9o7EzA1kf5dD4x13lvzPW3RZs988M6o
+			EZqgzZaaDXPOafNsMpx5rjY4lXEvzWuYJsI8MN7Jehtq1/X+nazBo+cLQACFG9y2tA0YfeC2nQLg
+			+ONoTynu5A4XubaVmW/MHYkd8/czyCsT+ei4VVfrd/JulzowtYJTb3jbszIge9QtW2879fvuLbnP
+			Dv8eYPAEcewxyqQO7f6qkEY8PaxCQ9r++0PHP9K09Ad9NZGuS1YBaLU9sS2vf6kCX7loBars8a5J
+			5jtfu5KWq/RtrniMQtmmNiU/fm3wg5Sy0/I2CLbDXWmA2ptd90iYJa2N61EPnF32quWhCfIIXkzL
+			z/o8l6n74U9oq/4Llg+DZr8f5q9k0xpiAkvYNhQWME7LU+L/kmWAiFWRfFH7HZMKZcN3CW94QXpA
+			jXjIgJAlj3RHel7yxCUzI6kxgCckYNQAsLxqHel2slpAmdjWpOwdi1gPRF+8wDScMd4tW81T0/Mc
+			Nj3TvTFsT3Ji1ugYv7bhMVwQgyEWT9esBtiKi0i74RdLU8gMkhF0PwMYnBaZte59MkCPNGEk5Rit
+			OlLukuNz4CafVCc3+UyQcyOkGE15yFaqkkCsrGWkXgmgWGKPllBUWdbwKLmQ6TJbgWrTL7uoNILk
+			sFfDPF4ZKdcyZCHzkqmMX+AE5MwlEYCASGLcxXZ2u/FNyYEFuP/Uq5r1SmB+M4yG/NzrjlmgZDaz
+			jqPSWTNbNzU3iesBZ5qbLU31PWi5MIaPoxVGpeStdE1rXf4UZkCRF7pngeudCnySLWel0P888o/N
+			WhaxiCYzhxXumlTU6CZnJj+SkPRo7upmokRKTEdtFGapMl3oWopJ553riQFIlTU9CMJIEc2cDpPq
+			RVGZUZe18FrkItJPQ7q5UsLyiQIbG8U8RaU9tbKtFSNJ9uxEEr6NzXNbRSRO1ca8/7BunKAMagUH
+			WdZwRumwrYQnh+rFzKg50Eo8pdJfQcrNwQazsGNErGbp5ETobTFAUW2sw0ZFLjqNCmrWCmRlNTZU
+			zJpys5p1IdH+aMPVud01rdFq4TZD6UVvEhW2sM0Trao6qaMCF0BkBaNZj6vZ0Hr0uR5dgOKYW0Pe
+			xqi1yjUsdQ/rWSVtl0DhmQ+MLPvPjmX2u+hNb4FaNB8usZawYMSgeudLX+TKh4LkVZ/xFkQejPXH
+			v2P8L7v6Ix7kvnbABS4PeAMsYP8imME1Mg+L7ntDHOr3wAdaFboeIACvOcCTDuCwABTwYU9ymMTo
+			WgB/0CWsBQxgVSIeMaley2JPDsDDnlRxgBSwKhNryaMxlrED5HOuYZ04VZ5UgAA0nC4lK4i97gLN
+			KIm3QwQNoIfBks+x4OeAFmH5WFoeV6ZcXESiXXlc/1EAmDH+VmYxeovLACIxEp+l5hcey5QKEBaP
+			txy0Fc+5ATz+cBGdbGX24ve98NXhfhN05u9c7VpD9taLSxaeR9E00pSGmHyUPOY0r/k/EEONki09
+			6QYACNKMsrSaK4XqNOsZhqnpMKVvPMxJdxnDC5aPYHskt/JW+UBndlYDbizTSi0ZzbIOsf0gNoDh
+			QkwAnfbPqgktAGej2VtGBpClYQbpOjtrAXF+dbEnDe4rwbBBxdk1rzV3wV8bKNikUrLBephqZIP1
+			WiUjmpbiJx9GRXvEn/aPpr9z7HNRWtvj+lW3tywu/jhc3CEuTsH9gxo6nfvJhqZPfeQWgAvz92un
+			LpmcwW3/sO98rdWFil+L/F0yURtstozStMRV/ez/4Nvk41q1o6llaVTDEDw6bzhSS8bo+IjXvb2x
+			YHzdvd5/J1vWgJ70MondZTZTSs6cwjfBqn31bUsaYyOkdJ2nnmerHltS4A67i4fugEJD+dBiMYjH
+			F9QtavOYwzfWcd7NrCW+23xoYuyW0Nw8NHkDvkV6r3uABC/Gvg8+gzzme+SF5mTG41nf642Prg+9
+			bt+0u0LtMXCAkesh0efotQ0u1IDOi2sMF5iL6CkOatASFSlHqCycAz18ds/73vv+9/Cpjng1DhqO
+			Y5fKoqaO8pfP/OY7f/mpeVHSNm587BZAOJzJvva3z/3ugntf+sQvPkPwQ5jym//86A+MVPCS9Pt8
+			Mzjpj7/8518Xqqgk7qJh2oi+wv/++///APh/YYF/45cYKxGACJiACriAd+ESBDgWBqgUEjiBFHgU
+			N0EUZFGBGriBHFh8DzgRcRWCIjiCJFiCJniCKJiCKoiCIdGCLviCMBiDMjiDNAiDAQEAOw==
+		">
+		</div>
+		<div style="font: bold 11pt verdana,geneva,lucida,'lucida grande',arial,helvetica,sans-serif;color:white; text-align: center; margin-bottom: 10px; margin-top: 10px">DIRXML</div>
+		<p class = "toc1">Table of Contents</p>
+		<div style = "text-align: left; margin-left: 10px;">
+			<a href= "#lbl1" class = "toc2">Preface</a><br/>
+<a onclick ="javascript:ShowHide('toc2')" href="javascript:;" class = "toc2">Global CONstants ... </a><br />
+<div id= "toc2" class = "tocgrp">
+</div>
+<a href= "#lbl4" class = "toc2">PUBlic Spin Methods</a><br/>
+<a href= "#lbl5" class = "toc4">getPasmADDR</a><br/>
+<a href= "#lbl7" class = "toc2">Assembly Cog </a><br/>
+<a href= "#lbl8" class = "toc3">Start </a><br/>
+<a href= "#lbl10" class = "toc3">Main Program </a><br/>
+<a href= "#lbl12" class = "toc3">Stop </a><br/>
+<a href= "#lbl14" class = "toc3">Send Spin Cmds </a><br/>
+<a href= "#lbl16" class = "toc3">data constants </a><br/>
+<a href= "#lbl18" class = "toc3">Send String bufptr </a><br/>
+<a href= "#lbl20" class = "toc3">Copy Cog to Hub </a><br/>
+<a href= "#lbl22" class = "toc3">Copy Hub to Hub </a><br/>
+<a href= "#lbl24" class = "toc3">time out </a><br/>
+<a href= "#lbl26" class = "toc3">date out </a><br/>
+<a href= "#lbl28" class = "toc3">decimal out </a><br/>
+<a href= "#lbl30" class = "toc3">Unsigned Divide </a><br/>
+<a href= "#lbl32" class = "toc3">Data Constants </a><br/>
+<a href= "#lbl34" class = "toc3">Variables </a><br/>
+<a href= "#lbl36" class = "toc2">MIT License </a><br/>
+
+		</div>
+	</div>
+	</td>
+	<td>
+		<div id="text" style= "text-align: left; padding-left: 20px; padding-right: 20px; width: 800px; height: 600px; background-color: #ffffe0; overflow: auto">
+			<h1 id = "lbl1" class = "title">directory as DataTable </h1>
+
+<br /><br />
+AUTHOR:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Michael Sommer (@MSrobots)<br />
+COPYRIGHT:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;See LICENCE (MIT)&nbsp;&nbsp;&nbsp;&nbsp;<br />
+LAST MODIFIED:&nbsp;&nbsp;&nbsp;&nbsp;10/04/2013<br />
+VERSION:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1.0<br />
+LICENSE:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MIT (see end of file)<br /><br />
+DESCRIPTION:<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;outputs&nbsp;&nbsp;XML showing directory<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;can output XSD xml schema document describing xml DataSet&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;compile and save output as dirxml.binary.<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rename to dirxml.psx and save to sd<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;call in webrowser as dirxml.psx[?p=/path]<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;call in webrowser as dirxml.psx?x=xsd to get xml schema <br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;shows xml without parameter<br />
+MODIFICATIONS:<br />
+10/04/2013&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;added spindoc comments<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Michael Sommer (MSrobots)<br />
+
+<br />
+<h2 id = "lbl2">Global CONstants </h2>
+<br /><a onclick ="javascript:ShowHide('lbl3')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl3>  { PSX CMDS }  
+  REQ_PARA_STRING  = 1
+  REQ_PARA_NUMBER  = 2
+  REQ_FILENAME     = 3
+  REQ_HEADER_STRING= 4
+  REQ_HEADER_NUMBER= 5
+  
+  SEND_FILE_EXT    = 11
+  SEND_SIZE_HEADER = 12
+  SEND_DATA        = 13
+  SEND_STRING      = 14
+  SEND_FLUSH       = 15
+  
+  CHANGE_DIRECTORY = 21
+  LIST_ENTRIES     = 22
+  LIST_ENTRY_ADDR  = 23
+
+  PSE_CALL         = 91
+  PSE_TRANSFER     = 92
+
+</pre>
+<hr /><br />
+<h2 id = "lbl4">PUBlic Spin Methods</h2>
+<hr /><h4 id = "lbl5">getPasmADDR
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl6')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl6><var>PUB</var> getPasmADDR
+<var>return</var> @cmdptr
+
+</pre>
+<hr /><h2 id = "lbl7">Assembly Cog </h2>
+<h3 id = "lbl8">Start </h3>
+<br /><a onclick ="javascript:ShowHide('lbl9')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl9>                        <var>org</var>     0
+                        <var>org</var>     0
+                        
+cmdptr                  <var>mov</var>     cmdptr,         <var>par</var>     ' adr of cmd mailbox
+par1ptr                 <var>mov</var>     par1ptr,        <var>par</var>     ' adr of param1 mailbox
+par2ptr                 <var>mov</var>     par2ptr,        <var>par</var>     ' adr of param2 mailbox
+bufptr                  <var>add</var>     par1ptr,        #4      ' adr of output buffer (1K)
+outptr                  <var>add</var>     par2ptr,        #8      ' adr of current written pos in out-buf
+count                   <var>rdlong</var>  bufptr,         par1ptr ' init adress of output buffer
+
+</pre>
+<hr /><h3 id = "lbl10">Main Program </h3>
+<br /><a onclick ="javascript:ShowHide('lbl11')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl11>                        
+usageflag               <var>mov</var>     usageflag,      zero 
+
+par1                    <var>mov</var>     par1,           #"x"           ' get string adr parameter "x"
+cmdout                  <var>mov</var>     cmdout,         #REQ_PARA_STRING
+par2                    <var>call</var>    #sendspincmd                   ' result is string adress in par1
+rownr                   <var>rdbyte</var>  par2,           par1           
+entryptr                <var>cmp</var>     par2,           #"x" <var>wz</var>        ' check if first char "x"
+LNDivideBuffer <var>if_nz</var>    <var>jmp</var>     #getpath                       ' if not test next param "p"
+LNDivideCounter         <var>add</var>     par1,           #1             '    check second char
+LNDivideDividend        <var>rdbyte</var>  par2,           par1           '       (xml or xsd)
+LNDivideQuotient        <var>cmp</var>     par2,           #"s" <var>wz</var>        '    check if second char "s"
+LNDivideDivsor <var>if_z</var>     <var>mov</var>     usageflag,      #1             '    set flag Schema senden
+              
+getpath                 <var>mov</var>     par1,           #"p"           ' get string parameter "p"
+tmp                     <var>mov</var>     cmdout,         #REQ_PARA_STRING
+                        <var>call</var>    #sendspincmd                   ' result is string in par1
+                        <var>rdbyte</var>  par2,           par1           ' check if string is null
+                        <var>cmp</var>     par2,           zero <var>wz</var>        ' if so
+              <var>if_z</var>      <var>mov</var>     par1,           zero           '    mark unused
+                        <var>cmp</var>     par1,           zero <var>wz</var>        ' path there ?
+              <var>if_nz</var>     <var>mov</var>     cmdout,         #CHANGE_DIRECTORY
+              <var>if_nz</var>     <var>call</var>    #sendspincmd                   ' change directory
+                        
+                         ' now done with parameter
+                        
+parsdone                <var>mov</var>     par1,           fileext        ' send file extension
+                        <var>mov</var>     cmdout,         #SEND_FILE_EXT
+                        <var>call</var>    #sendspincmd                   ' set file ext 
+                        
+                        <var>mov</var>     par2,           zero           ' clear flag nulti-status
+                        <var>mov</var>     par1,           minusone       ' size ' send packet size unknown
+                        <var>mov</var>     cmdout,         #SEND_SIZE_HEADER
+                        <var>call</var>    #sendspincmd                   ' send Header and content type/size
+
+                        <var>cmp</var>     usageflag,      #0 <var>wz</var>          ' XML/XSD?
+              <var>if_nz</var>     <var>mov</var>     outptr,         bufptr         ' xsd
+              <var>if_nz</var>     <var>movd</var>    cog2hub,        #xmlschema     '       copy XML-Schema
+              <var>if_nz</var>     <var>mov</var>     count,          #xmlheader-xmlschema
+              <var>if_nz</var>     <var>jmp</var>     #sendusageschemaexit           '       send and done
+
+sendXmlHeader           <var>mov</var>     outptr,         bufptr         ' else copy header
+                        <var>movd</var>    cog2hub,        #xmlheader
+                        <var>mov</var>     count,          #xmlrow-xmlheader              
+                        <var>call</var>    #cog2hub                       ' to Output Hub Buffer
+                        <var>call</var>    #sendstringbuf                 ' send header
+                        
+startrows               <var>mov</var>     rownr,          #0
+          
+                        <var>mov</var>     cmdout,         #LIST_ENTRY_ADDR
+                        <var>call</var>    #sendspincmd                   
+                        <var>mov</var>     entryptr,       par1           ' get ptr to direntrycache
+
+                        <var>mov</var>     par1,           #"W"
+                        <var>mov</var>     cmdout,         #LIST_ENTRIES
+                        <var>call</var>    #sendspincmd                   ' list first entry
+                         
+nextrow                 <var>mov</var>     tmp,            par1           ' get ptr to name
+                        <var>rdbyte</var>  par1,           par1           ' get first byte
+                        <var>cmp</var>     par1,           zero <var>wz</var>        ' test for empty name
+              <var>if_z</var>      <var>jmp</var>     #sendfooter                    ' and done with rows
+
+                        <var>mov</var>     outptr,         bufptr         
+                        <var>movd</var>    cog2hub,        #xmlrow        ' copy empty row
+                        <var>mov</var>     count,          #xmlfooter-xmlrow              
+                        <var>call</var>    #cog2hub                       ' to Output Hub Buffer                                    
+
+                        ' now patch values in Output Hub Buffer
+
+                    '    result or= (directoryEntryCache[12] &amp; $10) 
+                        <var>mov</var>     outptr,         entryptr       ' 12 is Directory? 
+                        <var>add</var>     outptr,         #12            
+                        <var>rdbyte</var>  par1,           outptr
+                        <var>and</var>     par1,           #$10
+                        <var>cmp</var>     par1,           zero      <var>wz</var>     ' zero if no dir
+              <var>if_z</var>      <var>mov</var>     outptr,         bufptr         ' if no dir set dir = "0" 
+              <var>if_z</var>      <var>add</var>     outptr,         #(@xmldir-@xmlrow) ' offset in bytes !
+              <var>if_z</var>      <var>mov</var>     par1,           #"0"
+              <var>if_z</var>      <var>wrbyte</var>  par1,           outptr         ' write "0" ... no dir
+                       
+writename               <var>mov</var>     par1,           tmp            ' get file name in par1            
+                        <var>mov</var>     outptr,         bufptr         ' copy filename
+                        <var>add</var>     outptr,         #(@xmlfirstname-@xmlrow) ' offset in bytes !
+                        <var>call</var>    #strhub2hub
+
+'  bytemove(@result, @directoryEntryCache[28], 4)
+'  if(result &lt; 0)
+'    result := posx                                               
+                        <var>mov</var>     outptr,         entryptr
+                        <var>add</var>     outptr,         #28            ' get entry size
+                        <var>mov</var>     count,          #4
+                        <var>mov</var>     par1,           zero
+                                                
+readlong                <var>rdbyte</var>  tmp,            outptr
+                        <var>or</var>      par1,           tmp
+                        <var>ror</var>     par1,           #8
+                        <var>add</var>     outptr,         #1
+                        <var>djnz</var>    count,          #readlong
+
+                        <var>mov</var>     outptr,         #(@xmllastsize-@xmlrow) ' offset in bytes !
+                        <var>call</var>    #decoutback                    ' output decimal ' write size
+
+                        <var>mov</var>     outptr,         entryptr       ' 16 create 
+                        <var>add</var>     outptr,         #16            
+                        <var>mov</var>     cmdin,          #(@xmlcreated-@xmlrow+4) ' offset in bytes !
+                        <var>call</var>    #dateout
+                        <var>mov</var>     outptr,         entryptr       ' 14 create 
+                        <var>add</var>     outptr,         #14            ' get entry time
+                        <var>call</var>    #timeout                        
+
+                        <var>mov</var>     outptr,         entryptr       ' 24 mod
+                        <var>add</var>     outptr,         #24            ' get entry day/month1
+                        <var>mov</var>     cmdin,          #(@xmlmodified-@xmlrow+4) ' offset in bytes !
+                        <var>call</var>    #dateout
+                        <var>mov</var>     outptr,         entryptr       ' 22 mod
+                        <var>add</var>     outptr,         #22            ' get entry time                        
+                        <var>call</var>    #timeout                        
+                         
+                        <var>mov</var>     outptr,         entryptr       ' 18 acessed just date
+                        <var>add</var>     outptr,         #18            ' get entry day/month1
+                        <var>mov</var>     cmdin,          #(@xmlacessed-@xmlrow+4) ' offset in bytes !
+                        <var>call</var>    #dateout
+                                                                                                     
+                        <var>add</var>     rownr,          #1
+                        <var>mov</var>     outptr,         #(@xmllastrownr-@xmlrow) ' offset in bytes !
+                        <var>mov</var>     par1,           rownr          ' write rownr 
+                        <var>call</var>    #decoutback                    ' output decimal  rownr
+                       
+                        <var>call</var>    #sendstringbuf                 ' send row
+
+                        <var>mov</var>     par1,           #"N"
+                        <var>mov</var>     cmdout,         #LIST_ENTRIES
+                        <var>call</var>    #sendspincmd                   ' list next entry                                                                          
+                        <var>jmp</var>     #nextrow                       ' and do it again
+                       
+sendfooter              <var>mov</var>     outptr,         bufptr         
+                        <var>movd</var>    cog2hub,        #xmlfooter        ' Transfer footer into hub-buff
+                        <var>mov</var>     count,          #xmlfooter_end-xmlfooter       
+sendusageschemaexit     <var>call</var>    #cog2hub                       ' copy footer to Output Hub Buffer
+                        <var>call</var>    #sendstringbuf                 ' send footer
+
+                        <var>mov</var>     par2,           #"/"           ' string in par2
+                        <var>mov</var>     par1,           par2ptr        ' hubadr par2
+                        <var>mov</var>     cmdout,         #CHANGE_DIRECTORY
+                        <var>call</var>    #sendspincmd                   ' change directory
+
+main_end                                                       ' done
+
+</pre>
+<hr /><h3 id = "lbl12">Stop </h3>
+<br /><a onclick ="javascript:ShowHide('lbl13')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl13>
+                        <var>wrlong</var>  zero,           cmdptr  ' write exit to cmd mailbox
+                        <var>cogid</var>   cmdin                   ' get own cogid
+                        <var>cogstop</var> cmdin                   ' and shoot yourself ... done
+
+</pre>
+<hr /><h3 id = "lbl14">Send Spin Cmds </h3>sendspincmd:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;call spin cog with command and wait for response<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl15')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl15>sendspincmd             <var>wrlong</var>  par2,           par2ptr ' write param2 value
+                        <var>wrlong</var>  par1,           par1ptr ' write param1 value
+                        <var>wrlong</var>  cmdout,         cmdptr  ' write cmd value                        
+sendspincmdwait         <var>rdlong</var>  cmdin,          cmdptr
+                        <var>cmp</var>     cmdin,          cmdout <var>wz</var>
+        <var>if_z</var>            <var>jmp</var>     #sendspincmdwait        ' wait for spin
+                        <var>rdlong</var>  par1,           par1ptr ' get answer param1
+                        <var>rdlong</var>  par2,           par2ptr ' get answer param2
+sendspincmd_ret         <var>ret</var>
+
+</pre>
+<hr /><h3 id = "lbl16">data constants </h3>
+<br /><a onclick ="javascript:ShowHide('lbl17')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl17>zero                    <var>long</var>    0
+minusone                <var>long</var>    -1
+space                   <var>long</var>    32
+incDest1                <var>long</var>    1 &lt;&lt; 9
+fileext                 <var>long</var>
+                        <var>byte</var>    "xml",0
+c1980                   <var>long</var>    1980
+
+</pre>
+<hr /><h3 id = "lbl18">Send String bufptr </h3>sendstringbuf:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sends String from Hub Buffer bufptr to the socket/browser<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl19')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl19>sendstringbuf           <var>mov</var>     par1,           bufptr         ' send string from Output hub-buff 
+                        <var>mov</var>     cmdout,         #SEND_STRING
+                        <var>call</var>    #sendspincmd                   
+sendstringbuf_ret       <var>ret</var>
+
+</pre>
+<hr /><h3 id = "lbl20">Copy Cog to Hub </h3>cog2hub:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;copy count longs from Cog to Hub<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl21')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl21>cog2hub                 <var>wrlong</var>  0-0,            outptr
+                        <var>add</var>     cog2hub,        incDest1
+                        <var>add</var>     outptr,         #4
+                        <var>djnz</var>    count,          #cog2hub
+cog2hub_ret             <var>ret</var>
+
+</pre>
+<hr /><h3 id = "lbl22">Copy Hub to Hub </h3>strhub2hub:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;copy strsize bytes from Hub to Hub<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl23')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl23>strhub2hub              <var>rdbyte</var>  tmp,            par1
+                        <var>cmp</var>     tmp,            zero <var>wz</var>
+              <var>if_z</var>      <var>jmp</var>     #strhub2hub_ret
+                        <var>add</var>     par1,           #1
+                        <var>wrbyte</var>  tmp,            outptr
+                        <var>add</var>     outptr,         #1
+                        <var>jmp</var>     #strhub2hub
+strhub2hub_ret          <var>ret</var>
+
+</pre>
+<hr /><h3 id = "lbl24">time out </h3>timeout:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Decodes FAT time value to string<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl25')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl25>'  return (directoryEntryCache[23] &gt;&gt; 3)    mod hour
+'  return (directoryEntryCache[15] &gt;&gt; 3) create hour
+'  return (((directoryEntryCache[23] &amp; $7) &lt;&lt; 3) | (directoryEntryCache[22] &gt;&gt; 5)) mod minute
+'  return (((directoryEntryCache[15] &amp; $7) &lt;&lt; 3) | (directoryEntryCache[14] &gt;&gt; 5))  create  minute
+'  return ((directoryEntryCache[22] &amp; $1F) &lt;&lt; 1)   mod second
+'  return (((directoryEntryCache[14] &amp; $1F) &lt;&lt; 1) +  (directoryEntryCache[13] / 100)) create second
+'  tmp 23 15     mod 23 create 15
+ ' par2 22 14
+
+timeout                 <var>rdbyte</var>  par2,           outptr
+                        <var>add</var>     outptr,         #1             ' get entry time
+                        <var>rdbyte</var>  tmp,            outptr
+
+                        <var>mov</var>     par1,           tmp            
+                        <var>shr</var>     par1,           #3
+                        <var>mov</var>     outptr,         cmdin          ' offset in bytes !
+                        <var>add</var>     outptr,         #9            
+                        <var>call</var>    #decoutback                    ' output decimal hour
+
+                        <var>and</var>     tmp,            #7
+                        <var>shl</var>     tmp,            #3
+                        <var>mov</var>     par1,           par2
+                        <var>shr</var>     par1,           #5
+                        <var>or</var>      par1,           tmp
+                        <var>mov</var>     outptr,         cmdin          ' offset in bytes !
+                        <var>add</var>     outptr,         #12
+                        <var>call</var>    #decoutback                    ' output decimal  minutes
+
+                        <var>mov</var>     par1,           par2
+                        <var>and</var>     par1,           #$1F
+                        <var>shl</var>     par1,           #1
+                        <var>mov</var>     outptr,         cmdin          ' offset in bytes !
+                        <var>add</var>     outptr,         #15
+                        <var>call</var>    #decoutback                    ' output decimal  seconds
+timeout_ret             <var>ret</var>
+
+</pre>
+<hr /><h3 id = "lbl26">date out </h3>dateout:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Decodes FAT date value to string<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl27')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl27>' return ((directoryEntryCache[25] &gt;&gt; 1) + 1_980) mod year
+' return ((directoryEntryCache[19] &gt;&gt; 1) + 1_980)  access year
+' return ((directoryEntryCache[17] &gt;&gt; 1) + 1_980)   create year
+dateout                 <var>rdbyte</var>  par2,           outptr         ' get entry day/month1
+                        <var>add</var>     outptr,         #1             
+                        <var>rdbyte</var>  tmp,            outptr         ' get entry month2/year
+
+                        <var>mov</var>     par1,           tmp            ' get entry year 
+                        <var>shr</var>     par1,           #1
+                        <var>add</var>     par1,           c1980          ' write year
+                        <var>mov</var>     outptr,         cmdin          ' offset in bytes !
+                        <var>call</var>    #decoutback                    ' output decimal
+
+' return (((directoryEntryCache[25] &amp; $1) &lt;&lt; 3) | (directoryEntryCache[24] &gt;&gt; 5)) 
+' return (((directoryEntryCache[19] &amp; $1) &lt;&lt; 3) | (directoryEntryCache[18] &gt;&gt; 5)) access                      
+' return (((directoryEntryCache[17] &amp; $1) &lt;&lt; 3) | (directoryEntryCache[16] &gt;&gt; 5))  create month
+                        <var>and</var>     tmp,            #1
+                        <var>shl</var>     tmp,            #3
+                        <var>mov</var>     par1,           par2
+                        <var>shr</var>     par1,           #5
+                        <var>or</var>      par1,           tmp
+                        <var>mov</var>     outptr,         cmdin          ' offset in bytes !
+                        <var>add</var>     outptr,         #3
+                        <var>call</var>    #decoutback                    ' output decimal  month
+                        
+' return (directoryEntryCache[24] &amp; $1F) mod day
+' return (directoryEntryCache[18] &amp; $1F)  access day                        
+' return (directoryEntryCache[16] &amp; $1F) create   day
+                        <var>mov</var>     par1,           par2
+                        <var>and</var>     par1,           #$1F           ' write day par1  
+                        <var>mov</var>     outptr,         cmdin          ' offset in bytes !
+                        <var>add</var>     outptr,         #6
+                        <var>call</var>    #decoutback                    ' output decimal day
+dateout_ret             <var>ret</var>
+
+</pre>
+<hr /><h3 id = "lbl28">decimal out </h3>decoutback:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;outputs par1 as decimal. starting at offset outptr with last <br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;digit, decrementing outptr<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl29')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl29>decoutback              <var>add</var>     outptr,                 bufptr
+                        <var>mov</var>     LNDivideDividend,       par1
+decoutloop              <var>sub</var>     outptr,                 #1
+                        <var>mov</var>     LNDivideDivsor,         #10
+                        <var>call</var>    #LNDivide
+                        <var>add</var>     LNDivideDividend,       #48
+                        <var>wrbyte</var>  LNDivideDividend,       outptr                        
+                        <var>mov</var>     LNDivideDividend,       LNDivideQuotient
+                        <var>cmp</var>     LNDivideDividend,       #0 <var>wz</var>
+              <var>if_nz</var>     <var>jmp</var>     #decoutloop                        
+decoutback_ret          <var>ret</var>
+
+</pre>
+<hr /><h3 id = "lbl30">Unsigned Divide </h3>LNDivide:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Just put the thing you want to divide in the dividend<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;and the thing you want to divide by in the divisor.<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Then the result will appear in the quotient and<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the remainder will appear in the dividend.<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl31')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl31>LNDivide                <var>mov</var>     LNDivideQuotient,       #0                           ' Setup to divide.
+                        <var>mov</var>     LNDivideBuffer,         #0                           '
+                        <var>mov</var>     LNDivideCounter,        #32                          '
+
+                        <var>cmp</var>     LNDivideDivsor,         #0 <var>wz</var>                        ' Clear if dividing by zero.
+<var>if_z</var>                    <var>mov</var>     LNDivideDividend,       #0                           '
+<var>if_z</var>                    <var>jmp</var>     #LNDivide_ret                                        '
+                     
+LNDivideLoopPre         <var>shr</var>     LNDivideDivsor,         #1 <var>wc</var>, <var>wz</var>                    ' Align divisor MSB and count size.
+                        <var>rcr</var>     LNDivideBuffer,         #1                           '
+<var>if_nz</var>                   <var>djnz</var>    LNDivideCounter,        #LNDivideLoopPre             '
+                                                  
+LNDivideLoopPost        <var>cmpsub</var>  LNDivideDividend,       LNDivideBuffer <var>wc</var>            ' Preform division.
+                        <var>rcl</var>     LNDivideQuotient,       #1                           '
+                        <var>shr</var>     LNDivideBuffer,         #1                           '
+                        <var>djnz</var>    LNDivideCounter,        #LNDivideLoopPost            '
+                        
+LNDivide_ret            <var>ret</var>                                                          ' Return. Remainder in dividend on exit.
+
+</pre>
+<hr /><h3 id = "lbl32">Data Constants </h3>
+<br /><a onclick ="javascript:ShowHide('lbl33')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl33>xmlschema               <var>long</var>
+                        <var>byte</var>    "&lt;?xml version=",34,"1.0",34,"?&gt;",13,10,"&lt;xs:schema id=",34
+                        <var>byte</var>    "ds"                        
+                        <var>byte</var>    34," xmlns=",34,34," xmlns:xs=",34,"http://www.w3.<var>org</var>/2001/XMLSchema",34," xmlns:msdata=",34,"urn:schemas-microsoft-com:xml-msdata",34,"&gt;&lt;xs:element name=",34                        
+                        <var>byte</var>    "ds"                        
+                        <var>byte</var>    34," msdata:IsDataSet=",34,"<var>true</var>",34, " msdata:UseCurrentLocale=",34,"<var>true</var>",34,"&gt;&lt;xs:complexType&gt;&lt;xs:choice minOccurs=",34,"0",34," maxOccurs=",34,"unbounded",34,"&gt;&lt;xs:element name=",34                       
+                        <var>byte</var>   "dt"
+                        <var>byte</var>    34,"&gt;&lt;xs:complexType&gt;&lt;xs:sequence&gt;"
+                        <var>byte</var>    "&lt;xs:element name=",34,"<var>nr</var>",34," type=",34,"xs:integer",34," minOccurs=",34,"0",34," /&gt;"
+                        <var>byte</var>    "&lt;xs:element name=",34,"name",34," type=",34,"xs:string",34," minOccurs=",34,"0",34," /&gt;"
+                        <var>byte</var>    "&lt;xs:element name=",34,"size",34," type=",34,"xs:integer",34," minOccurs=",34,"0",34," /&gt;"
+                        <var>byte</var>    "&lt;xs:element name=",34,"dir",34," type=",34,"xs:integer",34," minOccurs=",34,"0",34," /&gt;"
+                        <var>byte</var>    "&lt;xs:element name=",34,"create",34," type=",34,"xs:dateTime",34," minOccurs=",34,"0",34," /&gt;"
+                        <var>byte</var>    "&lt;xs:element name=",34,"modify",34," type=",34,"xs:dateTime",34," minOccurs=",34,"0",34," /&gt;"
+                        <var>byte</var>    "&lt;xs:element name=",34,"access",34," type=",34,"xs:dateTime",34," minOccurs=",34,"0",34," /&gt;"
+                        <var>byte</var>    "&lt;/xs:sequence&gt;&lt;/xs:complexType&gt;&lt;/xs:element&gt;&lt;/xs:choice&gt;&lt;/xs:complexType&gt;&lt;/xs:element&gt;&lt;/xs:schema&gt;"
+                        <var>byte</var>    0
+
+xmlheader               <var>long</var>
+                        <var>byte</var>    "&lt;?xml version=",34,"1.0",34,"?&gt;",13,10,"&lt;ds&gt;", 0
+
+xmlrow                  <var>long</var>
+                        <var>byte</var>    "&lt;dt&gt;"
+                        <var>byte</var>    "&lt;<var>nr</var>&gt;"
+                        <var>byte</var>    " "[10] 
+xmllastrownr            <var>byte</var>    "&lt;/<var>nr</var>&gt;"
+                        <var>byte</var>    "&lt;name&gt;"
+xmlfirstname            <var>byte</var>    " "[12]    
+                        <var>byte</var>    "&lt;/name&gt;"
+                        <var>byte</var>    "&lt;size&gt;"
+                        <var>byte</var>    " "[10] 
+xmllastsize             <var>byte</var>    "&lt;/size&gt;"
+                        <var>byte</var>    "&lt;dir&gt;"
+xmldir                  <var>byte</var>    "1"
+                        <var>byte</var>    "&lt;/dir&gt;" 
+                        <var>byte</var>    "&lt;create&gt;"
+xmlcreated              <var>byte</var>    "0000-00-00T00:00:00"
+                        <var>byte</var>    "&lt;/create&gt;"
+                        <var>byte</var>    "&lt;modify&gt;"
+xmlmodified             <var>byte</var>    "0000-00-00T00:00:00"
+                        <var>byte</var>    "&lt;/modify&gt;"
+                        <var>byte</var>    "&lt;access&gt;"
+xmlacessed              <var>byte</var>    "0000-00-00T00:00:00"
+                        <var>byte</var>    "&lt;/access&gt;"
+                        <var>byte</var>    "&lt;/dt&gt;", 0
+
+xmlfooter               <var>long</var>                                                                                                                              
+                        <var>byte</var>    "&lt;/ds&gt;", 0
+xmlfooter_end           <var>long</var>
+
+</pre>
+<hr /><h3 id = "lbl34">Variables </h3>
+<br /><a onclick ="javascript:ShowHide('lbl35')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl35>cmdin                   <var>res</var>     1
+
+                        ' res 1                    ' still 1 long free !
+                        <var>fit</var>     496
+
+</pre>
+<hr /><br />
+<h2 id = "lbl36">MIT License </h2>
+<br /><a onclick ="javascript:ShowHide('lbl37')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl37>                                                    'MIT License
+
+</pre>
+<hr /><pre>
+ ______________________________________________________________________________________
+|                            TERMS OF USE: MIT License                                 |                                                            
+|______________________________________________________________________________________|
+|Permission is hereby granted, free of charge, to any person obtaining a copy of this  |
+|software and associated documentation files (the "Software"), to deal in the Software |
+|without restriction, including without limitation the rights to use, copy, modify,    |
+|merge, publish, distribute, sublicense, and/or sell copies of the Software, and to    |
+|permit persons to whom the Software is furnished to do so, subject to the following   |
+|conditions:                                                                           |
+|                                                                                      |
+|The above copyright notice and this permission notice shall be included in all copies |
+|or substantial portions of the Software.                                              |
+|                                                                                      |
+|THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,   |
+|INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A         |
+|PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT    |
+|HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF  |
+|CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE  |
+|OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                         |
+|______________________________________________________________________________________|
+</pre>
+<br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br />
+		</div>
+	</td></tr>
+</table>
+</div>
+</body>
+</html>	

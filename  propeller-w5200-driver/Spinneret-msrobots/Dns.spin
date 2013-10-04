@@ -216,7 +216,7 @@ PRI ParseDnsResponse(buffer) | i, len, ansRRS
   i := 0
   
   ' The number of answers to expect
-  ansRRS := DeserializeWord(buffer+ANSWERS)
+  ansRRS := wiz.DeserializeWord(buffer+ANSWERS)
 
   '--------------------------------------
   'Query Section
@@ -248,7 +248,7 @@ PRI ParseDnsResponse(buffer) | i, len, ansRRS
       'Increment the pointer until we reach the end of the name
       repeat until byte[buffer++] == $00
      
-    len := DeserializeWord(buffer)
+    len := wiz.DeserializeWord(buffer)
     
     'If the length equals 4 we have an IP
     'Otherwise we have text
@@ -262,7 +262,6 @@ PRI ParseDnsResponse(buffer) | i, len, ansRRS
        
   dnsCnt := i    
 
-
 PUB CreateTransactionId(mask) 
   transId := CNT
   ?transId
@@ -271,49 +270,40 @@ PUB CreateTransactionId(mask)
 PUB FillTransactionID
   word[@msgId] := transId
 
-
-PRI DeserializeWord(buffer) | value
-  value := byte[buffer++] << 8
-  value += byte[buffer]
-  return value
-
-PUB SendReceive(buffer, len) | bytesToRead, ptr 
-  
+PUB SendReceive(buffer, len) | bytesToRead 
+  RESULT := @null
   bytesToRead := 0
-
-  'Open socket and Send Message 
-  sock.Open
+  sock.Open                                             'Open socket and Send Message
   sock.Send(buffer, len)
-
   bytesToRead := sock.Available
-   
-  'Check for a timeout
-  if(bytesToRead =< 0 )
+  if(bytesToRead =< 0 )                                 'Check for a timeout
     bytesToRead~
-    return @null
-
-  if(bytesToRead > 0) 
-    'Get the Rx buffer  
-    ptr := sock.Receive(buffer, bytesToRead)
-
+  else  
+    RESULT := sock.Receive(buffer, bytesToRead)         'Get the Rx buffer
   sock.Disconnect
-  return ptr
   
-CON
-{{
- ______________________________________________________________________________________________________________________________
-|                                                   TERMS OF USE: MIT License                                                  |                                                            
-|______________________________________________________________________________________________________________________________|
-|Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation    |     
-|files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,    |
-|modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software|
-|is furnished to do so, subject to the following conditions:                                                                   |
-|                                                                                                                              |
-|The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.|
-|                                                                                                                              |
-|THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE          |
-|WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR         |
-|COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,   |
-|ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                         |
- ------------------------------------------------------------------------------------------------------------------------------ 
+''
+''=======[ MIT License ]==================================================================
+CON                                                     'MIT License
+{{{
+ ______________________________________________________________________________________
+|                            TERMS OF USE: MIT License                                 |                                                            
+|______________________________________________________________________________________|
+|Permission is hereby granted, free of charge, to any person obtaining a copy of this  |
+|software and associated documentation files (the "Software"), to deal in the Software |
+|without restriction, including without limitation the rights to use, copy, modify,    |
+|merge, publish, distribute, sublicense, and/or sell copies of the Software, and to    |
+|permit persons to whom the Software is furnished to do so, subject to the following   |
+|conditions:                                                                           |
+|                                                                                      |
+|The above copyright notice and this permission notice shall be included in all copies |
+|or substantial portions of the Software.                                              |
+|                                                                                      |
+|THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,   |
+|INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A         |
+|PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT    |
+|HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF  |
+|CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE  |
+|OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                         |
+|______________________________________________________________________________________|
 }}

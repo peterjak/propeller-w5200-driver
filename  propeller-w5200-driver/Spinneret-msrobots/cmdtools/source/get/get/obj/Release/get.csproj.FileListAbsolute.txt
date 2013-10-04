@@ -1,0 +1,5 @@
+C:\Projekte\get\get\obj\Release\ResolveAssemblyReference.cache
+C:\Projekte\get\get\bin\Release\get.exe
+C:\Projekte\get\get\bin\Release\get.pdb
+C:\Projekte\get\get\obj\Release\get.exe
+C:\Projekte\get\get\obj\Release\get.pdb

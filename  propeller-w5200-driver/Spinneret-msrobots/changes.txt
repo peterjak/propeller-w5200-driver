@@ -9,5 +9,7 @@
 		commented sourcecode and added some spindoc comments
 		added netbios to main program
 		did some optimisation for size ... running out of space ...
+10/04/2013	added spindoc comments
+		added VS2008 sources for cmdline tools
 
 

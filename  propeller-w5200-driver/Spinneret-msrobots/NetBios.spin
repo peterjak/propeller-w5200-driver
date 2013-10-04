@@ -1,83 +1,87 @@
-'*********************************************************************************************
-{
-AUTHOR: Mike Gebhard / Michael Sommer (@MSrobots)
-COPYRIGHT: Parallax Inc.
-LAST MODIFIED: 9/2/2013
-VERSION 1.0
-LICENSE: MIT (see end of file)
-
-DESCRIPTION:
-  The NETBIOS object  - original file was NetBiosUnitTest
-
-  This program partially implements NetBIOS name services
-        * sending Registration
-        * sending NB Name Query Response                                                    
-        * sending NBSTAT Name Query Response 
-
-RESOURCES:
-  http://tools.ietf.org/html/rfc1001
-  http://tools.ietf.org/html/rfc1002
-  http://ubiqx.org/cifs/NetBIOS.html
-
-MODIFICATION:
-  9/2/2013      original file was NetBiosUnitTest.spin
-                created NetBios shrunk down as much as possible
-                added hostname. and workgoup to Init
-                Michael Sommer (MSrobots)
-
-  Form a DOS prompt run nbtstat -a PROPNET.
------------------------------------------------------ 
-  C:\>nbtstat -a PROPNET
-
-  Local Area Connection:
-  Node IpAddress: [192.168.1.103] Scope Id: []
-
-           NetBIOS Remote Machine Name Table
-
-       Name               Type         Status
-    ---------------------------------------------
-    PROPNET        <00>  UNIQUE      Registered
-    WORKGROUP      <00>  GROUP       Registered
-
-    MAC Address = 00-08-DC-16-F8-01
------------------------------------------------------
-  
-  From a DOS prompt execute ping PROPNET
------------------------------------------------------ 
-  C:\>ping PROPNET
-   
-  Pinging PROPNET [192.168.1.107] with 32 bytes of data:
-   
-  Reply from 192.168.1.107: bytes=32 time<1ms TTL=128
-  Reply from 192.168.1.107: bytes=32 time<1ms TTL=128
-  Reply from 192.168.1.107: bytes=32 time<1ms TTL=128
-  Reply from 192.168.1.107: bytes=32 time<1ms TTL=128
-   
-  Ping statistics for 192.168.1.107:
-      Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),
-  Approximate round trip times in milli-seconds:
-      Minimum = 0ms, Maximum = 0ms, Average = 0ms
-
-Error messages
--------------------  
-RCODE field values:
- 
-Symbol      Value   Description:
- 
-FMT_ERR       0x1   Format Error.  Request was invalidly
-                    formatted.
-SRV_ERR       0x2   Server failure.  Problem with NBNS, cannot
-                    process name.
-IMP_ERR       0x4   Unsupported request error.  Allowable only
-                    for challenging NBNS when gets an Update type
-                    registration request.
-RFS_ERR       0x5   Refused error.  For policy reasons server
-                    will not register this name from this host.
-ACT_ERR       0x6   Active error.  Name is owned by another node.
-CFT_ERR       0x7   Name in conflict error.  A UNIQUE name is owned by more than one node.
-}
-'*********************************************************************************************
-CON
+'':::::::[ NetBios ]::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+{{
+''
+''AUTHORS:          Mike Gebhard / Michael Sommer
+''COPYRIGHT:        See LICENCE (MIT)    
+''LAST MODIFIED:    10/04/2013
+''VERSION:          1.0
+''LICENSE:          MIT (see end of file)
+''
+''
+''DESCRIPTION:
+''                  The NETBIOS object - original file was NetBiosUnitTest
+''
+'' This program partially implements NetBIOS name services
+''                * sending Registration
+''                * sending NB Name Query Response                                          
+''                * sending NBSTAT Name Query Response
+''
+''RESOURCES:
+''                  http://tools.ietf.org/html/rfc1001
+''                  http://tools.ietf.org/html/rfc1002
+''                  http://ubiqx.org/cifs/NetBIOS.html
+''
+''MODIFICATIONS:
+'' 9/2/2013         original file was NetBiosUnitTest.spin
+''                  created NetBios shrunk down as much as possible
+''                  added hostname. and workgoup to Init
+''10/04/2013        added spindoc comments
+''                  Michael Sommer (MSrobots)
+''
+'' Form a DOS prompt run nbtstat -a PROPNET.
+''-----------------------------------------------------
+'' C:\>nbtstat -a PROPNET
+''
+'' Local Area Connection:
+'' Node IpAddress: [192.168.1.103] Scope Id: []
+''
+''         NetBIOS Remote Machine Name Table
+''
+''     Name               Type         Status
+''  ---------------------------------------------
+''  PROPNET        <00>  UNIQUE      Registered
+''  WORKGROUP      <00>  GROUP       Registered
+''
+''  MAC Address = 00-08-DC-16-F8-01
+''-----------------------------------------------------
+''
+'' From a DOS prompt execute ping PROPNET
+''-----------------------------------------------------
+'' C:\>ping PROPNET
+'' 
+'' Pinging PROPNET [192.168.1.107] with 32 bytes of data:
+'' 
+'' Reply from 192.168.1.107: bytes=32 time<1ms TTL=128
+'' Reply from 192.168.1.107: bytes=32 time<1ms TTL=128
+'' Reply from 192.168.1.107: bytes=32 time<1ms TTL=128
+'' Reply from 192.168.1.107: bytes=32 time<1ms TTL=128
+'' 
+'' Ping statistics for 192.168.1.107:
+''    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),
+'' Approximate round trip times in milli-seconds:
+''    Minimum = 0ms, Maximum = 0ms, Average = 0ms
+''
+''Error messages
+''-------------------
+''RCODE field values:
+''
+''Symbol    Value   Description:
+''
+''FMT_ERR     0x1   Format Error.  Request was invalidly
+''                  formatted.
+''SRV_ERR     0x2   Server failure.  Problem with NBNS, cannot
+''                  process name.
+''IMP_ERR     0x4   Unsupported request error.  Allowable only
+''                  for challenging NBNS when gets an Update type
+''                  registration request.
+''RFS_ERR     0x5   Refused error.  For policy reasons server
+''                  will not register this name from this host.
+''ACT_ERR     0x6   Active error.  Name is owned by another node.
+''CFT_ERR     0x7   Name in conflict error.  A UNIQUE name is owned by more than one node.
+}}
+CON                                                     
+''
+''=======[ Global CONstants ... ]=========================================================
   ZERO                          = $00
   CR                            = $0D
   LF                            = $0A
@@ -89,7 +93,7 @@ CON
   NB                            = $20
   NB_STAT                       = $21
 
-  {{ Packet Enum}}
+  { Packet Enum}
   TRANSACTION_ID                = $00
   FLAGS                         = $02
   QUESTIONS                     = $04
@@ -104,14 +108,14 @@ CON
   NB_FLAGS                      = $38
   NB_IP                         = $3A
 
-  {{ CheckSocket Enum }}
+  { CheckSocket Enum }
   CHECKSOCKET_NOTHING           = $0
   CHECKSOCKET_NB_SEND           = $1
   CHECKSOCKET_NBSTAT_SEND       = $2
   CHECKSOCKET_OTHER             = $3
-       
-VAR
 
+''     
+''=======[ Global DATa ]==================================================================
 DAT
   
   encName          byte $0[33], $00
@@ -184,11 +188,19 @@ DAT
   _lastReadSize    long  $00    ' last bytes read in sendreceive
   null             long  $00 
 
+''
+''=======[ Used OBJects ]=================================================================
 OBJ
   sock          : "Socket"
   wiz           : "W5100"
 
-PUB Init(buffer, socket, hostname , workgroup) | tr1, tr2, tr3
+''
+''=======[ PUBlic Spin Methods]===========================================================
+PUB Init(buffer, socket, hostname , workgroup) | tr1, tr2, tr3 'Init NetBios and register hostname and workgroup
+{{
+''Init:             Init NetBios and register hostname and workgroup
+''Returns:          0 success >0 NetBios Err ... see RCODE field values in CON section
+}}
   _buffPtr := buffer
   _sockId  := socket  
   ' Fill the hostname and workgroup into nbStatQueryResp
@@ -218,145 +230,175 @@ PUB Init(buffer, socket, hostname , workgroup) | tr1, tr2, tr3
   'Send the name registration request 3 times
   'If we do not get a response then the name is available
   
-  nbNameReg[2] := $29                                   ' RD bit 1 - NAME REGISTRATION REQUEST
+  nbNameReg[2] := $29                                   'RD bit 1 - NAME REGISTRATION REQUEST
   repeat 3
-    sendRegister(tr1, @encName, 0)                      ' no group
-    sendRegister(tr2, @encServer, 0)                    ' no group
-    sendRegister(tr3, @encGroup, $80)                   ' group
+    sendRegister(tr1, @encName, 0)                      'no group
+    sendRegister(tr2, @encServer, 0)                    'no group
+    sendRegister(tr3, @encGroup, $80)                   'group
 ' should be inside repeat?
   sock.Available
   repeat
-      if CheckSocket == CHECKSOCKET_OTHER               ' not sure here... check needed?
+      if CheckSocket == CHECKSOCKET_OTHER               'not sure here... check needed?
         RESULT := (wiz.DeserializeWord(_buffPtr+constant(FLAGS+8)) & $000F)
           if (RESULT)
             return RESULT
   until _lastReadSize == 0
     
-  nbNameReg[2] := $28                                   ' RD bit 0 - NAME OVERWRITE DEMAND
-  sendRegister(tr1, @encName, 0)                        ' no group
-  sendRegister(tr2, @encServer, 0)                      ' no group
-  sendRegister(tr3, @encGroup, $80)                     ' group    
+  nbNameReg[2] := $28                                   'RD bit 0 - NAME OVERWRITE DEMAND
+  sendRegister(tr1, @encName, 0)                        'no group
+  sendRegister(tr2, @encServer, 0)                      'no group
+  sendRegister(tr3, @encGroup, $80)                     'group    
 
-PUB CheckSocket  | avail, needed, ptr, name
+PUB CheckSocket  | avail, needed, ptr, name             'checks NetBios Name Service and if there processes one request
+{{
+''CheckSocket:      Checks NetBios Name Service and if there processes one request
+''Returns:          see CheckSocket Enum values in CON section
+                    buffer contains last received request/response
+}}
   _lastReadSize := 0
-  if ((avail := waitForCountBytes(8)) => 8)             ' Header Data in the buffer?
-    sock.Receive(_buffPtr, 8)                           ' Get udp header
-    needed := wiz.DeserializeWord(_buffPtr + 6)         ' size packet
-    if ((avail := waitForCountBytes(needed)) => needed) ' Data there?
-      sock.Receive(_buffPtr+8, needed)
-      _lastReadSize := needed + 8                       ' remember last block size
-      RESULT := CHECKSOCKET_OTHER                       ' return typ 3 other as default
-      
-      ifnot ((byte[_buffPtr+constant(FLAGS+8)] & $80) == $80) ' just requests no responses            
-        ptr := 0                                        ' nothing
-        name := _buffPtr+constant(QUERY+1+8)            ' adress of query name
-        byte[@ipResp-2] := 0                            ' no group
-        if strcomp(name,@encName)                       ' query for host workstation?
-          ptr := @encName
-        elseif strcomp(name,@encServer)                 ' query for host server?
-          ptr := @encServer
-        elseif strcomp(name,@wildcard)                  ' query for wildcard?
-          ptr := @wildcard
-        elseif strcomp(name,@encGroup)                  ' query for group?
-          byte[@ipResp-2] := $80                        ' group
-          ptr := @encGroup
-                 
-        if ptr                                          ' query for me?  
-          case wiz.DeserializeWord(_buffPtr + constant(NB_1+8)) ' what typ?
-            NB:  
-              sendResponse(ptr, @nbPosQueryResp, constant(@enbPosQueryResp - @nbPosQueryResp))            
-              RESULT := CHECKSOCKET_NB_SEND             ' return typ 1 response (nbpos host/group)
-            NB_STAT:
-              sendResponse(ptr, @nbStatQueryResp, constant(@enbStatQueryResp - @nbStatQueryResp))            
-              RESULT := CHECKSOCKET_NBSTAT_SEND         ' return typ 2 response (nbstat host/group)
-
-PUB DisconnectSocket
+  if sock.DataReady > 0                                 'Any Data ?
+    if ((avail := waitForCountBytes(8)) => 8)           'Header Data in the buffer?
+      sock.Receive(_buffPtr, 8)                         'Get udp header
+      needed := wiz.DeserializeWord(_buffPtr + 6)       'size packet
+      if ((avail := waitForCountBytes(needed)) => needed)'Data there?
+        sock.Receive(_buffPtr+8, needed)
+        _lastReadSize := needed + 8                     'remember last block size
+        RESULT := CHECKSOCKET_OTHER                     'return typ 3 other as default
+        
+        ifnot ((byte[_buffPtr+constant(FLAGS+8)] & $80) == $80) ' just requests no responses            
+          ptr := 0                                      'nothing
+          name := _buffPtr+constant(QUERY+1+8)          'adress of query name
+          byte[@ipResp-2] := 0                          'no group
+          if strcomp(name,@encName)                     'query for host workstation?
+            ptr := @encName
+          elseif strcomp(name,@encServer)               'query for host server?
+            ptr := @encServer
+          elseif strcomp(name,@wildcard)                'query for wildcard?
+            ptr := @wildcard
+          elseif strcomp(name,@encGroup)                'query for group?
+            byte[@ipResp-2] := $80                      'group
+            ptr := @encGroup
+                   
+          if ptr                                        'query for me?  
+            case wiz.DeserializeWord(_buffPtr + constant(NB_1+8)) 'what typ?
+              NB:  
+                sendResponse(ptr, @nbPosQueryResp, constant(@enbPosQueryResp - @nbPosQueryResp))            
+                RESULT := CHECKSOCKET_NB_SEND           'return typ 1 response (nbpos host/group)
+              NB_STAT:
+                sendResponse(ptr, @nbStatQueryResp, constant(@enbStatQueryResp - @nbStatQueryResp))            
+                RESULT := CHECKSOCKET_NBSTAT_SEND       'return typ 2 response (nbstat host/group)
+     
+PUB DisconnectSocket | tmp                              'processes all outstanding requests and disconnect Multi-Socket
+{{
+''DisconnectSocket: Processes all outstanding requests and disconnect Multi-Socket
+}}
+  repeat
+    CheckSocket
+  until (_lastReadSize == 0)
   sock.Disconnect
-  sock.Close
   
-PUB ReInitSocket
+PUB ReInitSocket | tmp                                  'ReInit Mult-Socket for NetBios
+{{
+''ReInitSocket:     ReInit Mult-Socket for NetBios
+}}
   sock.Init(_sockId, UDP, 137) 
   sock.RemoteIp($FF, $FF, $FF, $FF)
   sock.RemotePort(137)
   sock.Open
 
-PUB SendQuery(queryname, pad, suffix, nbstat)
+PUB SendQuery(queryname, pad, suffix, nbstat)           'Still Debug - send Query
+{{
+''SendQuery:        Still Debug - send Query
+}}
   if nbstat
-    byte[@nbNameQueryReq+3]  := $00                     ' no Broadcast
-    byte[@enbNameQueryReq-3] := NB_STAT                 ' nb status query
+    byte[@nbNameQueryReq+3]  := $00                     'no Broadcast
+    byte[@enbNameQueryReq-3] := NB_STAT                 'nb status query
     sock.RemoteIp(192, 168, 1, 105)  
   else
-    byte[@nbNameQueryReq+3]  := $10                     ' Broadcast
-    byte[@enbNameQueryReq-3] := NB                      ' nb name query 
+    byte[@nbNameQueryReq+3]  := $10                     'Broadcast
+    byte[@enbNameQueryReq-3] := NB                      'nb name query 
     sock.RemoteIp($FF, $FF, $FF, $FF)  
   RESULT := word[@nbNameQueryReq] := CreateTransactionId($FFFF) 
   FirstLevelEncode(@nbNameQueryReq+13, queryname, pad, suffix)
   sock.Send(@nbNameQueryReq, constant(@enbNameQueryReq - @nbNameQueryReq))
   sock.Available  '?
 
-PUB GetLastReadSize
+PUB GetLastReadSize | tmp                               'get lastReadSize .. size last recived frame
+{{
+''GetLastReadSize:  Get lastReadSize .. size last recived frame
+}}
   RESULT :=  _lastReadSize 
 
-PUB GetLastIP
-  RESULT :=  _buffPtr + constant(@ipResp - @nbPosQueryResp+8) ' adr ip
+PUB GetLastIP | tmp                                     'Still Debug - Get Ip ?not needed?
+{{
+''GetLastIP:        Still Debug - Get Ip ?not needed?
+}}
+  RESULT :=  _buffPtr + constant(@ipResp - @nbPosQueryResp+8) 'adr ip
 
-PUB DecodeLastNameInplace
+PUB DecodeLastNameInplace | tmp                         'Still Debug - decode Name in buffer for readability
+{{
+''DecodeLastNameInplace: Still Debug - decode Name in buffer for readability
+}}
   FirstLevelDecode(_buffPtr+21, _buffPtr+21)
   
-PUB GetLastName
+PUB GetLastName | tmp                                   'Still Debug - give address of (decoded?) Name
+{{
+''GetLastName:      Still Debug - give address of (decoded?) Name
+}}
   RESULT := _buffPtr+21
-{
-PUB GetRemoteIP
-  RESULT := sock.GetRemoteIP
-  
-PUB GetUpdRemoteIP
-  RESULT := sock.GetUpdRemoteIP
-}   
-PRI sendRegister(trn, encn, grp) 
+
+''
+''=======[ PRIvate Spin Methods ... ]=====================================================
+PRI SendRegister(trn, encn, grp)                        'send register request
+{{
+''SendRegister:     Send register request
+}}
   byte[@ipReg-2] := grp                           
   word[@nbNameReg] := trn  
   bytemove(@nbNameReg+13, encn, 32)
   sock.Send(@nbNameReg, constant(@enbNameReg - @nbNameReg))
    
-PRI sendResponse(name, response, size)
+PRI SendResponse(name, response, size)                  'answer query
+{{
+''SendResponse:     Answer query
+}}
   sock.RemoteIp(byte[_buffPtr], byte[_buffPtr+1], byte[_buffPtr+2], byte[_buffPtr+3])
-  bytemove(response, _buffPtr+8, 2)                     ' set trn
-  bytemove(response+13, name, 32)                       ' set name
+  bytemove(response, _buffPtr+8, 2)                     'set trn
+  bytemove(response+13, name, 32)                       'set name
   sock.Send(response, size)
   sock.RemoteIp($FF, $FF, $FF, $FF)  
                                        
-PRI waitForCountBytes(count)
+PRI WaitForCountBytes(count)                            'wait for count bytes on socket
+{{
+''WaitForCountBytes: Wait for count bytes on socket
+}}
   RESULT := sock.DataReady
-  if RESULT < count                                     ' If to less data
-    RESULT := sock.Available                            ' wait for more
-    if RESULT < count                                   ' still to less data ... 
-        DisconnectSocket                                ' error - reinit
+  if RESULT < count                                     'If to less data
+    RESULT := sock.Available                            'wait for more
+    if RESULT < count                                   'still to less data ... 
+        sock.Disconnect                                 'error - reinit
         ReInitSocket                                    
         RESULT := 0
       
-PRI FirstLevelEncode(dest, source, pad, suffix) | char, size
+PRI FirstLevelEncode(dest, source, pad, suffix) | char, size 'Encode the name
+{{
+''FirstLevelEncode: Encode Name
+}}
   size := strsize(source) <# 15  
-{
-  if ((size == 1) and (byte[source] == "*"))            
-    char := byte[source++] & $FF                        ' Encode "*"
+  repeat size                                           'Encode the name
+    char := byte[source++] & $FF
     byte[dest++] := (char >> 4) + $41
     byte[dest++] := (char & $0F) + $41    
-    repeat 14                                           ' Pad zeros 
-      byte[dest++] := $41
-      byte[dest++] := $41     
-  else
-}   
-    repeat size                                         ' Encode the name
-      char := byte[source++] & $FF
-      byte[dest++] := (char >> 4) + $41
-      byte[dest++] := (char & $0F) + $41    
-    repeat 15 - size                                    ' Pad spaces/zeros
-      byte[dest++] := (pad >> 4) + $41
-      byte[dest++] := (pad & $0F) + $41  
-  byte[dest++] := (suffix >> 4) + $41                   ' Add the suffix
+  repeat 15 - size                                      'Pad spaces/zeros
+    byte[dest++] := (pad >> 4) + $41
+    byte[dest++] := (pad & $0F) + $41  
+  byte[dest++] := (suffix >> 4) + $41                   'Add the suffix
   byte[dest++] := (suffix & $0F) + $41
 
-PRI FirstLevelDecode(dest, source)
+PRI FirstLevelDecode(dest, source)                      'Decode Name
+{{
+''FirstLevelDecode: Decode Name
+}}
   repeat 15
     byte[dest++] := ((byte[source++] - $41) << 4) + (byte[source++] - $41)
   byte[dest++] := "#"  
@@ -366,28 +408,38 @@ PRI FirstLevelDecode(dest, source)
   if (RESULT := byte[source++] - $11) > $39
     RESULT += 7     
   byte[dest++] := RESULT 
-  byte[dest++] := 0 'trminate string 
+  byte[dest++] := 0 'terminate string
    
-PRI CreateTransactionId(mask)
+PRI CreateTransactionId(mask)                           'Create Random TransactionId
+{{
+''CreateTransactionId: Create Random TransactionId
+}}
   RESULT := CNT
   ?RESULT
   RESULT &= mask
 
-CON
-{{
- ______________________________________________________________________________________________________________________________
-|                                                   TERMS OF USE: MIT License                                                  |                                                            
-|______________________________________________________________________________________________________________________________|
-|Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation    |     
-|files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,    |
-|modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software|
-|is furnished to do so, subject to the following conditions:                                                                   |
-|                                                                                                                              |
-|The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.|
-|                                                                                                                              |
-|THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE          |
-|WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR         |
-|COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,   |
-|ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                         |
- ------------------------------------------------------------------------------------------------------------------------------ 
-}}
+''
+''=======[ MIT License ]==================================================================
+CON                                                     'MIT License
+{{{
+ ______________________________________________________________________________________
+|                            TERMS OF USE: MIT License                                 |                                                            
+|______________________________________________________________________________________|
+|Permission is hereby granted, free of charge, to any person obtaining a copy of this  |
+|software and associated documentation files (the "Software"), to deal in the Software |
+|without restriction, including without limitation the rights to use, copy, modify,    |
+|merge, publish, distribute, sublicense, and/or sell copies of the Software, and to    |
+|permit persons to whom the Software is furnished to do so, subject to the following   |
+|conditions:                                                                           |
+|                                                                                      |
+|The above copyright notice and this permission notice shall be included in all copies |
+|or substantial portions of the Software.                                              |
+|                                                                                      |
+|THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,   |
+|INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A         |
+|PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT    |
+|HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF  |
+|CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE  |
+|OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                         |
+|______________________________________________________________________________________|
+}} 

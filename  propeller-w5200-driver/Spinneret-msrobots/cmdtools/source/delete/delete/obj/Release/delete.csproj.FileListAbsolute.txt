@@ -1,0 +1,5 @@
+C:\Projekte\delete\delete\bin\Release\delete.exe
+C:\Projekte\delete\delete\bin\Release\delete.pdb
+C:\Projekte\delete\delete\obj\Release\ResolveAssemblyReference.cache
+C:\Projekte\delete\delete\obj\Release\delete.exe
+C:\Projekte\delete\delete\obj\Release\delete.pdb
