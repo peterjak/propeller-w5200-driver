@@ -1,15 +1,24 @@
-'*********************************************************************************************
-{
- AUTHOR: Mike Gebhard
- COPYRIGHT: Parallax Inc.
- LAST MODIFIED: 8/12/2012
- VERSION 1.0
- LICENSE: MIT (see end of file)
-}
-CON
-  _clkmode = xtal1 + pll16x     
-  _xinfreq = 5_000_000
-
+'':::::::[ Spi5100CounterPasm ]:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+{{ 
+''
+''AUTHOR:           Mike Gebhard
+''COPYRIGHT:        Parallax Inc.
+''LAST MODIFIED:    10/04/2013
+''VERSION:          1.0
+''LICENSE:          MIT (see end of file)
+''
+''
+''DESCRIPTION:
+''                  SPI driver for wiznet W5100
+''
+''
+''MODIFICATIONS:
+'' 8/12/2012        original file 
+''10/04/2013        added minimal spindoc comments
+''                  Michael Sommer (MSrobots)
+}}
+''
+''=======[ Global DATa ]==================================================================
 DAT
   cog       byte  $0
   _cmd      long  $0
@@ -20,6 +29,8 @@ DAT
   _cs       long  $0
   _miso     long  $0
 
+''
+''=======[ PUBlic Spin Methods]===========================================================
 PUB Init(p_cs, p_sck, p_mosi, p_miso)
   Start(p_cs, p_sck, p_mosi, p_miso)
 
@@ -95,9 +106,8 @@ PUB Read(addr, numberOfBytes, dest_buffer_ptr) | _index, _data, _spi_word
     ' catch error
     return 0 
     
-
-
-
+''
+''=======[ Assembly Cog ]=================================================================
 DAT
                     org     0
 startSpi

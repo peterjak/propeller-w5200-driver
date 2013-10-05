@@ -1,0 +1,666 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<style type="text/css">
+	body {
+		background: #404066;
+		color: #000000;
+		font: 10pt verdana, geneva, lucida, 'lucida grande', arial, helvetica, sans-serif;
+		margin: 5px 10px 10px 10px;
+		padding: 0px;
+		overflow: hidden;
+	}
+	h1 {
+		color: darkblue;
+		font :bold 16pt verdana,geneva,lucida,'lucida grande',arial,helvetica,sans-serif;
+		margin-top: 0
+	}
+	.title {
+		text-align: center;
+	}
+	h2 {
+		color:darkblue;
+		font:bold 14pt verdana,geneva,lucida,'lucida grande',arial,helvetica,sans-serif
+	}
+	h3 {
+		color:darkblue;
+		font:bold 12pt verdana,geneva,lucida,'lucida grande',arial,helvetica,sans-serif
+	}
+	h4 {
+		color:#b73235;
+		font:bold 10pt verdana,geneva,lucida,'lucida grande',arial,helvetica,sans-serif
+	}
+	pre {
+		font: 10pt parallax,courier,monospaced;
+		line-height: 97%;
+	}	
+	.source {
+		margin-left: 20px;
+		border: 1px solid #ccc;
+		overflow: auto;
+		display: none;
+		background: #f8f8e8;
+		margin-top: 12pt;
+		width: 95%;
+		padding-top: 5px;
+		padding-left: 10px;
+		max-height: 600px;
+		letter-spacing: 0px;
+	}
+	var {
+		color: #000080;
+		font-style: normal;
+		font-weight: bold;
+		letter-spacing: -1px;
+	}
+	a {
+		font-weight: bold;
+		font-size: 6pt;
+		text-decoration: none;
+		color: #0000cc;
+	}
+	.toc1 {
+		font-size: 12pt;
+		font-weight: bold;
+		vertical-align: baseline;
+		text-align: center;
+		color: #d7d0ff;
+	}		
+	.toc2 {
+		font-size: 95%;
+		font-weight: bold;
+		vertical-align: baseline;
+		color: white;
+		text-decoration: none;
+	}		
+	.toc3 {
+		font-size: 90%;
+		font-weight: normal;
+		vertical-align: baseline;
+		margin-left: 10px;
+		color: white;
+		text-decoration: none;
+	}		
+	.toc4 {
+		font-size: 85%;
+		font-weight: normal;
+		font-style: italic;
+		vertical-align: baseline;
+		margin-left: 20px;
+		color: #d7d0ff;
+		text-decoration: none;
+	}
+	.tocgrp {
+		display: none
+	}
+  hr {
+  	border: 0;
+    color: #b73235;
+    background-color: #b73235;
+    height: 1px;
+  }
+	</style>
+	<script language="JavaScript">
+		window.onload = resize;
+		window.onresize = resize;
+		var show=0;
+		function ShowHide(divId) {
+			if (document.getElementById(divId).style.display!='block') {
+				document.getElementById(divId).style.display='block';
+				if (divId.substring(0, 3) == 'toc') {
+					window.location = '#lbl' + divId.substring(3);
+				}
+			} else {
+				document.getElementById(divId).style.display='none';
+			}
+		};
+    function resize() {
+      var myWidth = 0, myHeight = 0;
+      if(typeof(window.innerWidth) == 'number') {
+        //Non-IE
+        myWidth = window.innerWidth;
+        myHeight = window.innerHeight;
+      } else if(document.documentElement && (document.documentElement.clientWidth || document.documentElement.clientHeight)) {
+        //IE 6+ in 'standards compliant mode'
+        myWidth = document.documentElement.clientWidth;
+        myHeight = document.documentElement.clientHeight;
+      } else if(document.body && (document.body.clientWidth || document.body.clientHeight)) {
+        //IE 4 compatible
+        myWidth = document.body.clientWidth;
+        myHeight = document.body.clientHeight;
+      }
+      document.getElementById("text").style.height = (myHeight - 10) + "px";
+      document.getElementById("text").style.width = (Math.min(myWidth - 250, 800)) + "px";
+      document.getElementById("toc").style.height = (myHeight - 10) + "px";
+     }	
+    function selectall(source) { 
+	    var selection, range, doc, win; 
+	    if ( (doc = source.ownerDocument)
+	    	&& (win = doc.defaultView)
+	    	&& typeof win.getSelection != 'undefined'
+	    	&& typeof doc.createRange != 'undefined' 
+	    	&& (selection = window.getSelection())
+	    	&& typeof selection.removeAllRanges != 'undefined'
+	    ) { 
+	       range = doc.createRange(); 
+	       range.selectNode(source); 
+	       selection.removeAllRanges(); 
+	       selection.addRange(range); 
+	    } else if (document.body && typeof document.body.createTextRange != 'undefined' && (range = document.body.createTextRange())) { 
+	       range.moveToElementText(source); 
+	       range.select(); 
+	    } 
+		}
+  </script>
+</head>
+<body style = "margin: 0 0 0 0;">
+<div align=center>
+<table cellpadding=0 cols=2 border=0>
+	<tr><td valign="top">
+	<div id="toc" style= "width: 200px; height: 600px; overflow: auto; background-color: #222255; border-left: solid #ffffe0"><br/>
+		<div style="background-color:#222255; width: 100%; text-align: center">
+		<img src="data:image/gif;base64,
+			R0lGODlhrwBFALMAABAIPyIiVRwQYDUrcjQmSkwnSk9OW2wrQp1PYKgxMU1KiKCeqvv7++Tk58rJ
+			0G5niiwAAAAArwBFAAAI/gADCBxIsKDBgwgTKlzIsKHDhxAjSpxIsaLFixgzatzIsaPHjyAfEhhJ
+			cmSBkyhTqlzJsqXLlzBjypxJs2bJkRhL1tzJs6fPn0BhlqyoM6jRo0iTAiUpsajKA1CjSp1KtarV
+			q1izat3KtatXqCuZOnSK0mqCs2jTql3Ltq3bt3Djyp1L123VlDgbknwqta7fv4ADCx5sF2XehXtT
+			Rl2LoLHjx5AjS55MubLly5gza97c+OwBwwQQmywLNW3jB6hTq17NurXr17Bjy55Nu7Zt1QgSfD55
+			GOHok4vPIkitoLjx48iTK1/OvLnz59CjS59u/EHu3bwV/i4QfPgD4wPC/osfT768+fPo06tfz769
+			+/fhFVjXjT2079+lhX9XMF6A//8ABijggAQWaOCBCCao4IIMxnddfQnhl99w/IXH4IUYZqjhhhwK
+			6CB9ht1H2gH6VdjhiSimqGKDAyiQm24hHiRhiRauaOONOHb4IYgF2FfQjAlQaCEARBZppJEKHqkk
+			kggCAKCTOf4HJZQMUhngklYKsCNYPcpIAGlnfWchAQaUaeaZaGZ5JZlotmmmmk+SGYB/ABhAQJQA
+			yDkSnAUGYKeAfrppwJz+bbmbjwMBKeYAAhCwAAOQRiqppA08wGedDkyqaaSVXupoAwYQaYADC/DZ
+			YZ4LgLqAA6Em+UAD/6U+aUADm7IKpaHZ/fglcCQKOUCemTYg7LDEDstApwJiCmmxzAp7rKXJEpAp
+			A5YC8MCxpm6IKqQPPApqtnS+ykCsUo7qwLnoktqqli2+yCWiAo02oYnAUivomcFCW+60495rprf6
+			0iltpNVe2wC4GNbL7cDfGmgtrQvceWWeNxFA5H+4dvkjmAmIKXCmoWJZ5KgMOGDxx8dyK3KRjpZ8
+			sgAKq2wttitum7KlJDc84MPjviylowsELfQCD0jMroueHWrQrtzRiPK6BdZ5bKv1VkprwATWKSzV
+			DD+QacE074zwmgB/LWqwUEspbsRqzrypzhnDG8Cu89ZYb9o7EzA1kf5dD4x13lvzPW3RZs988M6o
+			EZqgzZaaDXPOafNsMpx5rjY4lXEvzWuYJsI8MN7Jehtq1/X+nazBo+cLQACFG9y2tA0YfeC2nQLg
+			+ONoTynu5A4XubaVmW/MHYkd8/czyCsT+ei4VVfrd/JulzowtYJTb3jbszIge9QtW2879fvuLbnP
+			Dv8eYPAEcewxyqQO7f6qkEY8PaxCQ9r++0PHP9K09Ad9NZGuS1YBaLU9sS2vf6kCX7loBars8a5J
+			5jtfu5KWq/RtrniMQtmmNiU/fm3wg5Sy0/I2CLbDXWmA2ptd90iYJa2N61EPnF32quWhCfIIXkzL
+			z/o8l6n74U9oq/4Llg+DZr8f5q9k0xpiAkvYNhQWME7LU+L/kmWAiFWRfFH7HZMKZcN3CW94QXpA
+			jXjIgJAlj3RHel7yxCUzI6kxgCckYNQAsLxqHel2slpAmdjWpOwdi1gPRF+8wDScMd4tW81T0/Mc
+			Nj3TvTFsT3Ji1ugYv7bhMVwQgyEWT9esBtiKi0i74RdLU8gMkhF0PwMYnBaZte59MkCPNGEk5Rit
+			OlLukuNz4CafVCc3+UyQcyOkGE15yFaqkkCsrGWkXgmgWGKPllBUWdbwKLmQ6TJbgWrTL7uoNILk
+			sFfDPF4ZKdcyZCHzkqmMX+AE5MwlEYCASGLcxXZ2u/FNyYEFuP/Uq5r1SmB+M4yG/NzrjlmgZDaz
+			jqPSWTNbNzU3iesBZ5qbLU31PWi5MIaPoxVGpeStdE1rXf4UZkCRF7pngeudCnySLWel0P888o/N
+			WhaxiCYzhxXumlTU6CZnJj+SkPRo7upmokRKTEdtFGapMl3oWopJ553riQFIlTU9CMJIEc2cDpPq
+			RVGZUZe18FrkItJPQ7q5UsLyiQIbG8U8RaU9tbKtFSNJ9uxEEr6NzXNbRSRO1ca8/7BunKAMagUH
+			WdZwRumwrYQnh+rFzKg50Eo8pdJfQcrNwQazsGNErGbp5ETobTFAUW2sw0ZFLjqNCmrWCmRlNTZU
+			zJpys5p1IdH+aMPVud01rdFq4TZD6UVvEhW2sM0Trao6qaMCF0BkBaNZj6vZ0Hr0uR5dgOKYW0Pe
+			xqi1yjUsdQ/rWSVtl0DhmQ+MLPvPjmX2u+hNb4FaNB8usZawYMSgeudLX+TKh4LkVZ/xFkQejPXH
+			v2P8L7v6Ix7kvnbABS4PeAMsYP8imME1Mg+L7ntDHOr3wAdaFboeIACvOcCTDuCwABTwYU9ymMTo
+			WgB/0CWsBQxgVSIeMaley2JPDsDDnlRxgBSwKhNryaMxlrED5HOuYZ04VZ5UgAA0nC4lK4i97gLN
+			KIm3QwQNoIfBks+x4OeAFmH5WFoeV6ZcXESiXXlc/1EAmDH+VmYxeovLACIxEp+l5hcey5QKEBaP
+			txy0Fc+5ATz+cBGdbGX24ve98NXhfhN05u9c7VpD9taLSxaeR9E00pSGmHyUPOY0r/k/EEONki09
+			6QYACNKMsrSaK4XqNOsZhqnpMKVvPMxJdxnDC5aPYHskt/JW+UBndlYDbizTSi0ZzbIOsf0gNoDh
+			QkwAnfbPqgktAGej2VtGBpClYQbpOjtrAXF+dbEnDe4rwbBBxdk1rzV3wV8bKNikUrLBephqZIP1
+			WiUjmpbiJx9GRXvEn/aPpr9z7HNRWtvj+lW3tywu/jhc3CEuTsH9gxo6nfvJhqZPfeQWgAvz92un
+			LpmcwW3/sO98rdWFil+L/F0yURtstozStMRV/ez/4Nvk41q1o6llaVTDEDw6bzhSS8bo+IjXvb2x
+			YHzdvd5/J1vWgJ70MondZTZTSs6cwjfBqn31bUsaYyOkdJ2nnmerHltS4A67i4fugEJD+dBiMYjH
+			F9QtavOYwzfWcd7NrCW+23xoYuyW0Nw8NHkDvkV6r3uABC/Gvg8+gzzme+SF5mTG41nf642Prg+9
+			bt+0u0LtMXCAkesh0efotQ0u1IDOi2sMF5iL6CkOatASFSlHqCycAz18ds/73vv+9/Cpjng1DhqO
+			Y5fKoqaO8pfP/OY7f/mpeVHSNm587BZAOJzJvva3z/3ugntf+sQvPkPwQ5jym//86A+MVPCS9Pt8
+			Mzjpj7/8518Xqqgk7qJh2oi+wv/++///APh/YYF/45cYKxGACJiACriAd+ESBDgWBqgUEjiBFHgU
+			N0EUZFGBGriBHFh8DzgRcRWCIjiCJFiCJniCKJiCKoiCIdGCLviCMBiDMjiDNAiDAQEAOw==
+		">
+		</div>
+		<div style="font: bold 11pt verdana,geneva,lucida,'lucida grande',arial,helvetica,sans-serif;color:white; text-align: center; margin-bottom: 10px; margin-top: 10px">SPI5100COUNTERPASM</div>
+		<p class = "toc1">Table of Contents</p>
+		<div style = "text-align: left; margin-left: 10px;">
+			<a href= "#lbl1" class = "toc2">Preface</a><br/>
+<a href= "#lbl2" class = "toc2">Global DATa </a><br/>
+<a href= "#lbl4" class = "toc2">PUBlic Spin Methods</a><br/>
+<a href= "#lbl5" class = "toc4">Init</a><br/>
+<a href= "#lbl7" class = "toc4">Start</a><br/>
+<a href= "#lbl9" class = "toc4">Stop</a><br/>
+<a href= "#lbl11" class = "toc4">ReStart</a><br/>
+<a href= "#lbl13" class = "toc4">GetCogId</a><br/>
+<a href= "#lbl15" class = "toc4">Write</a><br/>
+<a href= "#lbl17" class = "toc4">Read</a><br/>
+<a href= "#lbl19" class = "toc2">Assembly Cog </a><br/>
+<a href= "#lbl21" class = "toc2">MIT License </a><br/>
+
+		</div>
+	</div>
+	</td>
+	<td>
+		<div id="text" style= "text-align: left; padding-left: 20px; padding-right: 20px; width: 800px; height: 600px; background-color: #ffffe0; overflow: auto">
+			<h1 id = "lbl1" class = "title">Spi5100CounterPasm </h1>
+ 
+<br /><br />
+AUTHOR:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Mike Gebhard<br />
+COPYRIGHT:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Parallax Inc.<br />
+LAST MODIFIED:&nbsp;&nbsp;&nbsp;&nbsp;10/04/2013<br />
+VERSION:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1.0<br />
+LICENSE:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MIT (see end of file)<br /><br />
+DESCRIPTION:<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SPI driver for wiznet W5100<br /><br />
+MODIFICATIONS:<br />
+ 8/12/2012&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;original file <br />
+10/04/2013&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;added minimal spindoc comments<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Michael Sommer (MSrobots)<br />
+
+<br />
+<h2 id = "lbl2">Global DATa </h2>
+<br /><a onclick ="javascript:ShowHide('lbl3')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl3>
+  cog       <var>byte</var>  $0
+  _cmd      <var>long</var>  $0
+  _iobuff   <var>long</var>  $0
+  _len      <var>long</var>  $0
+  _mosi     <var>long</var>  $0
+  _sck      <var>long</var>  $0
+  _cs       <var>long</var>  $0
+  _miso     <var>long</var>  $0
+
+</pre>
+<hr /><br />
+<h2 id = "lbl4">PUBlic Spin Methods</h2>
+<hr /><h4 id = "lbl5">Init(p_cs, p_sck, p_mosi, p_miso)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl6')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl6><var>PUB</var> Init(p_cs, p_sck, p_mosi, p_miso)
+  Start(p_cs, p_sck, p_mosi, p_miso)
+
+</pre>
+<hr /><h4 id = "lbl7">Start(p_cs, p_sck, p_mosi, p_miso)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl8')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl8><var>PUB</var> Start(p_cs, p_sck, p_mosi, p_miso)
+
+  'Init Parameters
+  _cmd    :=  0
+  
+  'Pin assignments
+  _sck  :=  p_sck 
+  _mosi :=  p_mosi
+  _miso :=  p_miso  
+  _cs   :=  p_cs
+
+  cog := <var>cognew</var>(@startSpi, @_cmd) + 1
+
+</pre>
+<hr /><h4 id = "lbl9">Stop
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl10')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl10><var>PUB</var> Stop
+  <var>if</var> cog
+    <var>cogstop</var>(Cog~ - 1)
+
+</pre>
+<hr /><h4 id = "lbl11">ReStart
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl12')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl12><var>PUB</var> ReStart
+  <var>ifnot</var>(cog)
+    cog := <var>cognew</var>(@startSpi, @_cmd) + 1
+
+</pre>
+<hr /><h4 id = "lbl13">GetCogId
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl14')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl14><var>PUB</var> GetCogId
+  <var>return</var> cog-1
+
+</pre>
+<hr /><h4 id = "lbl15">Write(addr, numberOfBytes, source)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl16')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl16><var>PUB</var> Write(addr, numberOfBytes, source)
+
+  'ReStart  
+
+  ' validate
+  <var>if</var> (numberOfBytes =&gt; 1)
+
+    'wait for the command to complete
+    <var>repeat</var> <var>until</var> _cmd == 0
+
+    _iobuff := source
+    _len := numberOfBytes
+
+    _cmd := ($F0 &lt;&lt; 24) + (addr &lt;&lt; 8) + <var>byte</var>[source]
+
+    <var>repeat</var> <var>until</var> _cmd == 0
+
+    ' return bytes written
+    <var>return</var>( numberOfBytes )
+
+  <var>else</var>
+    ' catch error
+    <var>return</var> 0 
+
+</pre>
+<hr /><h4 id = "lbl17">Read(addr, numberOfBytes, dest_buffer_ptr)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl18')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl18><var>PUB</var> Read(addr, numberOfBytes, dest_buffer_ptr) | _index, _data, _spi_word
+
+  'ReStart
+    
+  ' test for anything to read?
+  <var>if</var> (numberOfBytes =&gt; 1)
+
+    <var>repeat</var> <var>until</var> _cmd == 0
+    
+    _iobuff := dest_buffer_ptr
+    _len := numberOfBytes
+    
+    _cmd := ($0F &lt;&lt; 24) + (addr &lt;&lt; 8) + 0
+    
+    <var>repeat</var> <var>until</var> _cmd == 0 
+
+    ' return bytes read
+    <var>return</var>( numberOfBytes )
+  <var>else</var>
+    ' catch error
+    <var>return</var> 0 
+
+</pre>
+<hr /><br />
+<h2 id = "lbl19">Assembly Cog </h2>
+<br /><a onclick ="javascript:ShowHide('lbl20')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl20>
+                    <var>org</var>     0
+startSpi
+                    <var>mov</var>     t1,     <var>par</var>           'Command Read/Write
+                    <var>add</var>     t1,     #12            'Point SPI parameters
+'--------------------------------------------------------------------------
+'Initialize SPI pin masks and counter configurations 
+'-------------------------------------------------------------------------- 
+                    <var>rdlong</var>  t2,     t1            'Master out slave in
+                    <var>mov</var>     cntout, nco           'Save counter output pin
+                    <var>add</var>     cntout, t2
+                    <var>mov</var>     mosi,   #1
+                    <var>shl</var>     mosi,   t2
+
+                    <var>mov</var>     <var>frqb</var>,  zero
+                    <var>mov</var>     <var>ctrb</var>,  cntout
+                     
+                    <var>add</var>     t1,     #4            'Clock
+                    <var>rdlong</var>  t2,     t1
+                    <var>mov</var>     cntclk, nco           'Save counter clock pin
+                    <var>add</var>     cntclk, t2
+                    <var>mov</var>     sck,    #1
+                    <var>shl</var>     sck,    t2
+                     
+                    <var>add</var>     t1,     #4            'Chip Select
+                    <var>rdlong</var>  t2,     t1
+                    <var>mov</var>     cs,     #1
+                    <var>shl</var>     cs,     t2
+                               
+                    <var>add</var>     t1,     #4            'Master in slave out
+                    <var>rdlong</var>  t2,     t1
+
+                    <var>mov</var>     miso,   #1
+                    <var>shl</var>     miso,   t2
+
+                    <var>mov</var>     spi,    mosi          'SPI bus mask
+                    <var>or</var>      spi,    sck
+                    <var>or</var>      spi,    cs
+
+                    <var>mov</var>     idata,  zero          'Init
+                    <var>mov</var>     odata,  zero 
+'--------------------------------------------------------------------------
+'Initialize the SPI bus
+'--------------------------------------------------------------------------
+:initBus            <var>andn</var>    <var>outa</var>,   mosi
+                    <var>andn</var>    <var>outa</var>,   sck
+                    <var>or</var>      <var>outa</var>,   cs
+                    <var>or</var>      <var>dira</var>,   spi           'SPI bus output
+                    <var>andn</var>    <var>dira</var>,   miso          'Set master input                
+'--------------------------------------------------------------------------
+ 'Do we have a command to process? 
+'--------------------------------------------------------------------------
+:getCmd             <var>mov</var>     t1,     <var>par</var>
+                    <var>rdlong</var>  cmd,    t1
+                    testn   cmd,    zero      <var>wz</var>
+              <var>if_z</var>  <var>jmp</var>     #:getCmd              
+'--------------------------------------------------------------------------
+'Get the IO buffer pointer and unpack the command; op code and length
+'--------------------------------------------------------------------------
+                    <var>add</var>     t1,     #4            'Buffer pointer       
+                    <var>rdlong</var>  pbuff,  t1
+
+                    <var>add</var>     t1,     #4            'Number of bytes 
+                    <var>rdlong</var>  len,    t1            'to read write
+                    
+                    <var>mov</var>     op,     cmd           'Read =  $0000_0000
+                    <var>and</var>     op,     wmask         'Write = $F000_0000
+
+                    <var>mov</var>     reg,   cmd           'Get the register address
+                    <var>and</var>     reg,   addrmask
+                    <var>shr</var>     reg,   #8
+
+'--------------------------------------------------------------------------
+' Execute Read or Write
+'--------------------------------------------------------------------------
+                    <var>cmp</var>     op,     zero      <var>wz</var>   'Jump to read if 0
+          <var>if_z</var>      <var>jmp</var>     #:read                 'Otherwise write
+                    <var>jmp</var>     #:write                               
+                    
+'--------------------------------------------------------------------------
+' Read
+'--------------------------------------------------------------------------
+
+:read
+                    <var>andn</var>    <var>outa</var>,   sck           'Clock low
+                    <var>mov</var>     <var>frqa</var>,   frqx20        '20 Mhz
+                    <var>mov</var>     <var>phsb</var>,   cmd           'Load the command
+                    
+                    'mov     idata,  #0
+                    <var>mov</var>     t1,     reg
+                    <var>shl</var>     t1,     #8
+                    <var>and</var>     cmd,    opmask        'Clear address and data
+                    <var>or</var>      cmd,    t1            'next register to read
+                    <var>mov</var>     <var>phsb</var>,   cmd           'Load the command 
+                    <var>andn</var>    <var>outa</var>,   cs            'CS active low
+                    
+                    <var>mov</var>     <var>ctra</var>,   cntclk        'Start clocking
+                    <var>rol</var>     <var>phsb</var>,   #1            'Bits 31 - 24
+                    <var>rol</var>     <var>phsb</var>,   #1            'Bit 31 was ready to go 
+                    <var>rol</var>     <var>phsb</var>,   #1            'that's why we have 7 ROLs
+                    <var>rol</var>     <var>phsb</var>,   #1            'to start 
+                    <var>rol</var>     <var>phsb</var>,   #1
+                    <var>rol</var>     <var>phsb</var>,   #1
+                    <var>rol</var>     <var>phsb</var>,   #1
+                    
+                    <var>rol</var>     <var>phsb</var>,   #1            'Bits 23 - 16
+                    <var>rol</var>     <var>phsb</var>,   #1             
+                    <var>rol</var>     <var>phsb</var>,   #1
+                    <var>rol</var>     <var>phsb</var>,   #1
+                    <var>rol</var>     <var>phsb</var>,   #1
+                    <var>rol</var>     <var>phsb</var>,   #1
+                    <var>rol</var>     <var>phsb</var>,   #1
+                    <var>rol</var>     <var>phsb</var>,   #1
+                    
+                    <var>rol</var>     <var>phsb</var>,   #1            'Bits 15 - 8
+                    <var>rol</var>     <var>phsb</var>,   #1            
+                    <var>rol</var>     <var>phsb</var>,   #1
+                    <var>rol</var>     <var>phsb</var>,   #1
+                    <var>rol</var>     <var>phsb</var>,   #1
+                    <var>rol</var>     <var>phsb</var>,   #1
+                    <var>rol</var>     <var>phsb</var>,   #1
+                    <var>rol</var>     <var>phsb</var>,   #1
+                    <var>mov</var>     <var>ctra</var>,   zero          'Stop clocking
+                    
+                    <var>andn</var>    <var>outa</var>,  mosi           'Set mosi low   
+                    <var>mov</var>     <var>frqa</var>,  frqx10         '10Mhz
+
+                    <var>mov</var>     <var>phsa</var>,  phsx10         'Offset initial clock pulse
+                    <var>nop</var>
+                    <var>mov</var>     <var>ctra</var>,   cntclk        'Start clocking
+                    <var>test</var>    miso,   <var>ina</var>     <var>wc</var>    'Read 
+                    <var>rcl</var>     idata,  #1            'Rotate C to LSB
+                    <var>test</var>    miso,   <var>ina</var>     <var>wc</var>    
+                    <var>rcl</var>     idata,  #1
+                    <var>test</var>    miso,   <var>ina</var>     <var>wc</var>    
+                    <var>rcl</var>     idata,  #1
+                    <var>test</var>    miso,   <var>ina</var>     <var>wc</var>    
+                    <var>rcl</var>     idata,  #1
+                    <var>test</var>    miso,   <var>ina</var>     <var>wc</var>
+                    <var>rcl</var>     idata,  #1
+                    <var>test</var>    miso,   <var>ina</var>     <var>wc</var>    
+                    <var>rcl</var>     idata,  #1
+                    <var>test</var>    miso,   <var>ina</var>     <var>wc</var>    
+                    <var>rcl</var>     idata,  #1
+                    <var>test</var>    miso,   <var>ina</var>     <var>wc</var>
+                    <var>mov</var>     <var>ctra</var>,  zero           'Stop clocking 
+                    <var>rcl</var>     idata,  #1
+                    <var>or</var>      <var>outa</var>,   cs            'Deselect
+                    
+                    <var>and</var>     idata,  #$FF          'trim 
+                    <var>wrbyte</var>  idata,  pbuff         'Write byte to HUB
+                    <var>add</var>     pbuff,  #1            'Increment buffer pointer
+                    <var>add</var>     reg,    #1            '+1 register address 
+                    <var>djnz</var>    len,    #:read        'Get next byte
+
+                    <var>or</var>      <var>outa</var>,  sck            'Set the clock high
+                    <var>jmp</var>     #:done 
+'--------------------------------------------------------------------------
+' Write
+'--------------------------------------------------------------------------
+:write
+                    <var>andn</var>    <var>outa</var>,   sck           'Clock low
+                    <var>mov</var>     <var>frqa</var>,   frqx20        '20 Mhz
+:writeNext
+                    <var>and</var>     cmd,   opmask         'Clear address and data
+                    <var>mov</var>     t1,    reg            'Set destination register
+                    <var>shl</var>     t1,    #8             '
+                    <var>or</var>      cmd,   t1             '
+                    <var>rdbyte</var>  t1,    pbuff          'Read the next byte from the hub 
+                    <var>or</var>      cmd,   t1             'Insert the data
+                    
+                    <var>mov</var>     <var>phsb</var>,   cmd           'Load the command
+                    <var>andn</var>    <var>outa</var>,   cs            'CS active low                    
+
+                    <var>mov</var>     <var>ctra</var>,   cntclk        'Start clocking
+                    <var>rol</var>     <var>phsb</var>,   #1            'Bits 31 - 24
+                    <var>rol</var>     <var>phsb</var>,   #1            'Bit 31 was ready to go 
+                    <var>rol</var>     <var>phsb</var>,   #1            'that's why we have 7 ROLs
+                    <var>rol</var>     <var>phsb</var>,   #1            'to start 
+                    <var>rol</var>     <var>phsb</var>,   #1
+                    <var>rol</var>     <var>phsb</var>,   #1
+                    <var>rol</var>     <var>phsb</var>,   #1
+                    
+                    <var>rol</var>     <var>phsb</var>,   #1            'Bits 23 - 16
+                    <var>rol</var>     <var>phsb</var>,   #1             
+                    <var>rol</var>     <var>phsb</var>,   #1
+                    <var>rol</var>     <var>phsb</var>,   #1
+                    <var>rol</var>     <var>phsb</var>,   #1
+                    <var>rol</var>     <var>phsb</var>,   #1
+                    <var>rol</var>     <var>phsb</var>,   #1
+                    <var>rol</var>     <var>phsb</var>,   #1
+                    
+                    <var>rol</var>     <var>phsb</var>,   #1            'Bits 15 - 8
+                    <var>rol</var>     <var>phsb</var>,   #1            
+                    <var>rol</var>     <var>phsb</var>,   #1
+                    <var>rol</var>     <var>phsb</var>,   #1
+                    <var>rol</var>     <var>phsb</var>,   #1
+                    <var>rol</var>     <var>phsb</var>,   #1
+                    <var>rol</var>     <var>phsb</var>,   #1
+                    <var>rol</var>     <var>phsb</var>,   #1
+                    
+                    <var>rol</var>     <var>phsb</var>,   #1           'Bits 7 - 0
+                    <var>rol</var>     <var>phsb</var>,   #1            
+                    <var>rol</var>     <var>phsb</var>,   #1
+                    <var>rol</var>     <var>phsb</var>,   #1
+                    <var>rol</var>     <var>phsb</var>,   #1
+                    <var>rol</var>     <var>phsb</var>,   #1
+                    <var>rol</var>     <var>phsb</var>,   #1
+                    <var>rol</var>     <var>phsb</var>,   #1
+                    <var>mov</var>     <var>ctra</var>,   zero          'Stop clocking
+                    <var>or</var>      <var>outa</var>,  cs             'Deselect
+
+                    <var>add</var>     pbuff, #1             '+1 HUB pointer
+                    <var>add</var>     reg ,  #1             '+1 register address
+                    <var>djnz</var>    len,   #:writeNext    'Process next byte
+                    <var>or</var>      <var>outa</var>,  sck            'Set the clock high
+                    
+'--------------------------------------------------------------------------
+'Done - return
+'--------------------------------------------------------------------------
+:done               <var>mov</var>     t1,     <var>par</var>
+                    <var>mov</var>     cmd,    #0
+                    <var>wrlong</var>  cmd,    t1
+                    <var>mov</var>     <var>phsb</var>,   zero 'Clear phsb line
+                    <var>jmp</var>     #:getCmd
+
+'
+' Initialized data
+'
+zero                <var>long</var>    $0000_0000
+
+wmask               <var>long</var>    $F000_0000
+opmask              <var>long</var>    $FF00_0000
+'dmask               long    $0000_00FF
+addrmask            <var>long</var>    $00FF_FF00
+'clrdata             long    $FFFF_FF00 
+
+frqx20              <var>long</var>    $4000_0000
+phsx20              <var>long</var>    $5000_0000
+frqx10              <var>long</var>    $2000_0000
+phsx10              <var>long</var>    $6000_0000
+nco                 <var>long</var>    %00100_000 &lt;&lt; 23
+'
+' Uninitialized data
+'
+pbuff               <var>res</var>     1
+reg                 <var>res</var>     1    
+idata               <var>res</var>     1
+odata               <var>res</var>     1
+cmd                 <var>res</var>     1
+op                  <var>res</var>     1 
+len                 <var>res</var>     1
+'------[SPI Buss ]------------------- 
+mosi                <var>res</var>     1 
+sck                 <var>res</var>     1 
+cs                  <var>res</var>     1 
+miso                <var>res</var>     1
+spi                 <var>res</var>     1
+cntclk              <var>res</var>     1
+cntout              <var>res</var>     1
+'------[Temp Vars]-------------------
+t1                  <var>res</var>     1
+t2                  <var>res</var>     1
+                    <var>fit</var>
+
+</pre>
+<hr /><br />
+<h2 id = "lbl21">MIT License </h2>
+<br /><a onclick ="javascript:ShowHide('lbl22')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl22>                                                    'MIT License
+
+</pre>
+<hr /><pre>
+ ______________________________________________________________________________________
+|                            TERMS OF USE: MIT License                                 |                                                            
+|______________________________________________________________________________________|
+|Permission is hereby granted, free of charge, to any person obtaining a copy of this  |
+|software and associated documentation files (the "Software"), to deal in the Software |
+|without restriction, including without limitation the rights to use, copy, modify,    |
+|merge, publish, distribute, sublicense, and/or sell copies of the Software, and to    |
+|permit persons to whom the Software is furnished to do so, subject to the following   |
+|conditions:                                                                           |
+|                                                                                      |
+|The above copyright notice and this permission notice shall be included in all copies |
+|or substantial portions of the Software.                                              |
+|                                                                                      |
+|THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,   |
+|INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A         |
+|PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT    |
+|HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF  |
+|CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE  |
+|OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                         |
+|______________________________________________________________________________________|
+</pre>
+<br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br />
+		</div>
+	</td></tr>
+</table>
+</div>
+</body>
+</html>	

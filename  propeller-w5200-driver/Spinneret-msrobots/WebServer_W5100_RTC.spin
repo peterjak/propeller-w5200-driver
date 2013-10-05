@@ -27,6 +27,7 @@
 ''                  did some optimisation for size ... running out of space ...
 '' 9/30/2013        replaced PST by fullDuplexSerial4port
 ''10/04/2013        added spindoc comments
+''                  replaced SNTP Simple Network Time Protocol v2.01.spin by Sntp.spin
 ''                  Michael Sommer (MSrobots)
 }}
 CON                                                     
@@ -243,8 +244,8 @@ OBJ
   sock[SOCKETS]     : "Socket"
   dhcp              : "Dhcp"
   netbios           : "NetBios"
+  sntp              : "Sntp" 
   req               : "HttpHeader"
-  sntp              : "SNTP Simple Network Time Protocol v2.01"
 
 ''
 ''=======[ PUBlic Spin Methods]===========================================================

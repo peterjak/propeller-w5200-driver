@@ -1,4 +1,4 @@
-'':::::::[ SNTP Simple Network Time Protocol v2.01 ]::::::::::::::::::::::::::::::::::::::
+'':::::::[ Sntp ]:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 {{
 ''******************************************************************
 ''* SNTP Simple Network Time Protocol                       v2.01  *
@@ -22,7 +22,8 @@
 ''v2.01   02-02-2013              - Logic order error with previous bug fix
 ''
 ''        08-31-2013              - corrected day of week - MSrobots
-''        09-26-2013              - commented out unused methods - MSrobots
+''        09-26-2013              - REMOVED unused methods - MSrobots
+''        10/04/2013              - added minimal spindoc comments - MSrobots  
 ''        
 ''                           1                   2                   3
 ''       0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9  0  1
@@ -65,17 +66,6 @@
 ''=======[ PUBlic Spin Methods]===========================================================
 PUB CreateUDPtimeheader(BufferAddress)
   '---------------------------------------------------------------------
-  '                     UDP IP Address - 4 Bytes 
-  '---------------------------------------------------------------------
-    'BYTEMOVE(BufferAddress,IPAddr,4)
-  '---------------------------------------------------------------------
-  '                       UDP Header - 4 Bytes 
-  '---------------------------------------------------------------------
-    'byte[BufferAddress][4] := 0
-    'byte[BufferAddress][5] := 123 '<- Port Address 
-    'byte[BufferAddress][6] := 0 
-    'byte[BufferAddress][7] := 48  '<- Header + Packet
-  '---------------------------------------------------------------------
   '                       UDP Packet - 44 Bytes
   '---------------------------------------------------------------------
     byte[BufferAddress][0] := %11_100_011    'leap,version, and mode
@@ -90,161 +80,8 @@ PUB CreateUDPtimeheader(BufferAddress)
 
     bytemove(BufferAddress+8,string("LOCL"),4) 'ref-id ; four-character ASCII string
 
-    bytefill(BufferAddress+12,0,32)           '(ref, originate, receive, transmit) time 
-  
-{
-leap           = %11           ; alarm condition (clock not synchronized) 
-version        = %011 or %100  ; Version 3 or 4
-Mode           = %011          ; Client        
-stratum        = %00000000     ; unspecified
-Poll           = %00000000     ; = 2^n seconds (maximum interval between successive messages)
-precision      = %10010100     ; -20 (8-bit signed integer)
-rootdelay      = 0             ; 32 bit value
-rootdispersion = 0             ; 32 bit value
-ref id         = "LOCL"        ; four-character ASCII string
-ref time       = 0             ; 64 bit value
-originate time = 0             ; 64 bit value   
-receive time   = 0             ; 64 bit value
-transmit time  = 0             ; 64 bit value
-}     
-
-{
-PUB GetMode(BufferAddress)
-    result := byte[BufferAddress][8] & %00000111
-    '0 - reserved
-    '1 - symmetric active
-    '2 - symmetric passive
-    '3 - client
-    '4 - server
-    '5 - broadcast
-    '6 - reserved for NTP control message
-    '7 - reserved for private use
-
-PUB GetVersion(BufferAddress)    
-    result := (byte[BufferAddress][8] & %00111000)>>3
-    '3 - Version 3 (IPv4 only)
-    '4 - Version 4 (IPv4, IPv6 and OSI)
-
-PUB GetLI(BufferAddress)
-    result := (byte[BufferAddress][8] & %11000000)>>6
-    '0 - No warning
-    '1 - last minute has 61 seconds
-    '2 - last minute has 59 seconds
-    '3 - alarm condition (clock not synchronized)   
-
-PUB GetStratum(BufferAddress)
-    result := byte[BufferAddress][9]
-    '0      - unspecified or unavailable
-    '1      - primary reference (e.g., radio clock)
-    '2-15   - secondary reference (via NTP or SNTP) 
-    '16-255 - reserved
-
-PUB GetPoll(BufferAddress)
-    result := byte[BufferAddress][10]
-    'This is an eight-bit signed integer indicating the
-    'maximum interval between successive messages, in seconds
-    'to the nearest power of two. The values that can appear
-    'in this field presently range from 4 (16 s) to 14 (16384 s);
-    'however, most applications use only the sub-range 6 (64 s)
-    'to 10 (1024 s). 
-
-PUB GetPrecision(BufferAddress)
-    result := byte[BufferAddress][10]
-    'This is an eight-bit signed integer indicating the
-    'precision of the local clock, in seconds to the nearest
-    'power of two. The values that normally appear in this
-    'field range from -6 for mains-frequency clocks to -20 for
-    'microsecond clocks found in some workstations.
-
-PUB GetRootDelay(BufferAddress)|Temp1
-    Temp1 := byte[BufferAddress][12]<<24+byte[BufferAddress][13]<<16
-    Temp1 += byte[BufferAddress][14]<<8 +byte[BufferAddress][15]
-    result  := Temp1
-    'This is a 32-bit signed fixed-point number indicating the
-    'total roundtrip delay to the primary reference source, in
-    'seconds with fraction point between bits 15 and 16. Note
-    'that this variable can take on both positive and negative
-    'values, depending on the relative time and frequency offsets.
-    'The values that normally appear in this field range from
-    'negative values of a few milliseconds to positive values of
-    'several hundred milliseconds.
-
-PUB GetRootDispersion(BufferAddress)|Temp1
-    Temp1 := byte[BufferAddress][16]<<24+byte[BufferAddress][17]<<16
-    Temp1 += byte[BufferAddress][18]<<8 +byte[BufferAddress][19]
-    result  := Temp1
-    'This is a 32-bit unsigned fixed-point number indicating the
-    'nominal error relative to the primary reference source, in
-    'seconds with fraction point between bits 15 and 16. The values
-    'that normally appear in this field range from 0 to several
-    'hundred milliseconds.          
-
-PUB GetReferenceIdentifier(BufferAddress,FillAddress)
-'     Calling example:          
-'           PST.str(GetReferenceIdentifier(@Buffer,string("----"))
-'
-'           dashes get replaced with 4-Character Buffer contents
-'
-
-    bytemove(FillAddress,BufferAddress+20,4)
-    result := FillAddress
-'          Reference Identifier return codes
-'      
-'          Code     External Reference Source
-'          -----------------------------------------------------------
-'          LOCL     uncalibrated local clock used as a primary reference for
-'                   a subnet without external means of synchronization
-'          PPS      atomic clock or other pulse-per-second source
-'                   individually calibrated to national standards
-'          ACTS     NIST dialup modem service
-'          USNO     USNO modem service
-'          PTB      PTB (Germany) modem service
-'          TDF      Allouis (France) Radio 164 kHz
-'          DCF      Mainflingen (Germany) Radio 77.5 kHz
-'          MSF      Rugby (UK) Radio 60 kHz
-'          WWV      Ft. Collins (US) Radio 2.5, 5, 10, 15, 20 MHz
-'          WWVB     Boulder (US) Radio 60 kHz
-'          WWVH     Kaui Hawaii (US) Radio 2.5, 5, 10, 15 MHz
-'          CHU      Ottawa (Canada) Radio 3330, 7335, 14670 kHz
-'          LORC     LORAN-C radionavigation system
-'          OMEG     OMEGA radionavigation system
-'          GPS      Global Positioning Service
-'          GOES     Geostationary Orbit Environment Satellite
-           
-
-PUB  GetReferenceTimestamp(Offset,BufferAddress,Long1,Long2)|Temp1
-     Temp1 := byte[BufferAddress][24]<<24+byte[BufferAddress][25]<<16
-     Temp1 += byte[BufferAddress][26]<<8 +byte[BufferAddress][27]
-     long[Long1]:=Temp1
-     Temp1 := byte[BufferAddress][28]<<24+byte[BufferAddress][29]<<16
-     Temp1 += byte[BufferAddress][30]<<8 +byte[BufferAddress][31]
-     long[Long2]:=Temp1     
-     'This is the time at which the local clock was
-     'last set or corrected, in 64-bit timestamp format.
-     HumanTime(Offset,Long1)
-
-PUB  GetOriginateTimestamp(Offset,BufferAddress,Long1,Long2)|Temp1
-     Temp1 := byte[BufferAddress][32]<<24+byte[BufferAddress][33]<<16
-     Temp1 += byte[BufferAddress][34]<<8 +byte[BufferAddress][35]
-     long[Long1]:=Temp1
-     Temp1 := byte[BufferAddress][36]<<24+byte[BufferAddress][37]<<16
-     Temp1 += byte[BufferAddress][38]<<8 +byte[BufferAddress][39]
-     long[Long2]:=Temp1     
-     'This is the time at which the request departed the
-     'client for the server, in 64-bit timestamp format.
-     HumanTime(Offset,Long1)
-
-PUB  GetReceiveTimestamp(Offset,BufferAddress,Long1,Long2)|Temp1
-     Temp1 := byte[BufferAddress][40]<<24+byte[BufferAddress][41]<<16
-     Temp1 += byte[BufferAddress][42]<<8 +byte[BufferAddress][43]
-     long[Long1]:=Temp1
-     Temp1 := byte[BufferAddress][44]<<24+byte[BufferAddress][45]<<16
-     Temp1 += byte[BufferAddress][46]<<8 +byte[BufferAddress][47]
-     long[Long2]:=Temp1     
-     'This is the time at which the request arrived at
-     'the server, in 64-bit timestamp format.
-     HumanTime(Offset,Long1)     
-}
+    bytefill(BufferAddress+12,0,32)           '(ref, originate, receive, transmit) time
+    
 PUB  GetTransmitTimestamp(Offset,BufferAddress,Long1,Long2)|Temp1
      Temp1 := byte[BufferAddress][48]<<24+byte[BufferAddress][49]<<16
      Temp1 += byte[BufferAddress][50]<<8 +byte[BufferAddress][51]
@@ -343,4 +180,4 @@ CON                                                     'MIT License
 |CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE  |
 |OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                         |
 |______________________________________________________________________________________|
-}} 
+}}
