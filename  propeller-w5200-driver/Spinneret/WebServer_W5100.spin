@@ -75,6 +75,9 @@ DAT
   pinDir        byte  $30, $30, $30, "</dir>", CR, LF,                               {
 }                     "</root>", 0
 
+  xmlSint       byte  "<root>", CR, LF, "  <sint>" 
+  xsint         byte  "00000</sint>", CR, LF, "</root>", 0
+  
   xmlTime       byte  "<root>", CR, LF, "  <time>" 
   xtime         byte  "00/00/0000 00:00:00</time>", CR, LF, "</root>", 0
 
@@ -332,7 +335,7 @@ PRI BuildAndSendHeader(id, contentLength, ext) | dest, src
 PRI GetExtension(fn)  
   return fn + (strsize(fn) - 3)
 
-PRI RenderDynamic(id)
+PRI RenderDynamic(id) | value
 
   'Process pinstate
   if(strcomp(req.GetFileName, string("pinstate.xml")))
@@ -353,7 +356,31 @@ PRI RenderDynamic(id)
     sock[id].Send(@xsltPinState, strsize(@xsltPinState))
     return true
 
+  if(strcomp(req.GetFileName, string("sint.xml")))
+    value := -123
+    WriteInt(value)
+    BuildAndSendHeader(id, -1, string("xml"))
+    sock[id].Send(@xmlSint, strsize(@xmlSint))
+    return true
+
   return false
+
+PRI WriteInt(theInt) | ptr, len
+  'Clear the element value
+  bytefill(@xsint, "0", 5)
+
+  'Integer to string and get the length  
+  ptr :=  Dec(theInt)
+  len := strsize(ptr)
+
+  'Write the element value
+  'Add a "-" if the number is negative 
+  if(theInt < 0 )
+    xsint[0] := "-"
+    bytemove(@xsint+1 + (4-len), ptr, len)
+  else
+    bytemove(@xsint + (5-len), ptr, len)
+   
 
 PRI BuildPinStateXml(strpin, strvalue) | pin, value, state, dir
   pin := StrToBase(strpin, 10)
@@ -862,11 +889,11 @@ Note: This source came from the Parallax Serial Termianl library
 
   repeat 10                                                                     'Loop for 10 digits
     if value => i
-      workspace[j++] := value / i + "0" + x*(i == 1)                                      'If non-zero digit, output digit; adjust for max negative
+      workspace[j++] := value / i + "0" + x*(i == 1)                            'If non-zero digit, output digit; adjust for max negative
       value //= i                                                               'and digit from value
       result~~                                                                  'flag non-zero found
     elseif result or i == 1
-      workspace[j++] := "0"                                                                'If zero digit (or only digit) output it
+      workspace[j++] := "0"                                                     'If zero digit (or only digit) output it
     i /= 10
     
   workspace[j] := 0
