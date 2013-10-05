@@ -1,0 +1,1735 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<style type="text/css">
+	body {
+		background: #404066;
+		color: #000000;
+		font: 10pt verdana, geneva, lucida, 'lucida grande', arial, helvetica, sans-serif;
+		margin: 5px 10px 10px 10px;
+		padding: 0px;
+		overflow: hidden;
+	}
+	h1 {
+		color: darkblue;
+		font :bold 16pt verdana,geneva,lucida,'lucida grande',arial,helvetica,sans-serif;
+		margin-top: 0
+	}
+	.title {
+		text-align: center;
+	}
+	h2 {
+		color:darkblue;
+		font:bold 14pt verdana,geneva,lucida,'lucida grande',arial,helvetica,sans-serif
+	}
+	h3 {
+		color:darkblue;
+		font:bold 12pt verdana,geneva,lucida,'lucida grande',arial,helvetica,sans-serif
+	}
+	h4 {
+		color:#b73235;
+		font:bold 10pt verdana,geneva,lucida,'lucida grande',arial,helvetica,sans-serif
+	}
+	pre {
+		font: 10pt parallax,courier,monospaced;
+		line-height: 97%;
+	}	
+	.source {
+		margin-left: 20px;
+		border: 1px solid #ccc;
+		overflow: auto;
+		display: none;
+		background: #f8f8e8;
+		margin-top: 12pt;
+		width: 95%;
+		padding-top: 5px;
+		padding-left: 10px;
+		max-height: 600px;
+		letter-spacing: 0px;
+	}
+	var {
+		color: #000080;
+		font-style: normal;
+		font-weight: bold;
+		letter-spacing: -1px;
+	}
+	a {
+		font-weight: bold;
+		font-size: 6pt;
+		text-decoration: none;
+		color: #0000cc;
+	}
+	.toc1 {
+		font-size: 12pt;
+		font-weight: bold;
+		vertical-align: baseline;
+		text-align: center;
+		color: #d7d0ff;
+	}		
+	.toc2 {
+		font-size: 95%;
+		font-weight: bold;
+		vertical-align: baseline;
+		color: white;
+		text-decoration: none;
+	}		
+	.toc3 {
+		font-size: 90%;
+		font-weight: normal;
+		vertical-align: baseline;
+		margin-left: 10px;
+		color: white;
+		text-decoration: none;
+	}		
+	.toc4 {
+		font-size: 85%;
+		font-weight: normal;
+		font-style: italic;
+		vertical-align: baseline;
+		margin-left: 20px;
+		color: #d7d0ff;
+		text-decoration: none;
+	}
+	.tocgrp {
+		display: none
+	}
+  hr {
+  	border: 0;
+    color: #b73235;
+    background-color: #b73235;
+    height: 1px;
+  }
+	</style>
+	<script language="JavaScript">
+		window.onload = resize;
+		window.onresize = resize;
+		var show=0;
+		function ShowHide(divId) {
+			if (document.getElementById(divId).style.display!='block') {
+				document.getElementById(divId).style.display='block';
+				if (divId.substring(0, 3) == 'toc') {
+					window.location = '#lbl' + divId.substring(3);
+				}
+			} else {
+				document.getElementById(divId).style.display='none';
+			}
+		};
+    function resize() {
+      var myWidth = 0, myHeight = 0;
+      if(typeof(window.innerWidth) == 'number') {
+        //Non-IE
+        myWidth = window.innerWidth;
+        myHeight = window.innerHeight;
+      } else if(document.documentElement && (document.documentElement.clientWidth || document.documentElement.clientHeight)) {
+        //IE 6+ in 'standards compliant mode'
+        myWidth = document.documentElement.clientWidth;
+        myHeight = document.documentElement.clientHeight;
+      } else if(document.body && (document.body.clientWidth || document.body.clientHeight)) {
+        //IE 4 compatible
+        myWidth = document.body.clientWidth;
+        myHeight = document.body.clientHeight;
+      }
+      document.getElementById("text").style.height = (myHeight - 10) + "px";
+      document.getElementById("text").style.width = (Math.min(myWidth - 250, 800)) + "px";
+      document.getElementById("toc").style.height = (myHeight - 10) + "px";
+     }	
+    function selectall(source) { 
+	    var selection, range, doc, win; 
+	    if ( (doc = source.ownerDocument)
+	    	&& (win = doc.defaultView)
+	    	&& typeof win.getSelection != 'undefined'
+	    	&& typeof doc.createRange != 'undefined' 
+	    	&& (selection = window.getSelection())
+	    	&& typeof selection.removeAllRanges != 'undefined'
+	    ) { 
+	       range = doc.createRange(); 
+	       range.selectNode(source); 
+	       selection.removeAllRanges(); 
+	       selection.addRange(range); 
+	    } else if (document.body && typeof document.body.createTextRange != 'undefined' && (range = document.body.createTextRange())) { 
+	       range.moveToElementText(source); 
+	       range.select(); 
+	    } 
+		}
+  </script>
+</head>
+<body style = "margin: 0 0 0 0;">
+<div align=center>
+<table cellpadding=0 cols=2 border=0>
+	<tr><td valign="top">
+	<div id="toc" style= "width: 200px; height: 600px; overflow: auto; background-color: #222255; border-left: solid #ffffe0"><br/>
+		<div style="background-color:#222255; width: 100%; text-align: center">
+		<img src="data:image/gif;base64,
+			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
+		">
+		</div>
+		<div style="font: bold 11pt verdana,geneva,lucida,'lucida grande',arial,helvetica,sans-serif;color:white; text-align: center; margin-bottom: 10px; margin-top: 10px">W5100</div>
+		<p class = "toc1">Table of Contents</p>
+		<div style = "text-align: left; margin-left: 10px;">
+			<a href= "#lbl1" class = "toc2">Preface</a><br/>
+<a href= "#lbl2" class = "toc2">Global CONstants </a><br/>
+<a href= "#lbl4" class = "toc2">Global DATa </a><br/>
+<a href= "#lbl6" class = "toc2">Used OBJects </a><br/>
+<a href= "#lbl8" class = "toc2">PUBlic Spin Methods</a><br/>
+<a href= "#lbl9" class = "toc4">Start</a><br/>
+<a href= "#lbl11" class = "toc4">Init</a><br/>
+<a href= "#lbl13" class = "toc4">ReStart</a><br/>
+<a href= "#lbl15" class = "toc4">Stop</a><br/>
+<a href= "#lbl17" class = "toc4">GetCogId</a><br/>
+<a href= "#lbl19" class = "toc4">HardReset</a><br/>
+<a href= "#lbl21" class = "toc4">PowerDownActiveHigh</a><br/>
+<a href= "#lbl23" class = "toc4">DriveResetHigh</a><br/>
+<a href= "#lbl25" class = "toc4">SoftReset</a><br/>
+<a href= "#lbl27" class = "toc4">InitSocket</a><br/>
+<a onclick ="javascript:ShowHide('toc29')" href="javascript:;" class = "toc2">Receive data... </a><br />
+<div id= "toc29" class = "tocgrp">
+<a href= "#lbl30" class = "toc4">Rx</a><br/>
+</div>
+<a onclick ="javascript:ShowHide('toc32')" href="javascript:;" class = "toc2">Transmit data... </a><br />
+<div id= "toc32" class = "tocgrp">
+<a href= "#lbl33" class = "toc4">Tx</a><br/>
+<a href= "#lbl35" class = "toc4">FlushSocketBuffer</a><br/>
+</div>
+<a onclick ="javascript:ShowHide('toc37')" href="javascript:;" class = "toc2">Socket Buffer Pointer Methods... </a><br />
+<div id= "toc37" class = "tocgrp">
+<a href= "#lbl38" class = "toc4">GetMaximumSegmentSize</a><br/>
+<a href= "#lbl40" class = "toc4">GetTimeToLive</a><br/>
+<a href= "#lbl42" class = "toc4">GetRxBytesToRead</a><br/>
+<a href= "#lbl44" class = "toc4">GetFreeTxSize</a><br/>
+<a href= "#lbl46" class = "toc4">GetRxReadPointer</a><br/>
+<a href= "#lbl48" class = "toc4">SetRxReadPointer</a><br/>
+<a href= "#lbl50" class = "toc4">GetTxWritePointer</a><br/>
+<a href= "#lbl52" class = "toc4">SetTxWritePointer</a><br/>
+<a href= "#lbl54" class = "toc4">GetTxReadPointer</a><br/>
+<a href= "#lbl56" class = "toc4">SocketRxSize</a><br/>
+<a href= "#lbl58" class = "toc4">SocketTxSize</a><br/>
+</div>
+<a onclick ="javascript:ShowHide('toc60')" href="javascript:;" class = "toc2">Socket Commands... </a><br />
+<div id= "toc60" class = "tocgrp">
+<a href= "#lbl61" class = "toc4">OpenSocket</a><br/>
+<a href= "#lbl63" class = "toc4">StartListener</a><br/>
+<a href= "#lbl65" class = "toc4">FlushSocket</a><br/>
+<a href= "#lbl67" class = "toc4">OpenRemoteSocket</a><br/>
+<a href= "#lbl69" class = "toc4">DisconnectSocket</a><br/>
+<a href= "#lbl71" class = "toc4">CloseSocket</a><br/>
+</div>
+<a onclick ="javascript:ShowHide('toc73')" href="javascript:;" class = "toc2">Socket Status... </a><br />
+<div id= "toc73" class = "tocgrp">
+<a href= "#lbl74" class = "toc4">IsInit</a><br/>
+<a href= "#lbl76" class = "toc4">IsEstablished</a><br/>
+<a href= "#lbl78" class = "toc4">IsCloseWait</a><br/>
+<a href= "#lbl80" class = "toc4">IsClosed</a><br/>
+<a href= "#lbl82" class = "toc4">SocketStatus</a><br/>
+</div>
+<a onclick ="javascript:ShowHide('toc84')" href="javascript:;" class = "toc2">Common Register Initialize Methods... </a><br />
+<div id= "toc84" class = "tocgrp">
+<a href= "#lbl85" class = "toc4">SetCommonDefaults</a><br/>
+<a href= "#lbl87" class = "toc4">SetCommonnMode</a><br/>
+<a href= "#lbl89" class = "toc4">SetGateway</a><br/>
+<a href= "#lbl91" class = "toc4">SetSubnetMask</a><br/>
+<a href= "#lbl93" class = "toc4">SetMac</a><br/>
+<a href= "#lbl95" class = "toc4">SetIp</a><br/>
+<a href= "#lbl97" class = "toc4">RemoteIp</a><br/>
+</div>
+<a onclick ="javascript:ShowHide('toc99')" href="javascript:;" class = "toc2">Common Register Properties... </a><br />
+<div id= "toc99" class = "tocgrp">
+<a href= "#lbl100" class = "toc4">GetIp</a><br/>
+<a href= "#lbl102" class = "toc4">GetRemoteIp</a><br/>
+<a href= "#lbl104" class = "toc4">GetSubnetMask</a><br/>
+<a href= "#lbl106" class = "toc4">SetRemotePort</a><br/>
+<a href= "#lbl108" class = "toc4">GetGatewayIp</a><br/>
+<a href= "#lbl110" class = "toc4">GetMac</a><br/>
+<a href= "#lbl112" class = "toc4">GetIR2</a><br/>
+<a href= "#lbl114" class = "toc4">SetIR2</a><br/>
+<a href= "#lbl116" class = "toc4">GetIMR2</a><br/>
+<a href= "#lbl118" class = "toc4">SetIMR2</a><br/>
+<a href= "#lbl120" class = "toc4">GetVersion</a><br/>
+</div>
+<a onclick ="javascript:ShowHide('toc122')" href="javascript:;" class = "toc2">DHCP and DNS... </a><br />
+<div id= "toc122" class = "tocgrp">
+<a href= "#lbl123" class = "toc4">CopyDns</a><br/>
+<a href= "#lbl125" class = "toc4">CopyDhcpServer</a><br/>
+<a href= "#lbl127" class = "toc4">CopyRouter</a><br/>
+<a href= "#lbl129" class = "toc4">CopyGateway</a><br/>
+<a href= "#lbl131" class = "toc4">CopySubnet</a><br/>
+<a href= "#lbl133" class = "toc4">GetDns</a><br/>
+<a href= "#lbl135" class = "toc4">GetDnsByIndex</a><br/>
+<a href= "#lbl137" class = "toc4">GetDhcpServerIp</a><br/>
+<a href= "#lbl139" class = "toc4">GetRouter</a><br/>
+<a href= "#lbl141" class = "toc4">IsNullIp</a><br/>
+</div>
+<a onclick ="javascript:ShowHide('toc143')" href="javascript:;" class = "toc2">Set defaults... </a><br />
+<div id= "toc143" class = "tocgrp">
+<a href= "#lbl144" class = "toc4">SetDefault2kRxTxBuffers</a><br/>
+</div>
+<a onclick ="javascript:ShowHide('toc146')" href="javascript:;" class = "toc2">Socket Register Methods... </a><br />
+<div id= "toc146" class = "tocgrp">
+<a href= "#lbl147" class = "toc4">SetSocketMode</a><br/>
+<a href= "#lbl149" class = "toc4">SetSocketPort</a><br/>
+<a href= "#lbl151" class = "toc4">GetSocketPort</a><br/>
+<a href= "#lbl153" class = "toc4">SetSocketCommandRegister</a><br/>
+<a href= "#lbl155" class = "toc4">GetSocketCommandRegister</a><br/>
+<a href= "#lbl157" class = "toc4">GetSocketStatus</a><br/>
+<a href= "#lbl159" class = "toc4">GetSocketIR</a><br/>
+<a href= "#lbl161" class = "toc4">SetSocketIR</a><br/>
+</div>
+<a onclick ="javascript:ShowHide('toc163')" href="javascript:;" class = "toc2">Socket Helper Methods... </a><br />
+<div id= "toc163" class = "tocgrp">
+<a href= "#lbl164" class = "toc4">ReadSocketWord</a><br/>
+<a href= "#lbl166" class = "toc4">SocketWriteWord</a><br/>
+<a href= "#lbl168" class = "toc4">SocketReadByte</a><br/>
+<a href= "#lbl170" class = "toc4">SocketWriteByte</a><br/>
+<a href= "#lbl172" class = "toc4">ReadSocketByte</a><br/>
+</div>
+<a onclick ="javascript:ShowHide('toc174')" href="javascript:;" class = "toc2">Helper Methods... </a><br />
+<div id= "toc174" class = "tocgrp">
+<a href= "#lbl175" class = "toc4">SerializeWord</a><br/>
+<a href= "#lbl177" class = "toc4">DeserializeWord</a><br/>
+<a href= "#lbl179" class = "toc4">GetSocketRegister</a><br/>
+</div>
+<a onclick ="javascript:ShowHide('toc181')" href="javascript:;" class = "toc2">SPI Interface... </a><br />
+<div id= "toc181" class = "tocgrp">
+<a href= "#lbl182" class = "toc4">Read</a><br/>
+<a href= "#lbl184" class = "toc4">Write</a><br/>
+<a href= "#lbl186" class = "toc4">ReadByte</a><br/>
+<a href= "#lbl188" class = "toc4">WriteByte</a><br/>
+</div>
+<a onclick ="javascript:ShowHide('toc190')" href="javascript:;" class = "toc2">Debug methods... </a><br />
+<div id= "toc190" class = "tocgrp">
+<a href= "#lbl191" class = "toc4">GetCommonRegister</a><br/>
+<a href= "#lbl193" class = "toc4">DebugReadByte</a><br/>
+<a href= "#lbl195" class = "toc4">DebugRead</a><br/>
+<a href= "#lbl197" class = "toc4">GetWorkSpace</a><br/>
+<a href= "#lbl199" class = "toc4">DebugGet</a><br/>
+<a href= "#lbl201" class = "toc4">DebugWorkBuff</a><br/>
+<a href= "#lbl203" class = "toc4">DebugRead</a><br/>
+<a href= "#lbl205" class = "toc4">DebugReadWord</a><br/>
+<a href= "#lbl207" class = "toc4">DebugReadByte</a><br/>
+<a href= "#lbl209" class = "toc4">DebugSockRead</a><br/>
+<a href= "#lbl211" class = "toc4">DebugSockReadWord</a><br/>
+<a href= "#lbl213" class = "toc4">DebugSockReadByte</a><br/>
+</div>
+<a href= "#lbl215" class = "toc2">MIT License </a><br/>
+
+		</div>
+	</div>
+	</td>
+	<td>
+		<div id="text" style= "text-align: left; padding-left: 20px; padding-right: 20px; width: 800px; height: 600px; background-color: #ffffe0; overflow: auto">
+			<h1 id = "lbl1" class = "title">W5100 </h1>
+ 
+<br /><br />
+AUTHOR:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Mike Gebhard<br />
+COPYRIGHT:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Parallax Inc.<br />
+LAST MODIFIED:&nbsp;&nbsp;&nbsp;&nbsp;10/04/2013<br />
+VERSION:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1.0<br />
+LICENSE:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MIT (see end of file)<br /><br />
+DESCRIPTION:<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;wiznet W5100 driver<br /><br />
+MODIFICATIONS:<br />
+ 8/12/2012&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;original file ?<br />
+10/04/2013&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;added minimal spindoc comments<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Michael Sommer (MSrobots)<br />
+
+<br />
+<h2 id = "lbl2">Global CONstants </h2>
+<br /><a onclick ="javascript:ShowHide('lbl3')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl3>  { W5100 Common register enumeration }
+  '      1              2              3              4              5              6
+  '--------------------|--------------|--------------|--------------|--------------|-------------|    
+  #0000,  MODE_REG,{
+  01-04}  GATEWAY0,      GATEWAY1,      GATEWAY2,      GATEWAY3,{
+  05-08}  SUBNET_MASK0,  SUBNET_MASK1,  SUBNET_MASK2,  SUBNET_MASK3,{
+  09-0E}  MAC0,          MAC1,          MAC2,          MAC3,          MAC4,          MAC5,{
+  0F-12}  SOURCE_IP0,    SOURCE_IP1,    SOURCE_IP2,    SOURCE_IP3,{
+  13-14}  RES13,RES14,{
+  15}     INTR,{
+  16}     INTM2,{
+  17-18}  RTIME0,        RTIME1,{
+  19}     RETRY_COUNT,{
+  1A-1B}  RES1A,         RES1B,{
+  1C-1D}  P_AUTH_TYPE0,  P_AUTH_TYPE1,{
+  1E}     PPPALGO,{
+  1F}     VERSION,{
+  20-27}  RES20,RES21,RES22,RES23,RES24,RES25,RES26,RES27,{
+  28}     PTIMER,{
+  29}     PMAGIC,{
+  2A-2F}  RES2A,RES2B,RES2C,RES2D,RES2E,RES2F, {
+  30-31}  INTLR0,        INTLR1,{
+  32-33}  IR2,{
+  34}     PSTATUS,{
+  36}     IMR                                                                                               
+
+  { W5100  Socket Register Base Addresses }
+  #0000,  S_MR,{
+ 01     } S_CR,{
+ 02     } S_IR,{
+ 03     } S_SR,{
+ 04-05  } S_PORT0,      S_PORT1,{
+ 06-0B  } S_DEST_MAC0,  S_DEST_MAC1,   S_DEST_MAC2,   S_DEST_MAC3,   S_DEST_MAC4,   S_DEST_MAC5,{
+ 0C-0F  } S_DEST_IP0,   S_DEST_IP1,    S_DEST_IP2,    S_DEST_IP3,{
+ 10-11  } S_DEST_PORT0, S_DEST_PORT1,{
+ 12-13  } S_MAX_SEGM0,  S_MAX_SEGM1,{
+ 14     } S_PROTOCOL,{
+ 15     } S_TOS,{
+ 16     } S_TTL,{
+ 17-1D  } S_RES17,S_RES18,S_RES19,S_RES1A,S_RES1B,S_RES1C,S_RES1D,{
+ 1E     } S_RX_MEM_SIZE, {
+ 1F     } S_TX_MEM_SIZE, {
+ 20-21  } S_TX_FREE0,   S_TX_FREE1,{
+ 22-23  } S_TX_R_PTR0,  S_TX_R_PTR1, {
+ 24-25  } S_TX_W_PTR0,  S_TX_W_PTR1, {
+ 26-27  } S_RX_RCV_SIZE0,S_RX_RCV_SIZE1,{
+ 28-29  } S_RX_R_PTR0,  S_RX_R_PTR1, {
+ 2A-2B  } S_RX_W_PTR0,  S_RX_W_PTR1, {
+ 2C     } S_INT_MASK, {
+ 2D-2E  } S_IP_HEADER_FRAG_OFFSET {
+         Reservered $4n30 <var>to</var> $4nFF}
+         
+ { Socket Register Offsets }
+  SOCKET_BASE_ADDRESS = $0400
+  SOCKET_REG_SIZE     = $0100
+  
+  INTERNAL_RX_BUFFER_ADDRESS    = $6000
+  INTERNAL_TX_BUFFER_ADDRESS    = $4000
+  DEFAULT_RX_TX_BUFFER          = $800
+  DEFAULT_RX_TX_BUFFER_MASK     = DEFAULT_RX_TX_BUFFER - 1
+
+  { Socket Command Register }
+  OPEN              = $01
+  LISTEN            = $02
+  CONNECT           = $04
+  DISCONNECT        = $08
+  CLOSE             = $10
+  SEND              = $20
+  SEND_MAC          = $21
+  SEND_KEEP         = $22
+  RECV              = $40
+  'ADSL 
+  #$23, PCON, PDISCON, PCR, PCN, PCJ
+  
+  { Status Register }
+  SOCK_CLOSED       = $00
+  SOCK_INIT         = $13
+  SOCK_LISTEN       = $14
+  SOCK_ESTABLISHED  = $17
+  SOCK_CLOSE_WAIT   = $1C
+  SOCK_UPD          = $22
+  SOCK_IPRAW        = $32
+  SOCK_MACRAW       = $42
+  SOCK_PPPOE        = $5F
+  { Status Change States }
+  SOCK_SYSENT       = $15
+  SOCK_SYNRECV      = $16
+  SOCK_FIN_WAIT     = $18
+  SOCK_CLOSING      = $1A
+  SOCK_TIME_WAIT    = $1B
+  SOCK_LAST_ACK     = $1D
+  SOCK_ARP          = $01
+
+  'MACRAW and PPPOE can only be used with socket 0
+  #0, CLOSED, TCP, UDP, IPRAW, MACRAW, PPPOE
+
+  BUFFER_2K         = $800
+  BUFFER_16         = $10
+  SOCKETS           = 4
+
+  #0, READ_OPCODE, WRITE_OPCODE
+
+  { Spinneret PIN IO }   
+  SPI_MISO          = 0 ' SPI master in serial out from slave 
+  SPI_MOSI          = 1 ' SPI master out serial in to slave
+  SPI_CS            = 2 ' SPI chip select (active low)
+  SPI_SCK           = 3  ' SPI clock from master to all slaves
+  WIZ_INT           = 13
+  WIZ_RESET         = 14
+  WIZ_SPI_MODE      = 15
+
+  NULL              = 0
+
+</pre>
+<hr /><br />
+<h2 id = "lbl4">Global DATa </h2>
+<br /><a onclick ="javascript:ShowHide('lbl5')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl5>
+  _mode           <var>byte</var>  %0000_0000                      'enable ping
+  _gateway        <var>byte</var>  $00, $00, $00, $00              '192, 168, 1,   1  
+  _subnetmask     <var>byte</var>  $00, $00, $00, $00              '255, 255, 255, 0 
+  _mac            <var>byte</var>  $00, $00, $00, $00, $00, $00    '$00, $08, $DC, $16, $F8, $01
+  _ip             <var>byte</var>  $00, $00, $00, $00              '192, 168,   1,   199
+  _endcm          <var>byte</var>  $00
+
+  _dns1           <var>byte</var>  $00, $00, $00, $00
+  _dns2           <var>byte</var>  $00, $00, $00, $00
+  _dns3           <var>byte</var>  $00, $00, $00, $00
+  _dhcpServer     <var>byte</var>  $00, $00, $00, $00
+  _router         <var>byte</var>  $00, $00, $00, $00
+
+  workSpace       <var>byte</var>  $0[BUFFER_16]
+  
+  sockRxMem       <var>byte</var>  $02[SOCKETS]
+  sockTxMem       <var>byte</var>  $02[SOCKETS]
+  sockRxBase      <var>word</var>  INTERNAL_RX_BUFFER_ADDRESS[SOCKETS]
+  sockRxMask      <var>word</var>  DEFAULT_RX_TX_BUFFER_MASK[SOCKETS]
+  sockTxBase      <var>word</var>  INTERNAL_TX_BUFFER_ADDRESS[SOCKETS]
+  sockTxMask      <var>word</var>  DEFAULT_RX_TX_BUFFER_MASK[SOCKETS]
+
+</pre>
+<hr /><br />
+<h2 id = "lbl6">Used OBJects </h2>
+<br /><a onclick ="javascript:ShowHide('lbl7')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl7>
+  spi           : "Spi5100CounterPasm" 
+
+</pre>
+<hr /><br />
+<h2 id = "lbl8">PUBlic Spin Methods</h2>
+<hr /><h4 id = "lbl9">Start(m_cs, c_clk, m_mosi, m_miso)
+</h4>
+
+<br />DESCRIPTION:<br />
+&nbsp;&nbsp;Initialize default values.&nbsp;&nbsp;All 8 Rx/Tx bufffers are set to 2k.<br />
+<br />
+PARMS:<br />
+&nbsp;&nbsp;SPI_CS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= m_cs ' SPI chip select (active low)<br />
+&nbsp;&nbsp;SPI_SCK&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= c_clk ' SPI clock from master to all slaves<br />
+&nbsp;&nbsp;SPI_MOSI&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= m_mosi ' SPI master out serial in to slave<br />
+&nbsp;&nbsp;SPI_MISO&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= m_miso ' SPI master in serial out from slave <br />
+<br />
+RETURNS:<br />
+&nbsp;&nbsp;Nothing<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl10')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl10><var>PUB</var> Start(m_cs, c_clk, m_mosi, m_miso)
+  'Init the SPI bus
+  spi.Init( m_cs, c_clk, m_mosi, m_miso )
+  SetCommonDefaults
+
+</pre>
+<hr /><h4 id = "lbl11">Init
+</h4>
+
+<br />DESCRIPTION:<br />
+&nbsp;&nbsp;Initialize default values.&nbsp;&nbsp;All 8 Rx/Tx bufffers are set to 2k.<br />
+<br />
+&nbsp;&nbsp;Hardcoded SPI IO<br />
+&nbsp;&nbsp;SPI_MOSI&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= 1 ' SPI master out serial in to slave<br />
+&nbsp;&nbsp;SPI_SCK&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= 0 ' SPI clock from master to all slaves<br />
+&nbsp;&nbsp;SPI_CS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= 3 ' SPI chip select (active low)<br />
+&nbsp;&nbsp;SPI_MISO&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= 2 ' SPI master in serial out from slave <br />
+<br />
+PARMS:<br />
+&nbsp;&nbsp;None<br />
+<br />
+RETURNS:<br />
+&nbsp;&nbsp;Nothing<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl12')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl12><var>PUB</var> Init
+  'Init the SPI bus
+  spi.Init( SPI_CS, SPI_SCK, SPI_MOSI, SPI_MISO )
+
+  SetCommonDefaults
+
+  ' Set Interrupt mask register
+  SetIMR2($FF)
+
+</pre>
+<hr /><h4 id = "lbl13">ReStart
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl14')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl14><var>PUB</var> ReStart
+  spi.ReStart
+
+</pre>
+<hr /><h4 id = "lbl15">Stop
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl16')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl16><var>PUB</var> Stop
+  spi.Stop
+
+</pre>
+<hr /><h4 id = "lbl17">GetCogId
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl18')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl18><var>PUB</var> GetCogId
+  <var>return</var> spi.GetCogId
+
+</pre>
+<hr /><h4 id = "lbl19">HardReset(pin)
+</h4>
+
+<br />DESCRIPTION:<br />
+&nbsp;&nbsp;Reset the W5100.&nbsp;&nbsp;This action will clear all W5100 register values&nbsp;&nbsp;<br />
+<br />
+PARMS:<br />
+&nbsp;&nbsp;Pin&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- W5100 reset pin <br />
+<br />
+RETURNS:<br />
+&nbsp;&nbsp;Nothing<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl20')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl20><var>PUB</var> HardReset(pin) | uSec, mSec
+                                                         
+  uSec := ((clkfreq / 1_000_000) * 5) #&gt; 381
+  mSec := ((clkfreq / 1_000) * 200) #&gt; 381 
+  
+  <var>dira</var>[pin]~~
+  <var>outa</var>[pin]~
+  <var>waitcnt</var>(uSec + <var>cnt</var>)
+  <var>outa</var>[pin]~~
+  <var>waitcnt</var>(mSec + <var>cnt</var>)
+  <var>dira</var>[pin]~
+
+</pre>
+<hr /><h4 id = "lbl21">PowerDownActiveHigh(pin, state)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl22')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl22><var>PUB</var> PowerDownActiveHigh(pin, state)
+  <var>dira</var>[pin]~~
+  <var>outa</var>[pin] := state
+
+</pre>
+<hr /><h4 id = "lbl23">DriveResetHigh(pin)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl24')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl24><var>PUB</var> DriveResetHigh(pin)
+  <var>dira</var>[pin]~~
+  <var>outa</var>[pin]~~
+
+</pre>
+<hr /><h4 id = "lbl25">SoftReset
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl26')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl26><var>PUB</var> SoftReset
+  Write(MODE_REG, @_mode | %1000_0000, 1)   
+
+</pre>
+<hr /><h4 id = "lbl27">InitSocket(socket, protocol, port)
+</h4>
+
+<br />DESCRIPTION:<br />
+&nbsp;&nbsp;Initialize a socket.<br />
+&nbsp;&nbsp;W5100 has 4 sockets<br />
+&nbsp;&nbsp;W5200 has 8 sockets<br />
+<br />
+PARMS:<br />
+&nbsp;&nbsp;socket&nbsp;&nbsp;&nbsp;&nbsp;- Socket ID to initialize (0-n)<br />
+&nbsp;&nbsp;protocol&nbsp;&nbsp;- TCP/UPD<br />
+&nbsp;&nbsp;port&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- Listener port (0-65535)&nbsp;&nbsp;<br />
+<br />
+RETURNS:<br />
+&nbsp;&nbsp;Nothing<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl28')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl28><var>PUB</var> InitSocket(socket, protocol, port)
+  SetSocketMode(socket, protocol)
+  SetSocketPort(socket, port)
+
+</pre>
+<hr /><br />
+<h2 id = "lbl29">Receive data</h2>
+<hr /><h4 id = "lbl30">Rx(socket, buffer, length)
+</h4>
+
+<br />DESCRIPTION:<br />
+&nbsp;&nbsp;Read the Rx socket(n) buffer into HUB memory.&nbsp;&nbsp;The W5200/W5100<br />
+&nbsp;&nbsp;use a circlar buffer. If the buffer is 100 bytes, we're<br />
+&nbsp;&nbsp;currently at 91 and receice 20 bytes the first 10 bytes fill<br />
+&nbsp;&nbsp;addresses 91-100. The remaining 10 bytes fill addresses 0-9.<br />
+<br />
+&nbsp;&nbsp;The Rx method figures ot if the buffer wraps an updates the<br />
+&nbsp;&nbsp;buffer pointers for the next read.<br />
+<br />
+PARMATERS:<br />
+&nbsp;&nbsp;socket&nbsp;&nbsp;&nbsp;&nbsp;- Socket ID<br />
+&nbsp;&nbsp;buffer&nbsp;&nbsp;&nbsp;&nbsp;- Pointer to HUB memory<br />
+&nbsp;&nbsp;length&nbsp;&nbsp;&nbsp;&nbsp;- Bytes to read into HUB memory<br />
+<br />
+RETURNS:<br />
+&nbsp;&nbsp;Nothing<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl31')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl31><var>PUB</var> Rx(socket, buffer, length) | src_mask, src_ptr, upper_size, left_size
+  'Rx memory buffer offset and Physical Rx buffer address
+  src_mask := GetRxReadPointer(socket) &amp; sockRxMask[socket]
+  src_ptr :=  src_mask + sockRxBase[socket]
+
+  'Check for Rx buffer wrap
+  <var>if</var>((src_mask + length) &gt; (sockRxMask[socket] + 1))
+  
+    'Data wraps, get the upper buffer, read into HUB memory
+    'and update the buffer pointer
+    upper_size := sockRxMask[socket] + 1 - src_mask
+    Read(src_ptr, buffer, upper_size)
+    buffer += upper_size
+    
+    'Calculate the remaining byte and read Rx into
+    'HUB memory starting at the base buffer address
+    left_size := length - upper_size
+    Read(sockRxBase[socket] , buffer, left_size)
+    
+  <var>else</var>
+    'The data did not wrap, just copy Rx to HUB memory
+    Read(src_ptr, buffer, length)
+
+  'Update the current Rx read buffer pointer
+  length += GetRxReadPointer(socket)
+  SetRxReadPointer(socket, length)
+
+  'Set the command register to receive
+  SetSocketCommandRegister(socket, RECV) 
+
+</pre>
+<hr /><br />
+<h2 id = "lbl32">Transmit data</h2>
+<hr /><h4 id = "lbl33">Tx(socket, buffer, length)
+</h4>
+
+<br />DESCRIPTION:<br />
+&nbsp;&nbsp;Write HUB memory to the socket(n) Tx buffer.&nbsp;&nbsp;If the Tx buffer is 100<br />
+&nbsp;&nbsp;bytes, we're&nbsp;&nbsp;currently pointing to 91, and we need to transmit 20 bytes<br />
+&nbsp;&nbsp;the first 10 byte fill addresses 91-100. The remaining 10 bytes<br />
+&nbsp;&nbsp;fill addresses 0-9.<br />
+<br />
+PARMS:<br />
+&nbsp;&nbsp;socket&nbsp;&nbsp;&nbsp;&nbsp;- Socket ID<br />
+&nbsp;&nbsp;buffer&nbsp;&nbsp;&nbsp;&nbsp;- Pointer to HUB memory<br />
+&nbsp;&nbsp;length&nbsp;&nbsp;&nbsp;&nbsp;- Bytes to write to the socket(n) buffer<br />
+&nbsp;&nbsp;<br />
+RETURNS:<br />
+&nbsp;&nbsp;Nothing<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl34')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl34><var>PUB</var> Tx(socket, buffer, length) | dst_mask, dst_ptr, upper_size, left_size, ptr
+  'Calculate the physical socket(n) Tx address
+  ptr := GetTxWritePointer(socket)
+  dst_mask := ptr &amp; sockTxMask[socket]  
+  dst_ptr :=  sockTxBase[socket] + dst_mask
+  
+  <var>if</var>((dst_mask + length) &gt; (sockTxMask[socket] + 1))
+    'Wrap and write the Tx data
+    upper_size := (sockTxMask[socket] + 1) - dst_mask
+    Write(dst_ptr, buffer, upper_size)
+    buffer += upper_size
+    left_size := length - upper_size
+    Write(sockTxBase[socket], buffer, left_size)
+  <var>else</var>
+    Write(dst_ptr, buffer, length)
+
+  'Set Tx pointers for the next Tx
+  SetTxWritePointer(socket, length+ptr)
+
+  'Send
+  <var>return</var>  FlushSocketBuffer(socket, length)
+
+</pre>
+<hr /><h4 id = "lbl35">FlushSocketBuffer(socket, length)
+</h4>
+
+<br />DESCRIPTION: Send buffered socket(n) data <br />
+<br />
+PARMS:<br />
+&nbsp;&nbsp;socket&nbsp;&nbsp;&nbsp;&nbsp;- Socket ID <br />
+&nbsp;&nbsp;<br />
+RETURNS: Nothing<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl36')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl36><var>PUB</var> FlushSocketBuffer(socket, length) | bytesSent, ptr_txrd1, ptr_txrd2 
+  bytesSent := ptr_txrd1:= ptr_txrd2 := 0
+  ptr_txrd1 := GetTxReadPointer(socket)
+   
+  FlushSocket(socket)
+    
+  ptr_txrd2 := GetTxReadPointer(socket)
+  
+  <var>if</var>(ptr_txrd2 =&gt; ptr_txrd1)
+    bytesSent := ptr_txrd2 - ptr_txrd1
+  <var>else</var>
+    bytesSent :=  $FFFF - ptr_txrd1 + ptr_txrd2 + 1
+
+  <var>if</var>(bytesSent &gt; 0 <var>AND</var> bytesSent &lt; length)
+    FlushSocket(socket)  
+    ptr_txrd2 := GetTxReadPointer(socket)
+     
+    <var>if</var>( ptr_txrd2 =&gt; ptr_txrd1)
+      bytesSent := ptr_txrd2 - ptr_txrd1
+    <var>else</var>
+      bytesSent :=  $FFFF - ptr_txrd1 + ptr_txrd2 + 1
+
+  <var>return</var> bytesSent
+
+</pre>
+<hr /><br />
+<h2 id = "lbl37">Socket Buffer Pointer Methods</h2>
+<hr /><h4 id = "lbl38">GetMaximumSegmentSize(socket)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl39')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl39><var>PUB</var> GetMaximumSegmentSize(socket)
+  <var>return</var> ReadSocketWord(socket, S_MAX_SEGM0)
+
+</pre>
+<hr /><h4 id = "lbl40">GetTimeToLive(socket)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl41')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl41><var>PUB</var> GetTimeToLive(socket)
+  <var>return</var> ReadSocketByte(socket, S_TTL)
+
+</pre>
+<hr /><h4 id = "lbl42">GetRxBytesToRead(socket)
+</h4>
+
+<br />DESCRIPTION:<br />
+&nbsp;&nbsp;Read socket(n) receive size register<br />
+&nbsp;&nbsp;<br />
+PARMS:<br />
+&nbsp;&nbsp;socket&nbsp;&nbsp;&nbsp;&nbsp;- Socket ID<br />
+&nbsp;&nbsp;&nbsp;&nbsp;<br />
+RETURNS:<br />
+&nbsp;&nbsp;2 bytes: Number of bytes received<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl43')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl43><var>PUB</var> GetRxBytesToRead(socket)
+  <var>return</var> ReadSocketWord(socket, S_RX_RCV_SIZE0)
+
+</pre>
+<hr /><h4 id = "lbl44">GetFreeTxSize(socket)
+</h4>
+
+<br />DESCRIPTION:<br />
+&nbsp;&nbsp;Read 2 byte socket(n) Tx available size register<br />
+&nbsp;&nbsp;<br />
+PARMS:<br />
+&nbsp;&nbsp;socket&nbsp;&nbsp;&nbsp;&nbsp;- Socket ID<br />
+&nbsp;&nbsp;&nbsp;<br />
+RETURNS:<br />
+&nbsp;&nbsp;2 bytes: Socket(n) available Tx size&nbsp;&nbsp;&nbsp;<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl45')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl45><var>PUB</var> GetFreeTxSize(socket)
+  <var>return</var> ReadSocketWord(socket, S_TX_FREE0)
+
+</pre>
+<hr /><h4 id = "lbl46">GetRxReadPointer(socket)
+</h4>
+
+<br />DESCRIPTION: Read socket(n) Rx read pointer<br />
+<br />
+PARMS:<br />
+&nbsp;&nbsp;socket&nbsp;&nbsp;&nbsp;&nbsp;- Socket ID<br />
+&nbsp;&nbsp;<br />
+RETURNS: 2 bytes: Socket(n) Rx read pointer&nbsp;&nbsp;&nbsp;<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl47')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl47><var>PUB</var> GetRxReadPointer(socket)
+  <var>return</var> ReadSocketWord(socket, S_RX_R_PTR0)
+
+</pre>
+<hr /><h4 id = "lbl48">SetRxReadPointer(socket, value)
+</h4>
+
+<br />DESCRIPTION: Write socket(n) Rx read pointer<br />
+<br />
+PARMS:<br />
+&nbsp;&nbsp;socket&nbsp;&nbsp;&nbsp;&nbsp;- Socket ID<br />
+&nbsp;&nbsp;<br />
+RETURNS: Nothing&nbsp;&nbsp;<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl49')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl49><var>PUB</var> SetRxReadPointer(socket, value)
+  SocketWriteWord(socket, S_RX_R_PTR0, value) 
+
+</pre>
+<hr /><h4 id = "lbl50">GetTxWritePointer(socket)
+</h4>
+
+<br />DESCRIPTION: Read socket(n) Tx write pointer<br />
+<br />
+PARMS:<br />
+&nbsp;&nbsp;socket&nbsp;&nbsp;&nbsp;&nbsp;- Socket ID<br />
+&nbsp;&nbsp;<br />
+RETURNS: 2 bytes: Socket(n) Tx write pointer&nbsp;&nbsp;&nbsp;<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl51')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl51><var>PUB</var> GetTxWritePointer(socket)
+  <var>return</var> ReadSocketWord(socket, S_TX_W_PTR0)
+
+</pre>
+<hr /><h4 id = "lbl52">SetTxWritePointer(socket, value)
+</h4>
+
+<br />DESCRIPTION: Write socket(n) Tx write pointer <br />
+<br />
+PARMS:<br />
+&nbsp;&nbsp;socket&nbsp;&nbsp;&nbsp;&nbsp;- Socket ID <br />
+&nbsp;&nbsp;<br />
+RETURNS: 2 bytes: Socket(n) Tx write pointer <br />
+
+<br /><a onclick ="javascript:ShowHide('lbl53')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl53><var>PUB</var> SetTxWritePointer(socket, value)
+  SocketWriteWord(socket, S_TX_W_PTR0, value)
+
+</pre>
+<hr /><h4 id = "lbl54">GetTxReadPointer(socket)
+</h4>
+
+<br />DESCRIPTION: Read socket(n) Tx read pointer <br />
+<br />
+PARMS:<br />
+&nbsp;&nbsp;socket&nbsp;&nbsp;&nbsp;&nbsp;- Socket ID <br />
+&nbsp;&nbsp;<br />
+RETURNS: 2 bytes: Socket(n) Tx read pointer <br />
+
+<br /><a onclick ="javascript:ShowHide('lbl55')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl55><var>PUB</var> GetTxReadPointer(socket)
+  <var>return</var> ReadSocketWord(socket, S_TX_R_PTR0)
+
+</pre>
+<hr /><h4 id = "lbl56">SocketRxSize(socket)
+</h4>
+
+<br />DESCRIPTION: Configuration: Rx socket(n) size in bytes <br />
+<br />
+PARMS:<br />
+&nbsp;&nbsp;socket&nbsp;&nbsp;&nbsp;&nbsp;- Socket ID <br />
+&nbsp;&nbsp;<br />
+RETURNS: Rx socket(n) size in bytes <br />
+
+<br /><a onclick ="javascript:ShowHide('lbl57')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl57><var>PUB</var> SocketRxSize(socket)
+  <var>return</var> sockRxMem[socket] * 1024
+
+</pre>
+<hr /><h4 id = "lbl58">SocketTxSize(socket)
+</h4>
+
+<br />DESCRIPTION: Configuration: Tx socket(n) size in bytes <br />
+<br />
+PARMS:<br />
+&nbsp;&nbsp;socket&nbsp;&nbsp;&nbsp;&nbsp;- Socket ID <br />
+&nbsp;&nbsp;<br />
+RETURNS: Tx socket(n) size in bytes<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl59')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl59><var>PUB</var> SocketTxSize(socket)
+  <var>return</var> sockTxMem[socket] * 1024
+
+</pre>
+<hr /><br />
+<h2 id = "lbl60">Socket Commands</h2>
+<hr /><h4 id = "lbl61">OpenSocket(socket)
+</h4>
+
+<br />DESCRIPTION: Open socket(n)<br />
+<br />
+PARMS:<br />
+&nbsp;&nbsp;socket&nbsp;&nbsp;&nbsp;&nbsp;- Socket ID&nbsp;&nbsp;<br />
+&nbsp;&nbsp;<br />
+RETURNS: Nothing<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl62')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl62><var>PUB</var> OpenSocket(socket)
+  SetSocketCommandRegister(socket, OPEN)
+
+</pre>
+<hr /><h4 id = "lbl63">StartListener(socket)
+</h4>
+
+<br />DESCRIPTION: Listen on socket(n)<br />
+<br />
+PARMS:<br />
+&nbsp;&nbsp;socket&nbsp;&nbsp;&nbsp;&nbsp;- Socket ID <br />
+&nbsp;&nbsp;<br />
+RETURNS: Nothing<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl64')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl64><var>PUB</var> StartListener(socket)
+  SetSocketCommandRegister(socket, LISTEN)
+
+</pre>
+<hr /><h4 id = "lbl65">FlushSocket(socket)
+</h4>
+
+<br />DESCRIPTION: Send data through socket(n)<br />
+<br />
+PARMS:<br />
+&nbsp;&nbsp;socket&nbsp;&nbsp;&nbsp;&nbsp;- Socket ID <br />
+&nbsp;&nbsp;<br />
+RETURNS: Nothing<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl66')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl66><var>PUB</var> FlushSocket(socket)
+  SetSocketCommandRegister(socket, SEND)
+
+</pre>
+<hr /><h4 id = "lbl67">OpenRemoteSocket(socket)
+</h4>
+
+<br />DESCRIPTION: Connect remote socket(n)<br />
+<br />
+PARMS:<br />
+&nbsp;&nbsp;socket&nbsp;&nbsp;&nbsp;&nbsp;- Socket ID&nbsp;&nbsp;<br />
+&nbsp;&nbsp;<br />
+RETURNS: Nothing<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl68')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl68><var>PUB</var> OpenRemoteSocket(socket)
+  SetSocketCommandRegister(socket, CONNECT)  
+
+</pre>
+<hr /><h4 id = "lbl69">DisconnectSocket(socket)
+</h4>
+
+<br />DESCRIPTION: Disconnect socket(n)<br />
+<br />
+PARMS:<br />
+&nbsp;&nbsp;socket&nbsp;&nbsp;&nbsp;&nbsp;- Socket ID <br />
+&nbsp;&nbsp;<br />
+RETURNS: Nothing<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl70')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl70><var>PUB</var> DisconnectSocket(socket)
+  SetSocketCommandRegister(socket, DISCONNECT)
+
+</pre>
+<hr /><h4 id = "lbl71">CloseSocket(socket)
+</h4>
+
+<br />DESCRIPTION: Close socket(n)<br />
+<br />
+PARMS:<br />
+&nbsp;&nbsp;socket&nbsp;&nbsp;&nbsp;&nbsp;- Socket ID <br />
+&nbsp;&nbsp;<br />
+RETURNS: Nothing<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl72')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl72><var>PUB</var> CloseSocket(socket)
+  SetSocketCommandRegister(socket, CLOSE)
+
+</pre>
+<hr /><br />
+<h2 id = "lbl73">Socket Status</h2>
+<hr /><h4 id = "lbl74">IsInit(socket)
+</h4>
+
+<br />DESCRIPTION: Determine if the socket is initialized<br />
+<br />
+PARMS:<br />
+&nbsp;&nbsp;socket&nbsp;&nbsp;&nbsp;&nbsp;- Socket ID <br />
+&nbsp;&nbsp;<br />
+RETURNS: True if the socket is initialized; otherwise returns false. <br />
+
+<br /><a onclick ="javascript:ShowHide('lbl75')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl75><var>PUB</var> IsInit(socket)
+  <var>return</var> GetSocketStatus(socket) ==  SOCK_INIT
+
+</pre>
+<hr /><h4 id = "lbl76">IsEstablished(socket)
+</h4>
+
+<br />DESCRIPTION: Determine if the socket is established<br />
+<br />
+PARMS:<br />
+&nbsp;&nbsp;socket&nbsp;&nbsp;&nbsp;&nbsp;- Socket ID <br />
+&nbsp;&nbsp;<br />
+RETURNS: True if the socket is established; otherwise returns false. <br />
+
+<br /><a onclick ="javascript:ShowHide('lbl77')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl77><var>PUB</var> IsEstablished(socket)
+  <var>return</var> GetSocketStatus(socket) ==  SOCK_ESTABLISHED
+
+</pre>
+<hr /><h4 id = "lbl78">IsCloseWait(socket)
+</h4>
+
+<br />DESCRIPTION: Determine if the socket is close wait<br />
+<br />
+PARMS:<br />
+&nbsp;&nbsp;socket&nbsp;&nbsp;&nbsp;&nbsp;- Socket ID <br />
+&nbsp;&nbsp;<br />
+RETURNS: True if the socket is close wait; otherwise returns false. <br />
+
+<br /><a onclick ="javascript:ShowHide('lbl79')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl79><var>PUB</var> IsCloseWait(socket)
+  <var>return</var> GetSocketStatus(socket) ==  SOCK_CLOSE_WAIT
+
+</pre>
+<hr /><h4 id = "lbl80">IsClosed(socket)
+</h4>
+
+<br />DESCRIPTION: Determine if the socket is closed<br />
+<br />
+PARMS:<br />
+&nbsp;&nbsp;socket&nbsp;&nbsp;&nbsp;&nbsp;- Socket ID <br />
+&nbsp;&nbsp;<br />
+RETURNS: True if the socket is closed; otherwise returns false. <br />
+
+<br /><a onclick ="javascript:ShowHide('lbl81')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl81><var>PUB</var> IsClosed(socket)
+  <var>return</var> GetSocketStatus(socket) ==  SOCK_CLOSED
+
+</pre>
+<hr /><h4 id = "lbl82">SocketStatus(socket)
+</h4>
+
+<br />DESCRIPTION: Read the status of socket(n)<br />
+<br />
+PARMS:<br />
+&nbsp;&nbsp;socket&nbsp;&nbsp;&nbsp;&nbsp;- Socket ID <br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br />
+RETURNS: Byte: Socket(n) status register<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl83')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl83><var>PUB</var> SocketStatus(socket)
+  <var>return</var> GetSocketStatus(socket)  
+
+</pre>
+<hr /><br />
+<h2 id = "lbl84">Common Register Initialize Methods</h2>
+<hr /><h4 id = "lbl85">SetCommonDefaults
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl86')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl86><var>PUB</var> SetCommonDefaults
+  Write(MODE_REG, @_mode, 19)
+   'Use the default 8x2k Rx and Tx Buffers 
+  SetDefault2kRxTxBuffers
+
+</pre>
+<hr /><h4 id = "lbl87">SetCommonnMode(value)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl88')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl88><var>PUB</var> SetCommonnMode(value)
+  _mode := value &amp; $FF
+  Write(MODE_REG, @_mode, 1)     
+
+</pre>
+<hr /><h4 id = "lbl89">SetGateway(octet3, octet2, octet1, octet0)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl90')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl90><var>PUB</var> SetGateway(octet3, octet2, octet1, octet0)
+  _gateway[0] := octet3
+  _gateway[1] := octet2
+  _gateway[2] := octet1
+  _gateway[3] := octet0 
+  'long[@gateway] := octet3 &lt;&lt; 8 + octet2 &lt;&lt; 16 + octet1 &lt;&lt; 24 + octet0
+  Write(GATEWAY0, @_gateway, 4)
+
+</pre>
+<hr /><h4 id = "lbl91">SetSubnetMask(octet3, octet2, octet1, octet0)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl92')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl92><var>PUB</var> SetSubnetMask(octet3, octet2, octet1, octet0)
+  _subnetmask[0] := octet3 
+  _subnetmask[1] := octet2
+  _subnetmask[2] := octet1
+  _subnetmask[3] := octet0
+  Write(SUBNET_MASK0, @_subnetmask, 4) 
+
+</pre>
+<hr /><h4 id = "lbl93">SetMac(octet5, octet4, octet3, octet2, octet1, octet0)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl94')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl94><var>PUB</var> SetMac(octet5, octet4, octet3, octet2, octet1, octet0)
+  _mac[0] := octet5 
+  _mac[1] := octet4
+  _mac[2] := octet3
+  _mac[3] := octet2
+  _mac[4] := octet1
+  _mac[5] := octet0
+  Write(MAC0, @_mac, 6)
+
+</pre>
+<hr /><h4 id = "lbl95">SetIp(octet3, octet2, octet1, octet0)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl96')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl96><var>PUB</var> SetIp(octet3, octet2, octet1, octet0)
+  _ip[0] := octet3 
+  _ip[1] := octet2
+  _ip[2] := octet1
+  _ip[3] := octet0
+  Write(SOURCE_IP0, @_ip, 4 )
+
+</pre>
+<hr /><h4 id = "lbl97">RemoteIp(socket, octet3, octet2, octet1, octet0)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl98')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl98><var>PUB</var> RemoteIp(socket, octet3, octet2, octet1, octet0)
+  workSpace[0] := octet3 
+  workSpace[1] := octet2
+  workSpace[2] := octet1
+  workSpace[3] := octet0
+  Write(GetSocketRegister(socket, S_DEST_IP0), @workspace, 4)
+
+</pre>
+<hr /><br />
+<h2 id = "lbl99">Common Register Properties</h2>
+<hr /><h4 id = "lbl100">GetIp
+</h4>
+
+<br />DESCRIPTION:<br />
+
+<br />PARMS:<br />
+  
+<br />RETURNS:<br />
+  
+<br />
+<br /><a onclick ="javascript:ShowHide('lbl101')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl101><var>PUB</var> GetIp
+  'return @_ip
+  Read( SOURCE_IP0, @workspace, 4 )
+  <var>return</var> @workspace
+
+</pre>
+<hr /><h4 id = "lbl102">GetRemoteIp(socket)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl103')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl103><var>PUB</var> GetRemoteIp(socket)
+  Read(GetSocketRegister(socket, S_DEST_IP0), @workspace, 4)
+  <var>return</var> @workspace
+
+</pre>
+<hr /><h4 id = "lbl104">GetSubnetMask
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl105')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl105><var>PUB</var> GetSubnetMask
+  Read( SUBNET_MASK0, @workspace, 4)
+  <var>return</var> @workspace
+
+</pre>
+<hr /><h4 id = "lbl106">SetRemotePort(socket, port)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl107')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl107><var>PUB</var> SetRemotePort(socket, port)
+  SocketWriteWord(socket, S_DEST_PORT0, port)
+
+</pre>
+<hr /><h4 id = "lbl108">GetGatewayIp
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl109')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl109><var>PUB</var> GetGatewayIp
+  Read( GATEWAY0, @workspace, 4)
+  <var>return</var> @workspace
+
+</pre>
+<hr /><h4 id = "lbl110">GetMac
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl111')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl111><var>PUB</var> GetMac
+  Read( MAC0, @workspace, 6 )
+  <var>return</var> @workspace  
+
+</pre>
+<hr /><h4 id = "lbl112">GetIR2
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl113')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl113><var>PUB</var> GetIR2
+  <var>return</var> ReadByte(IR2)
+
+</pre>
+<hr /><h4 id = "lbl114">SetIR2(value)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl115')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl115><var>PUB</var> SetIR2(value)   
+  WriteByte(IR2, value)
+
+</pre>
+<hr /><h4 id = "lbl116">GetIMR2
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl117')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl117><var>PUB</var> GetIMR2
+  <var>return</var> ReadByte(INTM2)
+
+</pre>
+<hr /><h4 id = "lbl118">SetIMR2(value)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl119')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl119><var>PUB</var> SetIMR2(value)
+  WriteByte(INTM2, value)
+
+</pre>
+<hr /><h4 id = "lbl120">GetVersion
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl121')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl121><var>PUB</var> GetVersion
+  {The W5100 does <var>not</var> have a version register}
+  <var>return</var> ReadByte(RETRY_COUNT)
+
+</pre>
+<hr /><br />
+<h2 id = "lbl122">DHCP and DNS</h2> DHCP and DNS<br />
+ These methods are accessed by DHCP and DNS<br />
+ objects<br />
+
+<hr /><h4 id = "lbl123">CopyDns(source, len)
+</h4>
+
+<br />DESCRIPTION:<br />
+<br />
+PARMS:<br />
+&nbsp;&nbsp;<br />
+RETURNS:<br />
+&nbsp;&nbsp;<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl124')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl124><var>PUB</var> CopyDns(source, len)
+  <var>bytemove</var>(@_dns1, source, len)
+
+</pre>
+<hr /><h4 id = "lbl125">CopyDhcpServer(source, len)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl126')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl126><var>PUB</var> CopyDhcpServer(source, len)
+  <var>bytemove</var>(@_dhcpServer, source, len)
+
+</pre>
+<hr /><h4 id = "lbl127">CopyRouter(source, len)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl128')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl128><var>PUB</var> CopyRouter(source, len)
+  <var>bytemove</var>(@_router, source, len)
+
+</pre>
+<hr /><h4 id = "lbl129">CopyGateway(source, len)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl130')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl130><var>PUB</var> CopyGateway(source, len)
+  <var>bytemove</var>(@_gateway, source, len)
+  Write(GATEWAY0, @_gateway, 4)
+
+</pre>
+<hr /><h4 id = "lbl131">CopySubnet(source, len)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl132')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl132><var>PUB</var> CopySubnet(source, len)
+  <var>bytemove</var>(@_subnetMask, source, len)
+  Write(SUBNET_MASK0, @_subnetmask, 4)
+
+</pre>
+<hr /><h4 id = "lbl133">GetDns
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl134')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl134><var>PUB</var> GetDns
+  <var>return</var> GetDnsByIndex(0)
+
+</pre>
+<hr /><h4 id = "lbl135">GetDnsByIndex(idx)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl136')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl136><var>PUB</var> GetDnsByIndex(idx)
+  <var>if</var>(IsNullIp( @_dns1 + idx*4 ) )
+    <var>return</var> NULL
+  <var>return</var> @_dns1 + idx*4
+
+</pre>
+<hr /><h4 id = "lbl137">GetDhcpServerIp
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl138')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl138><var>PUB</var> GetDhcpServerIp
+  <var>return</var> @_dhcpServer
+
+</pre>
+<hr /><h4 id = "lbl139">GetRouter
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl140')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl140><var>PUB</var> GetRouter
+  <var>return</var> @_router
+
+</pre>
+<hr /><h4 id = "lbl141">IsNullIp(ipaddr)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl142')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl142><var>PRI</var> IsNullIp(ipaddr)
+  <var>return</var> (<var>byte</var>[ipaddr][0] + <var>byte</var>[ipaddr][1] + <var>byte</var>[ipaddr][2] + <var>byte</var>[ipaddr][3]) == 0    
+
+</pre>
+<hr /><br />
+<h2 id = "lbl143">Set defaults</h2>
+<hr /><h4 id = "lbl144">SetDefault2kRxTxBuffers
+</h4>
+
+<br />DESCRIPTION:<br />
+<br />
+PARMS:<br />
+&nbsp;&nbsp;<br />
+RETURNS:<br />
+ <br />
+
+<br /><a onclick ="javascript:ShowHide('lbl145')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl145><var>PUB</var> SetDefault2kRxTxBuffers | i
+  <var>repeat</var> i <var>from</var> 0 <var>to</var> SOCKETS-1
+    sockRxMem[i] := $55
+    sockTxMem[i] := $55
+    
+  <var>repeat</var> i <var>from</var> 0 <var>to</var> SOCKETS-1
+    sockRxMask[i] := DEFAULT_RX_TX_BUFFER_MASK
+    sockTxMask[i] := DEFAULT_RX_TX_BUFFER_MASK
+
+  <var>repeat</var> i <var>from</var> 1 <var>to</var> SOCKETS-1
+    sockRxBase[i] := sockRxBase[i-1] + DEFAULT_RX_TX_BUFFER
+    sockTxBase[i] := sockTxBase[i-1] + DEFAULT_RX_TX_BUFFER
+
+  'repeat i from 0 to SOCKETS-1
+    'WriteByte(GetSocketRegister(i, S_RX_MEM_SIZE) , sockRxMem[i])
+    'WriteByte(GetSocketRegister(i, S_TX_MEM_SIZE) , sockTxMem[i])  
+
+</pre>
+<hr /><br />
+<h2 id = "lbl146">Socket Register Methods</h2>
+<hr /><h4 id = "lbl147">SetSocketMode(socket, value)
+</h4>
+
+<br />DESCRIPTION:<br />
+<br />
+PARMS:<br />
+&nbsp;&nbsp;<br />
+RETURNS:<br />
+&nbsp;&nbsp;<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl148')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl148><var>PRI</var> SetSocketMode(socket, value)
+  SocketWriteByte(socket, S_MR, value)
+
+</pre>
+<hr /><h4 id = "lbl149">SetSocketPort(socket, port)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl150')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl150><var>PRI</var> SetSocketPort(socket, port)
+  SocketWriteWord(socket, S_PORT0, port)
+
+</pre>
+<hr /><h4 id = "lbl151">GetSocketPort(socket)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl152')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl152><var>PUB</var> GetSocketPort(socket)
+  <var>return</var> ReadSocketWord(socket, S_PORT0)
+
+</pre>
+<hr /><h4 id = "lbl153">SetSocketCommandRegister(socket, value)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl154')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl154><var>PRI</var> SetSocketCommandRegister(socket, value)
+  SocketWriteByte(socket, S_CR, value)
+
+</pre>
+<hr /><h4 id = "lbl155">GetSocketCommandRegister(socket)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl156')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl156><var>PRI</var> GetSocketCommandRegister(socket)
+  <var>return</var> SocketReadByte(socket, S_CR)
+
+</pre>
+<hr /><h4 id = "lbl157">GetSocketStatus(socket)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl158')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl158><var>PUB</var> GetSocketStatus(socket)
+  <var>return</var> SocketReadByte(socket, S_SR)
+
+</pre>
+<hr /><h4 id = "lbl159">GetSocketIR(socket)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl160')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl160><var>PUB</var> GetSocketIR(socket)
+  <var>return</var> SocketReadByte(socket, S_IR)
+
+</pre>
+<hr /><h4 id = "lbl161">SetSocketIR(socket, value)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl162')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl162><var>PUB</var> SetSocketIR(socket, value)
+  SocketWriteByte(socket, S_IR, value)
+
+</pre>
+<hr /><br />
+<h2 id = "lbl163">Socket Helper Methods</h2>
+<hr /><h4 id = "lbl164">ReadSocketWord(socket, register)
+</h4>
+
+<br />DESCRIPTION:<br />
+<br />
+PARMS:<br />
+&nbsp;&nbsp;<br />
+RETURNS:<br />
+&nbsp;&nbsp;<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl165')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl165><var>PRI</var> ReadSocketWord(socket, register)
+  Read(GetSocketRegister(socket, register), @workSpace, 2)
+  <var>return</var> DeserializeWord(@workSpace)
+
+</pre>
+<hr /><h4 id = "lbl166">SocketWriteWord(socket, register, value)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl167')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl167><var>PRI</var> SocketWriteWord(socket, register, value)
+  SerializeWord(value, @workSpace)
+  Write(GetSocketRegister(socket, register), @workSpace, 2)
+
+</pre>
+<hr /><h4 id = "lbl168">SocketReadByte(socket, register)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl169')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl169><var>PRI</var> SocketReadByte(socket, register)
+  <var>return</var> ReadByte(GetSocketRegister(socket, register))
+
+</pre>
+<hr /><h4 id = "lbl170">SocketWriteByte(socket, register, value)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl171')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl171><var>PRI</var> SocketWriteByte(socket, register, value)
+  WriteByte(GetSocketRegister(socket, register), value)
+
+</pre>
+<hr /><h4 id = "lbl172">ReadSocketByte(socket, register)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl173')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl173><var>PRI</var> ReadSocketByte(socket, register)
+  <var>return</var> ReadByte(GetSocketRegister(socket, register))
+
+</pre>
+<hr /><br />
+<h2 id = "lbl174">Helper Methods</h2>
+<hr /><h4 id = "lbl175">SerializeWord(value, buffer)
+</h4>
+
+<br />DESCRIPTION:<br />
+<br />
+PARMS:<br />
+&nbsp;&nbsp;<br />
+RETURNS:<br />
+&nbsp;&nbsp;<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl176')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl176><var>PUB</var> SerializeWord(value, buffer)
+  <var>byte</var>[buffer++] := (value &amp; $FF00) &gt;&gt; 8
+  <var>byte</var>[buffer] := value &amp; $FF 
+
+</pre>
+<hr /><h4 id = "lbl177">DeserializeWord(buffer)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl178')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl178><var>PUB</var> DeserializeWord(buffer) | value
+  value := <var>byte</var>[buffer++] &lt;&lt; 8
+  value += <var>byte</var>[buffer]
+  <var>return</var> value
+
+</pre>
+<hr /><h4 id = "lbl179">GetSocketRegister(sock, register)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl180')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl180><var>PUB</var> GetSocketRegister(sock, register)
+  <var>return</var> sock * SOCKET_REG_SIZE + SOCKET_BASE_ADDRESS + register
+
+</pre>
+<hr /><br />
+<h2 id = "lbl181">SPI Interface</h2>
+<hr /><h4 id = "lbl182">Read(register, buffer, length)
+</h4>
+
+<br />DESCRIPTION:<br />
+<br />
+PARMS:<br />
+&nbsp;&nbsp;<br />
+RETURNS:<br />
+&nbsp;&nbsp;<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl183')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl183><var>PRI</var> Read(register, buffer, length)
+  spi.Read(register, length, buffer)
+
+</pre>
+<hr /><h4 id = "lbl184">Write(register, buffer, length)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl185')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl185><var>PRI</var> Write(register, buffer, length)
+  spi.Write(register, length, buffer)
+
+</pre>
+<hr /><h4 id = "lbl186">ReadByte(register)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl187')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl187><var>PRI</var> ReadByte(register) 
+  spi.Read(register, 1, @workSpace)
+  <var>return</var> workSpace[0] &amp; $FF
+
+</pre>
+<hr /><h4 id = "lbl188">WriteByte(register, value)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl189')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl189><var>PRI</var> WriteByte(register, value) 
+  workSpace[0] := value
+  spi.Write(register, 1, @workSpace)
+
+</pre>
+<hr /><br />
+<h2 id = "lbl190">Debug methods</h2> Debug methods<br />
+ Expose varaibles to higher level objects<br />
+
+<hr /><h4 id = "lbl191">GetCommonRegister(register)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl192')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl192><var>PUB</var> GetCommonRegister(register)
+  <var>return</var> @_mode + register
+
+</pre>
+<hr /><h4 id = "lbl193">DebugReadByte(register)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl194')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl194><var>PUB</var> DebugReadByte(register)
+  <var>return</var> ReadByte(register)
+
+</pre>
+<hr /><h4 id = "lbl195">DebugRead(register, length)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl196')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl196><var>PUB</var> DebugRead(register, length)
+  Read( register, @workspace, length)
+  <var>return</var> @workspace 
+ 
+{ 
+
+</pre>
+<hr /><h4 id = "lbl197">GetWorkSpace
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl198')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl198><var>PUB</var> GetWorkSpace
+  <var>return</var> @workSpace
+
+</pre>
+<hr /><h4 id = "lbl199">DebugGet
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl200')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl200><var>PUB</var> DebugGet
+  <var>return</var> _mode
+
+</pre>
+<hr /><h4 id = "lbl201">DebugWorkBuff
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl202')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl202><var>PUB</var> DebugWorkBuff
+  <var>return</var> @workSpace
+
+</pre>
+<hr /><h4 id = "lbl203">DebugRead(register, buffer, length)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl204')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl204><var>PUB</var> DebugRead(register, buffer, length)
+  Read(register, buffer, length)
+
+</pre>
+<hr /><h4 id = "lbl205">DebugReadWord(socket, register)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl206')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl206><var>PUB</var> DebugReadWord(socket, register)
+  Read(register, @workSpace, 2)
+  <var>return</var> DeserializeWord(@workSpace)
+
+</pre>
+<hr /><h4 id = "lbl207">DebugReadByte(socket, register)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl208')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl208><var>PUB</var> DebugReadByte(socket, register)
+  <var>return</var> ReadByte(register)
+
+</pre>
+<hr /><h4 id = "lbl209">DebugSockRead(sock, register, buffer, length)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl210')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl210><var>PUB</var> DebugSockRead(sock, register, buffer, length)
+  Read(GetSocketRegister(sock, register), buffer, length)
+
+</pre>
+<hr /><h4 id = "lbl211">DebugSockReadWord(socket, register)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl212')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl212><var>PUB</var> DebugSockReadWord(socket, register)
+  Read(GetSocketRegister(socket, register), @workSpace, 2)
+  <var>return</var> DeserializeWord(@workSpace)
+
+</pre>
+<hr /><h4 id = "lbl213">DebugSockReadByte(socket, register)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl214')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl214><var>PUB</var> DebugSockReadByte(socket, register)
+  <var>return</var> ReadByte(GetSocketRegister(socket, register))
+}
+
+</pre>
+<hr /><br />
+<h2 id = "lbl215">MIT License </h2>
+<br /><a onclick ="javascript:ShowHide('lbl216')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl216>                                                    'MIT License
+
+</pre>
+<hr /><pre>
+ ______________________________________________________________________________________
+|                            TERMS OF USE: MIT License                                 |                                                            
+|______________________________________________________________________________________|
+|Permission is hereby granted, free of charge, to any person obtaining a copy of this  |
+|software and associated documentation files (the "Software"), to deal in the Software |
+|without restriction, including without limitation the rights to use, copy, modify,    |
+|merge, publish, distribute, sublicense, and/or sell copies of the Software, and to    |
+|permit persons to whom the Software is furnished to do so, subject to the following   |
+|conditions:                                                                           |
+|                                                                                      |
+|The above copyright notice and this permission notice shall be included in all copies |
+|or substantial portions of the Software.                                              |
+|                                                                                      |
+|THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,   |
+|INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A         |
+|PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT    |
+|HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF  |
+|CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE  |
+|OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                         |
+|______________________________________________________________________________________|
+</pre>
+<br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br />
+		</div>
+	</td></tr>
+</table>
+</div>
+</body>
+</html>	

@@ -1,14 +1,26 @@
-'*********************************************************************************************
-{
- AUTHOR: Mike Gebhard
- COPYRIGHT: Parallax Inc.
- LAST MODIFIED: 8/12/2012
- VERSION 1.0
- LICENSE: MIT (see end of file)
-}
-'*********************************************************************************************
+'':::::::[ W5100 ]::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+{{ 
+''
+''AUTHOR:           Mike Gebhard
+''COPYRIGHT:        Parallax Inc.
+''LAST MODIFIED:    10/04/2013
+''VERSION:          1.0
+''LICENSE:          MIT (see end of file)
+''
+''
+''DESCRIPTION:
+''                  wiznet W5100 driver
+''
+''
+''MODIFICATIONS:
+'' 8/12/2012        original file ?
+''10/04/2013        added minimal spindoc comments
+''                  Michael Sommer (MSrobots)
+}}
 CON
-  {{ W5100 Common register enumeration }}
+''
+''=======[ Global CONstants ]=============================================================
+  { W5100 Common register enumeration }
   '      1              2              3              4              5              6
   '--------------------|--------------|--------------|--------------|--------------|-------------|    
   #0000,  MODE_REG,{
@@ -34,7 +46,7 @@ CON
   34}     PSTATUS,{
   36}     IMR                                                                                               
 
-  {{ W5100  Socket Register Base Addresses }}
+  { W5100  Socket Register Base Addresses }
   #0000,  S_MR,{
  01     } S_CR,{
  02     } S_IR,{
@@ -60,7 +72,7 @@ CON
  2D-2E  } S_IP_HEADER_FRAG_OFFSET {
          Reservered $4n30 to $4nFF}
          
- {{Socket Register Offsets}}
+ { Socket Register Offsets }
   SOCKET_BASE_ADDRESS = $0400
   SOCKET_REG_SIZE     = $0100
   
@@ -69,7 +81,7 @@ CON
   DEFAULT_RX_TX_BUFFER          = $800
   DEFAULT_RX_TX_BUFFER_MASK     = DEFAULT_RX_TX_BUFFER - 1
 
-  {{ Socket Command Register}}
+  { Socket Command Register }
   OPEN              = $01
   LISTEN            = $02
   CONNECT           = $04
@@ -82,7 +94,7 @@ CON
   'ADSL 
   #$23, PCON, PDISCON, PCR, PCN, PCJ
   
-  {{ Status Register }}
+  { Status Register }
   SOCK_CLOSED       = $00
   SOCK_INIT         = $13
   SOCK_LISTEN       = $14
@@ -92,7 +104,7 @@ CON
   SOCK_IPRAW        = $32
   SOCK_MACRAW       = $42
   SOCK_PPPOE        = $5F
-  {{ Status Change States }}
+  { Status Change States }
   SOCK_SYSENT       = $15
   SOCK_SYNRECV      = $16
   SOCK_FIN_WAIT     = $18
@@ -125,6 +137,8 @@ CON
   NULL              = 0
                                                             
 
+''
+''=======[ Global DATa ]==================================================================
 DAT
   _mode           byte  %0000_0000                      'enable ping
   _gateway        byte  $00, $00, $00, $00              '192, 168, 1,   1  
@@ -148,33 +162,26 @@ DAT
   sockTxBase      word  INTERNAL_TX_BUFFER_ADDRESS[SOCKETS]
   sockTxMask      word  DEFAULT_RX_TX_BUFFER_MASK[SOCKETS]
 
-{{
-DESCRIPTION:
-
-PARMS:
-  
-RETURNS:
-  
-}}
-
+''
+''=======[ Used OBJects ]=================================================================
 OBJ
-  'spi           : "SpiW5100.spin"
   spi           : "Spi5100CounterPasm" 
 
-
+''
+''=======[ PUBlic Spin Methods]===========================================================
 PUB Start(m_cs, c_clk, m_mosi, m_miso)
 {{
-DESCRIPTION:
-  Initialize default values.  All 8 Rx/Tx bufffers are set to 2k.
-
-PARMS:
-  SPI_CS            = m_cs ' SPI chip select (active low)
-  SPI_SCK           = c_clk ' SPI clock from master to all slaves
-  SPI_MOSI          = m_mosi ' SPI master out serial in to slave
-  SPI_MISO          = m_miso ' SPI master in serial out from slave 
-
-RETURNS:
-  Nothing
+''DESCRIPTION:
+''  Initialize default values.  All 8 Rx/Tx bufffers are set to 2k.
+''
+''PARMS:
+''  SPI_CS            = m_cs ' SPI chip select (active low)
+''  SPI_SCK           = c_clk ' SPI clock from master to all slaves
+''  SPI_MOSI          = m_mosi ' SPI master out serial in to slave
+''  SPI_MISO          = m_miso ' SPI master in serial out from slave 
+''
+''RETURNS:
+''  Nothing
 }}
   'Init the SPI bus
   spi.Init( m_cs, c_clk, m_mosi, m_miso )
@@ -182,20 +189,20 @@ RETURNS:
 
 PUB Init
 {{
-DESCRIPTION:
-  Initialize default values.  All 8 Rx/Tx bufffers are set to 2k.
-
-  Hardcoded SPI IO
-  SPI_MOSI          = 1 ' SPI master out serial in to slave
-  SPI_SCK           = 0 ' SPI clock from master to all slaves
-  SPI_CS            = 3 ' SPI chip select (active low)
-  SPI_MISO          = 2 ' SPI master in serial out from slave 
-
-PARMS:
-  None
-
-RETURNS:
-  Nothing
+''DESCRIPTION:
+''  Initialize default values.  All 8 Rx/Tx bufffers are set to 2k.
+''
+''  Hardcoded SPI IO
+''  SPI_MOSI          = 1 ' SPI master out serial in to slave
+''  SPI_SCK           = 0 ' SPI clock from master to all slaves
+''  SPI_CS            = 3 ' SPI chip select (active low)
+''  SPI_MISO          = 2 ' SPI master in serial out from slave 
+''
+''PARMS:
+''  None
+''
+''RETURNS:
+''  Nothing
 }}
   'Init the SPI bus
   spi.Init( SPI_CS, SPI_SCK, SPI_MOSI, SPI_MISO )
@@ -217,14 +224,14 @@ PUB GetCogId
   
 PUB HardReset(pin) | uSec, mSec
 {{
-DESCRIPTION:
-  Reset the W5100.  This action will clear all W5100 register values  
-
-PARMS:
-  Pin     - W5100 reset pin 
-
-RETURNS:
-  Nothing
+''DESCRIPTION:
+''  Reset the W5100.  This action will clear all W5100 register values  
+''
+''PARMS:
+''  Pin     - W5100 reset pin 
+''
+''RETURNS:
+''  Nothing
 }}
                                                          
   uSec := ((clkfreq / 1_000_000) * 5) #> 381
@@ -253,43 +260,42 @@ PUB SoftReset
   
 PUB InitSocket(socket, protocol, port)
 {{
-DESCRIPTION:
-  Initialize a socket.
-  W5100 has 4 sockets
-  W5200 has 8 sockets
-
-PARMS:
-  socket    - Socket ID to initialize (0-n)
-  protocol  - TCP/UPD
-  port      - Listener port (0-65535)  
-
-RETURNS:
-  Nothing
+''DESCRIPTION:
+''  Initialize a socket.
+''  W5100 has 4 sockets
+''  W5200 has 8 sockets
+''
+''PARMS:
+''  socket    - Socket ID to initialize (0-n)
+''  protocol  - TCP/UPD
+''  port      - Listener port (0-65535)  
+''
+''RETURNS:
+''  Nothing
 }}
   SetSocketMode(socket, protocol)
   SetSocketPort(socket, port)
 
-'----------------------------------------------------
-' Receive data
-'----------------------------------------------------  
+''
+''=======[ Receive data... ]==============================================================
 PUB Rx(socket, buffer, length) | src_mask, src_ptr, upper_size, left_size
 {{
-DESCRIPTION:
-  Read the Rx socket(n) buffer into HUB memory.  The W5200/W5100
-  use a circlar buffer. If the buffer is 100 bytes, we're
-  currently at 91 and receice 20 bytes the first 10 bytes fill
-  addresses 91-100. The remaining 10 bytes fill addresses 0-9.
-
-  The Rx method figures ot if the buffer wraps an updates the
-  buffer pointers for the next read.
-
-PARMATERS:
-  socket    - Socket ID
-  buffer    - Pointer to HUB memory
-  length    - Bytes to read into HUB memory
-
-RETURNS:
-  Nothing
+''DESCRIPTION:
+''  Read the Rx socket(n) buffer into HUB memory.  The W5200/W5100
+''  use a circlar buffer. If the buffer is 100 bytes, we're
+''  currently at 91 and receice 20 bytes the first 10 bytes fill
+''  addresses 91-100. The remaining 10 bytes fill addresses 0-9.
+''
+''  The Rx method figures ot if the buffer wraps an updates the
+''  buffer pointers for the next read.
+''
+''PARMATERS:
+''  socket    - Socket ID
+''  buffer    - Pointer to HUB memory
+''  length    - Bytes to read into HUB memory
+''
+''RETURNS:
+''  Nothing
 }}
   'Rx memory buffer offset and Physical Rx buffer address
   src_mask := GetRxReadPointer(socket) & sockRxMask[socket]
@@ -321,65 +327,23 @@ RETURNS:
   SetSocketCommandRegister(socket, RECV) 
   
 
-'----------------------------------------------------
-' Transmit data
-'----------------------------------------------------
-{
+''
+''=======[ Transmit data... ]=============================================================
 PUB Tx(socket, buffer, length) | dst_mask, dst_ptr, upper_size, left_size, ptr
 {{
-DESCRIPTION:
-  Write HUB memory to the socket(n) Tx buffer.  If the Tx buffer is 100
-  bytes, we're  currently pointing to 91, and we need to transmit 20 bytes
-  the first 10 byte fill addresses 91-100. The remaining 10 bytes
-  fill addresses 0-9.
-
-PARMS:
-  socket    - Socket ID
-  buffer    - Pointer to HUB memory
-  length    - Bytes to write to the socket(n) buffer
-  
-RETURNS:
-  Nothing
-}}
-  'Exit if the the bytes to write are larger than the available Tx socket size
-  'This should not happen as the socket object handles buffer overflow but the
-  'implementer might decide to byapss the socket object
-  'if(GetFreeTxSize(socket) < length)
-    'return -2
-
-  'Calculate the physical socket(n) Tx address
-  ptr := GetTxWritePointer(socket)
-  dst_mask := ptr & sockTxMask[socket]  
-  dst_ptr :=  sockTxBase[socket] + dst_mask
-  
-  if((dst_mask + length) > (sockTxMask[socket] + 1))
-    'Wrap and write the Tx data
-    upper_size := (sockTxMask[socket] + 1) - dst_mask
-    Write(dst_ptr, buffer, upper_size)
-    buffer += upper_size
-    left_size := length - upper_size
-    Write(sockTxBase[socket], buffer, left_size)
-  else
-    Write(dst_ptr, buffer, length)
-
-  'Set Tx pointers for the next Tx
-  SetTxWritePointer(socket, length+ptr)
- }
-PUB Tx(socket, buffer, length) | dst_mask, dst_ptr, upper_size, left_size, ptr
-{{
-DESCRIPTION:
-  Write HUB memory to the socket(n) Tx buffer.  If the Tx buffer is 100
-  bytes, we're  currently pointing to 91, and we need to transmit 20 bytes
-  the first 10 byte fill addresses 91-100. The remaining 10 bytes
-  fill addresses 0-9.
-
-PARMS:
-  socket    - Socket ID
-  buffer    - Pointer to HUB memory
-  length    - Bytes to write to the socket(n) buffer
-  
-RETURNS:
-  Nothing
+''DESCRIPTION:
+''  Write HUB memory to the socket(n) Tx buffer.  If the Tx buffer is 100
+''  bytes, we're  currently pointing to 91, and we need to transmit 20 bytes
+''  the first 10 byte fill addresses 91-100. The remaining 10 bytes
+''  fill addresses 0-9.
+''
+''PARMS:
+''  socket    - Socket ID
+''  buffer    - Pointer to HUB memory
+''  length    - Bytes to write to the socket(n) buffer
+''  
+''RETURNS:
+''  Nothing
 }}
   'Calculate the physical socket(n) Tx address
   ptr := GetTxWritePointer(socket)
@@ -405,12 +369,12 @@ RETURNS:
 
 PUB FlushSocketBuffer(socket, length) | bytesSent, ptr_txrd1, ptr_txrd2 
 {{
-DESCRIPTION: Send buffered socket(n) data 
-
-PARMS:
-  socket    - Socket ID 
-  
-RETURNS: Nothing
+''DESCRIPTION: Send buffered socket(n) data 
+''
+''PARMS:
+''  socket    - Socket ID 
+''  
+''RETURNS: Nothing
 }}
   bytesSent := ptr_txrd1:= ptr_txrd2 := 0
   ptr_txrd1 := GetTxReadPointer(socket)
@@ -435,10 +399,8 @@ RETURNS: Nothing
 
   return bytesSent
   
-'----------------------------------------------------
-' Socket Buffer Pointer Methods
-'----------------------------------------------------
-
+''
+''=======[ Socket Buffer Pointer Methods... ]=============================================
 PUB GetMaximumSegmentSize(socket)
   return ReadSocketWord(socket, S_MAX_SEGM0)
   
@@ -447,237 +409,234 @@ PUB GetTimeToLive(socket)
   
 PUB GetRxBytesToRead(socket)
 {{
-DESCRIPTION:
-  Read socket(n) receive size register
-  
-PARMS:
-  socket    - Socket ID
-    
-RETURNS:
-  2 bytes: Number of bytes received
+''DESCRIPTION:
+''  Read socket(n) receive size register
+''  
+''PARMS:
+''  socket    - Socket ID
+''    
+''RETURNS:
+''  2 bytes: Number of bytes received
 }}
   return ReadSocketWord(socket, S_RX_RCV_SIZE0)
 
 PUB GetFreeTxSize(socket)
 {{
-DESCRIPTION:
-  Read 2 byte socket(n) Tx available size register
-  
-PARMS:
-  socket    - Socket ID
-   
-RETURNS:
-  2 bytes: Socket(n) available Tx size   
+''DESCRIPTION:
+''  Read 2 byte socket(n) Tx available size register
+''  
+''PARMS:
+''  socket    - Socket ID
+''   
+''RETURNS:
+''  2 bytes: Socket(n) available Tx size   
 }}
   return ReadSocketWord(socket, S_TX_FREE0)
 
 PUB GetRxReadPointer(socket)
 {{
-DESCRIPTION: Read socket(n) Rx read pointer
-
-PARMS:
-  socket    - Socket ID
-  
-RETURNS: 2 bytes: Socket(n) Rx read pointer   
+''DESCRIPTION: Read socket(n) Rx read pointer
+''
+''PARMS:
+''  socket    - Socket ID
+''  
+''RETURNS: 2 bytes: Socket(n) Rx read pointer   
 }}
   return ReadSocketWord(socket, S_RX_R_PTR0)
 
 PUB SetRxReadPointer(socket, value)
 {{
-DESCRIPTION: Write socket(n) Rx read pointer
-
-PARMS:
-  socket    - Socket ID
-  
-RETURNS: Nothing  
+''DESCRIPTION: Write socket(n) Rx read pointer
+''
+''PARMS:
+''  socket    - Socket ID
+''  
+''RETURNS: Nothing  
 }}
   SocketWriteWord(socket, S_RX_R_PTR0, value) 
 
 PUB GetTxWritePointer(socket)
 {{
-DESCRIPTION: Read socket(n) Tx write pointer
-
-PARMS:
-  socket    - Socket ID
-  
-RETURNS: 2 bytes: Socket(n) Tx write pointer   
+''DESCRIPTION: Read socket(n) Tx write pointer
+''
+''PARMS:
+''  socket    - Socket ID
+''  
+''RETURNS: 2 bytes: Socket(n) Tx write pointer   
 }}
   return ReadSocketWord(socket, S_TX_W_PTR0)
 
 PUB SetTxWritePointer(socket, value)
 {{
-DESCRIPTION: Write socket(n) Tx write pointer 
-
-PARMS:
-  socket    - Socket ID 
-  
-RETURNS: 2 bytes: Socket(n) Tx write pointer 
+''DESCRIPTION: Write socket(n) Tx write pointer 
+''
+''PARMS:
+''  socket    - Socket ID 
+''  
+''RETURNS: 2 bytes: Socket(n) Tx write pointer 
 }}
   SocketWriteWord(socket, S_TX_W_PTR0, value)
 
 PUB GetTxReadPointer(socket)
 {{
-DESCRIPTION: Read socket(n) Tx read pointer 
-
-PARMS:
-  socket    - Socket ID 
-  
-RETURNS: 2 bytes: Socket(n) Tx read pointer 
+''DESCRIPTION: Read socket(n) Tx read pointer 
+''
+''PARMS:
+''  socket    - Socket ID 
+''  
+''RETURNS: 2 bytes: Socket(n) Tx read pointer 
 }}
   return ReadSocketWord(socket, S_TX_R_PTR0)
 
 PUB SocketRxSize(socket)
 {{
-DESCRIPTION: Configuration: Rx socket(n) size in bytes 
-
-PARMS:
-  socket    - Socket ID 
-  
-RETURNS: Rx socket(n) size in bytes 
+''DESCRIPTION: Configuration: Rx socket(n) size in bytes 
+''
+''PARMS:
+''  socket    - Socket ID 
+''  
+''RETURNS: Rx socket(n) size in bytes 
 }}
   return sockRxMem[socket] * 1024
 
 PUB SocketTxSize(socket)
 {{
-DESCRIPTION: Configuration: Tx socket(n) size in bytes 
-
-PARMS:
-  socket    - Socket ID 
-  
-RETURNS: Tx socket(n) size in bytes
+''DESCRIPTION: Configuration: Tx socket(n) size in bytes 
+''
+''PARMS:
+''  socket    - Socket ID 
+''  
+''RETURNS: Tx socket(n) size in bytes
 }}
   return sockTxMem[socket] * 1024
   
-'----------------------------------------------------
-' Socket Commands
-'----------------------------------------------------  
+''
+''=======[ Socket Commands... ]===========================================================
 PUB OpenSocket(socket)
 {{
-DESCRIPTION: Open socket(n)
-
-PARMS:
-  socket    - Socket ID  
-  
-RETURNS: Nothing
+''DESCRIPTION: Open socket(n)
+''
+''PARMS:
+''  socket    - Socket ID  
+''  
+''RETURNS: Nothing
 }}
   SetSocketCommandRegister(socket, OPEN)
 
 PUB StartListener(socket)
 {{
-DESCRIPTION: Listen on socket(n)
-
-PARMS:
-  socket    - Socket ID 
-  
-RETURNS: Nothing
+''DESCRIPTION: Listen on socket(n)
+''
+''PARMS:
+''  socket    - Socket ID 
+''  
+''RETURNS: Nothing
 }}
   SetSocketCommandRegister(socket, LISTEN)
 
 PUB FlushSocket(socket)
 {{
-DESCRIPTION: Send data through socket(n)
-
-PARMS:
-  socket    - Socket ID 
-  
-RETURNS: Nothing
+''DESCRIPTION: Send data through socket(n)
+''
+''PARMS:
+''  socket    - Socket ID 
+''  
+''RETURNS: Nothing
 }}
   SetSocketCommandRegister(socket, SEND)
 
 PUB OpenRemoteSocket(socket)
 {{
-DESCRIPTION: Connect remote socket(n)
-
-PARMS:
-  socket    - Socket ID  
-  
-RETURNS: Nothing
+''DESCRIPTION: Connect remote socket(n)
+''
+''PARMS:
+''  socket    - Socket ID  
+''  
+''RETURNS: Nothing
 }}
   SetSocketCommandRegister(socket, CONNECT)  
 
 PUB DisconnectSocket(socket)
 {{
-DESCRIPTION: Disconnect socket(n)
-
-PARMS:
-  socket    - Socket ID 
-  
-RETURNS: Nothing
+''DESCRIPTION: Disconnect socket(n)
+''
+''PARMS:
+''  socket    - Socket ID 
+''  
+''RETURNS: Nothing
 }}
   SetSocketCommandRegister(socket, DISCONNECT)
 
 PUB CloseSocket(socket)
 {{
-DESCRIPTION: Close socket(n)
-
-PARMS:
-  socket    - Socket ID 
-  
-RETURNS: Nothing
+''DESCRIPTION: Close socket(n)
+''
+''PARMS:
+''  socket    - Socket ID 
+''  
+''RETURNS: Nothing
 }}
   SetSocketCommandRegister(socket, CLOSE)
   
-'----------------------------------------------------
-' Socket Status
-'----------------------------------------------------
+''
+''=======[ Socket Status... ]=============================================================
 PUB IsInit(socket)
 {{
-DESCRIPTION: Determine if the socket is initialized
-
-PARMS:
-  socket    - Socket ID 
-  
-RETURNS: True if the socket is initialized; otherwise returns false. 
+''DESCRIPTION: Determine if the socket is initialized
+''
+''PARMS:
+''  socket    - Socket ID 
+''  
+''RETURNS: True if the socket is initialized; otherwise returns false. 
 }}
   return GetSocketStatus(socket) ==  SOCK_INIT
 
 PUB IsEstablished(socket)
 {{
-DESCRIPTION: Determine if the socket is established
-
-PARMS:
-  socket    - Socket ID 
-  
-RETURNS: True if the socket is established; otherwise returns false. 
+''DESCRIPTION: Determine if the socket is established
+''
+''PARMS:
+''  socket    - Socket ID 
+''  
+''RETURNS: True if the socket is established; otherwise returns false. 
 }}
   return GetSocketStatus(socket) ==  SOCK_ESTABLISHED
 
 PUB IsCloseWait(socket)
 {{
-DESCRIPTION: Determine if the socket is close wait
-
-PARMS:
-  socket    - Socket ID 
-  
-RETURNS: True if the socket is close wait; otherwise returns false. 
+''DESCRIPTION: Determine if the socket is close wait
+''
+''PARMS:
+''  socket    - Socket ID 
+''  
+''RETURNS: True if the socket is close wait; otherwise returns false. 
 }}
   return GetSocketStatus(socket) ==  SOCK_CLOSE_WAIT
 
 PUB IsClosed(socket)
 {{
-DESCRIPTION: Determine if the socket is closed
-
-PARMS:
-  socket    - Socket ID 
-  
-RETURNS: True if the socket is closed; otherwise returns false. 
+''DESCRIPTION: Determine if the socket is closed
+''
+''PARMS:
+''  socket    - Socket ID 
+''  
+''RETURNS: True if the socket is closed; otherwise returns false. 
 }}
   return GetSocketStatus(socket) ==  SOCK_CLOSED
 
 PUB SocketStatus(socket)
 {{
-DESCRIPTION: Read the status of socket(n)
-
-PARMS:
-  socket    - Socket ID 
-  
-RETURNS: Byte: Socket(n) status register
+''DESCRIPTION: Read the status of socket(n)
+''
+''PARMS:
+''  socket    - Socket ID 
+''                                                                                                  
+''RETURNS: Byte: Socket(n) status register
 }}
   return GetSocketStatus(socket)  
 
-'----------------------------------------------------
-' Common Register Initialize Methods
-'----------------------------------------------------
+''
+''=======[ Common Register Initialize Methods... ]========================================
 PUB SetCommonDefaults
   Write(MODE_REG, @_mode, 19)
    'Use the default 8x2k Rx and Tx Buffers 
@@ -726,16 +685,15 @@ PUB RemoteIp(socket, octet3, octet2, octet1, octet0)
   Write(GetSocketRegister(socket, S_DEST_IP0), @workspace, 4)
 
 
-'----------------------------------------------------
-' Common Register Properties
-'----------------------------------------------------
+''
+''=======[ Common Register Properties... ]================================================
 PUB GetIp
 {{
-DESCRIPTION:
+''DESCRIPTION:
 
-PARMS:
+''PARMS:
   
-RETURNS:
+''RETURNS:
   
 }}
   'return @_ip
@@ -777,22 +735,21 @@ PUB GetVersion
   {The W5100 does not have a version register}
   return ReadByte(RETRY_COUNT)
 
-
-
-
-'----------------------------------------------------
-' DHCP and DNS
-' These methods are accessed by DHCP and DNS
-' objects
-'----------------------------------------------------
+''
+''=======[ DHCP and DNS... ]==============================================================
+{{
+'' DHCP and DNS
+'' These methods are accessed by DHCP and DNS
+'' objects
+}}
 PUB CopyDns(source, len)
 {{
-DESCRIPTION:
-
-PARMS:
-  
-RETURNS:
-  
+''DESCRIPTION:
+''
+''PARMS:
+''  
+''RETURNS:
+''  
 }}
   bytemove(@_dns1, source, len)
 
@@ -829,17 +786,16 @@ PRI IsNullIp(ipaddr)
   return (byte[ipaddr][0] + byte[ipaddr][1] + byte[ipaddr][2] + byte[ipaddr][3]) == 0    
 
 
-'----------------------------------------------------
-' Set defaults
-'----------------------------------------------------     
+''
+''=======[ Set defaults... ]=============================================================
 PUB SetDefault2kRxTxBuffers | i
 {{
-DESCRIPTION:
-
-PARMS:
-  
-RETURNS:
-  
+''DESCRIPTION:
+''
+''PARMS:
+''  
+''RETURNS:
+'' 
 }}
   repeat i from 0 to SOCKETS-1
     sockRxMem[i] := $55
@@ -858,17 +814,16 @@ RETURNS:
     'WriteByte(GetSocketRegister(i, S_TX_MEM_SIZE) , sockTxMem[i])  
 
 
-'----------------------------------------------------
-' Wrapped Socket Register Methods
-'----------------------------------------------------
+''
+''=======[ Socket Register Methods... ]===================================================
 PRI SetSocketMode(socket, value)
 {{
-DESCRIPTION:
-
-PARMS:
-  
-RETURNS:
-  
+''DESCRIPTION:
+''
+''PARMS:
+''  
+''RETURNS:
+''  
 }}
   SocketWriteByte(socket, S_MR, value)
 
@@ -893,17 +848,16 @@ PUB GetSocketIR(socket)
 PUB SetSocketIR(socket, value)
   SocketWriteByte(socket, S_IR, value)
   
-'----------------------------------------------------
-' Socket Helper Methods
-'----------------------------------------------------
+''
+''=======[ Socket Helper Methods... ]=====================================================
 PRI ReadSocketWord(socket, register)
 {{
-DESCRIPTION:
-
-PARMS:
-  
-RETURNS:
-  
+''DESCRIPTION:
+''
+''PARMS:
+''  
+''RETURNS:
+''  
 }}
   Read(GetSocketRegister(socket, register), @workSpace, 2)
   return DeserializeWord(@workSpace)
@@ -921,17 +875,16 @@ PRI SocketWriteByte(socket, register, value)
 PRI ReadSocketByte(socket, register)
   return ReadByte(GetSocketRegister(socket, register))
   
-'----------------------------------------------------
-' Helper Methods
-'---------------------------------------------------- 
+''
+''=======[ Helper Methods... ]============================================================
 PUB SerializeWord(value, buffer)
 {{
-DESCRIPTION:
-
-PARMS:
-  
-RETURNS:
-  
+''DESCRIPTION:
+''
+''PARMS:
+''  
+''RETURNS:
+''  
 }}
   byte[buffer++] := (value & $FF00) >> 8
   byte[buffer] := value & $FF 
@@ -945,17 +898,16 @@ PUB GetSocketRegister(sock, register)
   return sock * SOCKET_REG_SIZE + SOCKET_BASE_ADDRESS + register
 
 
-'----------------------------------------------------
-' SPI Interface
-'----------------------------------------------------  
+''
+''=======[ SPI Interface... ]=============================================================
 PRI Read(register, buffer, length)
 {{
-DESCRIPTION:
-
-PARMS:
-  
-RETURNS:
-  
+''DESCRIPTION:
+''
+''PARMS:
+''  
+''RETURNS:
+''  
 }}
   spi.Read(register, length, buffer)
 
@@ -972,12 +924,12 @@ PRI WriteByte(register, value)
   spi.Write(register, 1, @workSpace)
 
   
-'----------------------------------------------------
-' Debug methods
-' Expose varaibles to higher level objects
-'----------------------------------------------------
-
-
+''
+''=======[ Debug methods... ]=============================================================
+{{
+'' Debug methods
+'' Expose varaibles to higher level objects
+}}
 PUB GetCommonRegister(register)
   return @_mode + register
 
