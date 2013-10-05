@@ -1,0 +1,876 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<style type="text/css">
+	body {
+		background: #404066;
+		color: #000000;
+		font: 10pt verdana, geneva, lucida, 'lucida grande', arial, helvetica, sans-serif;
+		margin: 5px 10px 10px 10px;
+		padding: 0px;
+		overflow: hidden;
+	}
+	h1 {
+		color: darkblue;
+		font :bold 16pt verdana,geneva,lucida,'lucida grande',arial,helvetica,sans-serif;
+		margin-top: 0
+	}
+	.title {
+		text-align: center;
+	}
+	h2 {
+		color:darkblue;
+		font:bold 14pt verdana,geneva,lucida,'lucida grande',arial,helvetica,sans-serif
+	}
+	h3 {
+		color:darkblue;
+		font:bold 12pt verdana,geneva,lucida,'lucida grande',arial,helvetica,sans-serif
+	}
+	h4 {
+		color:#b73235;
+		font:bold 10pt verdana,geneva,lucida,'lucida grande',arial,helvetica,sans-serif
+	}
+	pre {
+		font: 10pt parallax,courier,monospaced;
+		line-height: 97%;
+	}	
+	.source {
+		margin-left: 20px;
+		border: 1px solid #ccc;
+		overflow: auto;
+		display: none;
+		background: #f8f8e8;
+		margin-top: 12pt;
+		width: 95%;
+		padding-top: 5px;
+		padding-left: 10px;
+		max-height: 600px;
+		letter-spacing: 0px;
+	}
+	var {
+		color: #000080;
+		font-style: normal;
+		font-weight: bold;
+		letter-spacing: -1px;
+	}
+	a {
+		font-weight: bold;
+		font-size: 6pt;
+		text-decoration: none;
+		color: #0000cc;
+	}
+	.toc1 {
+		font-size: 12pt;
+		font-weight: bold;
+		vertical-align: baseline;
+		text-align: center;
+		color: #d7d0ff;
+	}		
+	.toc2 {
+		font-size: 95%;
+		font-weight: bold;
+		vertical-align: baseline;
+		color: white;
+		text-decoration: none;
+	}		
+	.toc3 {
+		font-size: 90%;
+		font-weight: normal;
+		vertical-align: baseline;
+		margin-left: 10px;
+		color: white;
+		text-decoration: none;
+	}		
+	.toc4 {
+		font-size: 85%;
+		font-weight: normal;
+		font-style: italic;
+		vertical-align: baseline;
+		margin-left: 20px;
+		color: #d7d0ff;
+		text-decoration: none;
+	}
+	.tocgrp {
+		display: none
+	}
+  hr {
+  	border: 0;
+    color: #b73235;
+    background-color: #b73235;
+    height: 1px;
+  }
+	</style>
+	<script language="JavaScript">
+		window.onload = resize;
+		window.onresize = resize;
+		var show=0;
+		function ShowHide(divId) {
+			if (document.getElementById(divId).style.display!='block') {
+				document.getElementById(divId).style.display='block';
+				if (divId.substring(0, 3) == 'toc') {
+					window.location = '#lbl' + divId.substring(3);
+				}
+			} else {
+				document.getElementById(divId).style.display='none';
+			}
+		};
+    function resize() {
+      var myWidth = 0, myHeight = 0;
+      if(typeof(window.innerWidth) == 'number') {
+        //Non-IE
+        myWidth = window.innerWidth;
+        myHeight = window.innerHeight;
+      } else if(document.documentElement && (document.documentElement.clientWidth || document.documentElement.clientHeight)) {
+        //IE 6+ in 'standards compliant mode'
+        myWidth = document.documentElement.clientWidth;
+        myHeight = document.documentElement.clientHeight;
+      } else if(document.body && (document.body.clientWidth || document.body.clientHeight)) {
+        //IE 4 compatible
+        myWidth = document.body.clientWidth;
+        myHeight = document.body.clientHeight;
+      }
+      document.getElementById("text").style.height = (myHeight - 10) + "px";
+      document.getElementById("text").style.width = (Math.min(myWidth - 250, 800)) + "px";
+      document.getElementById("toc").style.height = (myHeight - 10) + "px";
+     }	
+    function selectall(source) { 
+	    var selection, range, doc, win; 
+	    if ( (doc = source.ownerDocument)
+	    	&& (win = doc.defaultView)
+	    	&& typeof win.getSelection != 'undefined'
+	    	&& typeof doc.createRange != 'undefined' 
+	    	&& (selection = window.getSelection())
+	    	&& typeof selection.removeAllRanges != 'undefined'
+	    ) { 
+	       range = doc.createRange(); 
+	       range.selectNode(source); 
+	       selection.removeAllRanges(); 
+	       selection.addRange(range); 
+	    } else if (document.body && typeof document.body.createTextRange != 'undefined' && (range = document.body.createTextRange())) { 
+	       range.moveToElementText(source); 
+	       range.select(); 
+	    } 
+		}
+  </script>
+</head>
+<body style = "margin: 0 0 0 0;">
+<div align=center>
+<table cellpadding=0 cols=2 border=0>
+	<tr><td valign="top">
+	<div id="toc" style= "width: 200px; height: 600px; overflow: auto; background-color: #222255; border-left: solid #ffffe0"><br/>
+		<div style="background-color:#222255; width: 100%; text-align: center">
+		<img src="data:image/gif;base64,
+			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
+		">
+		</div>
+		<div style="font: bold 11pt verdana,geneva,lucida,'lucida grande',arial,helvetica,sans-serif;color:white; text-align: center; margin-bottom: 10px; margin-top: 10px">SOCKET</div>
+		<p class = "toc1">Table of Contents</p>
+		<div style = "text-align: left; margin-left: 10px;">
+			<a href= "#lbl1" class = "toc2">Preface</a><br/>
+<a href= "#lbl2" class = "toc2">Global CONstants </a><br/>
+<a href= "#lbl4" class = "toc2">VARiables </a><br/>
+<a href= "#lbl6" class = "toc2">Global DATa </a><br/>
+<a href= "#lbl8" class = "toc2">Used OBJects </a><br/>
+<a href= "#lbl10" class = "toc2">PUBlic Spin Methods </a><br/>
+<a href= "#lbl11" class = "toc4">Init</a><br/>
+<a href= "#lbl13" class = "toc4">Destruct</a><br/>
+<a onclick ="javascript:ShowHide('toc15')" href="javascript:;" class = "toc3">Socket Commands... </a><br />
+<div id= "toc15" class = "tocgrp">
+<a href= "#lbl16" class = "toc4">Open</a><br/>
+<a href= "#lbl18" class = "toc4">Listen</a><br/>
+<a href= "#lbl20" class = "toc4">Connect</a><br/>
+<a href= "#lbl22" class = "toc4">Close</a><br/>
+<a href= "#lbl24" class = "toc4">Receive</a><br/>
+<a href= "#lbl26" class = "toc4">Send</a><br/>
+<a href= "#lbl28" class = "toc4">Disconnect</a><br/>
+<a href= "#lbl30" class = "toc4">SendMac</a><br/>
+<a href= "#lbl32" class = "toc4">RemotePort</a><br/>
+<a href= "#lbl34" class = "toc4">DeserializeWord</a><br/>
+</div>
+<a onclick ="javascript:ShowHide('toc36')" href="javascript:;" class = "toc3">Socket Status... </a><br />
+<div id= "toc36" class = "tocgrp">
+<a href= "#lbl37" class = "toc4">Connected</a><br/>
+<a href= "#lbl39" class = "toc4">DataReady</a><br/>
+<a href= "#lbl41" class = "toc4">Available</a><br/>
+<a href= "#lbl43" class = "toc4">IsClosed</a><br/>
+<a href= "#lbl45" class = "toc4">IsCloseWait</a><br/>
+<a href= "#lbl47" class = "toc4">GetStatus</a><br/>
+</div>
+<a onclick ="javascript:ShowHide('toc49')" href="javascript:;" class = "toc3">Socket Properties... </a><br />
+<div id= "toc49" class = "tocgrp">
+<a href= "#lbl50" class = "toc4">Id</a><br/>
+<a href= "#lbl52" class = "toc4">SetTimeout</a><br/>
+<a href= "#lbl54" class = "toc4">SetTransactionTimeout</a><br/>
+<a href= "#lbl56" class = "toc4">GetUpdRemoteIP</a><br/>
+<a href= "#lbl58" class = "toc4">GetUpdDataLength</a><br/>
+<a href= "#lbl60" class = "toc4">GetUpdRemotePort</a><br/>
+<a href= "#lbl62" class = "toc4">GetPort</a><br/>
+<a href= "#lbl64" class = "toc4">RemoteIp</a><br/>
+<a href= "#lbl66" class = "toc4">GetRemoteIP</a><br/>
+<a href= "#lbl68" class = "toc4">GetMtu</a><br/>
+<a href= "#lbl70" class = "toc4">GetTtl</a><br/>
+<a href= "#lbl72" class = "toc4">GetSocketIR</a><br/>
+<a href= "#lbl74" class = "toc4">SetSocketIR</a><br/>
+</div>
+<a onclick ="javascript:ShowHide('toc76')" href="javascript:;" class = "toc2">PRIvate Spin Methods... </a><br />
+<div id= "toc76" class = "tocgrp">
+<a href= "#lbl77" class = "toc4">ParseHeader</a><br/>
+<a href= "#lbl79" class = "toc4">UpdHeaderIp</a><br/>
+<a href= "#lbl81" class = "toc4">UdpHeaderPort</a><br/>
+<a href= "#lbl83" class = "toc4">UdpHeaderDataLen</a><br/>
+</div>
+<a href= "#lbl85" class = "toc2">MIT License </a><br/>
+
+		</div>
+	</div>
+	</td>
+	<td>
+		<div id="text" style= "text-align: left; padding-left: 20px; padding-right: 20px; width: 800px; height: 600px; background-color: #ffffe0; overflow: auto">
+			<h1 id = "lbl1" class = "title">Socket </h1>
+ 
+<br /><br />
+AUTHOR:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Mike Gebhard<br />
+COPYRIGHT:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Parallax Inc.<br />
+LAST MODIFIED:&nbsp;&nbsp;&nbsp;&nbsp;10/04/2013<br />
+VERSION:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1.0<br />
+LICENSE:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MIT (see end of file)<br /><br />
+DESCRIPTION:<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Socket.spin is a generic high level wrapper object for the W5100/W5200.<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Socket.spin encapsulates a W5100/W5200 hardware socket and exposes<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;generic socket methods. <br />
+<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;┌─────────────────┐<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│ Socket Object&nbsp;&nbsp;&nbsp;│<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├─────────────────┤<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│ W5200 Object&nbsp;&nbsp;&nbsp;&nbsp;│<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├─────────────────┤<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│ SPI Driver&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─────────────────┘<br />
+<br />
+MODIFICATIONS:<br />
+ 8/12/2012&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;original file ?<br />
+10/04/2013&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;added minimal spindoc comments<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Michael Sommer (MSrobots)<br />
+
+<br />
+<h2 id = "lbl2">Global CONstants </h2>
+<br /><a onclick ="javascript:ShowHide('lbl3')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl3>  'MACRAW and PPPOE can only be used with socket 0
+  #0, CLOSED, TCP, UDP, IPRAW, MACRAW, PPPOE
+
+  UPD_HEADER_IP       = $00
+  UDP_HEADER_PORT     = $04
+  UDP_HEADER_LENGTH   = $06
+  UPD_DATA            = $08
+
+  'Increase TRANS_TIMEOUT in increments of 100*X if you are experiencing timeouts
+  TRANS_TIMEOUT       = 1500  
+  TIMEOUT             = TRANS_TIMEOUT * 10
+
+  DISCONNECT_TIMEOUT  = 500  
+
+</pre>
+<hr /><br />
+<h2 id = "lbl4">VARiables </h2>
+<br /><a onclick ="javascript:ShowHide('lbl5')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl5>
+  <var>byte</var>  _sock
+  <var>byte</var>  _protocol
+  <var>byte</var>  _remoteIp[4]
+  <var>byte</var>  readCount
+  <var>word</var>  _remotePort
+  <var>word</var>  _dataLen
+  <var>word</var>  _trans_timeout
+  <var>word</var>  _timeout
+
+</pre>
+<hr /><br />
+<h2 id = "lbl6">Global DATa </h2>
+<br /><a onclick ="javascript:ShowHide('lbl7')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl7>
+  _port       <var>word</var>  $2710
+  null        <var>long</var>  $00
+
+</pre>
+<hr /><br />
+<h2 id = "lbl8">Used OBJects </h2>
+<br /><a onclick ="javascript:ShowHide('lbl9')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl9>
+  wiz           : "W5100"
+
+</pre>
+<hr /><br />
+<h2 id = "lbl10">PUBlic Spin Methods </h2>
+<hr /><h4 id = "lbl11">Init(socketId, protocol, portNum)
+</h4>
+
+<br />DESCRIPTION:<br />
+&nbsp;&nbsp;Initialize a socket.<br />
+&nbsp;&nbsp;W5100 has 4 sockets<br />
+&nbsp;&nbsp;W5200 has 8 sockets<br />
+<br />
+PARMS:<br />
+&nbsp;&nbsp;socketId&nbsp;&nbsp;- Socket ID to initialize (0-n)<br />
+&nbsp;&nbsp;protocol&nbsp;&nbsp;- TCP/UPD<br />
+&nbsp;&nbsp;portNum&nbsp;&nbsp;&nbsp;- Listener port (0-65535)&nbsp;&nbsp;<br />
+<br />
+RETURNS:<br />
+&nbsp;&nbsp;Nothing<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl12')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl12><var>PUB</var> Init(socketId, protocol, portNum)
+  _sock := socketId
+  _protocol := protocol
+
+  <var>if</var>(_trans_timeout == null)
+    _trans_timeout := TRANS_TIMEOUT
+    
+  <var>if</var>(_timeout == null)
+    _timeout := TIMEOUT
+  
+  'Increment port numbers stating at 10,000
+  <var>if</var>(portNum == -1)
+    portNum := _port++
+    
+  'wiz.Init
+  wiz.InitSocket(socketId, protocol, portNum)
+  wiz.SetSocketIR(_sock, $FF)
+
+  readCount := 0
+
+</pre>
+<hr /><h4 id = "lbl13">Destruct
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl14')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl14><var>PUB</var> Destruct
+  RemoteIp(0,0,0,0)
+  RemotePort(0)
+  _sock := -1
+  _protocol := CLOSED
+  readCount := 0
+
+</pre>
+<hr /><h3 id = "lbl15">Socket Commands</h3>
+<hr /><h4 id = "lbl16">Open
+</h4>
+
+<br />DESCRIPTION: Open socket<br />
+<br />
+PARMS:<br />
+&nbsp;&nbsp;<br />
+RETURNS: Nothing<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl17')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl17><var>PUB</var> Open
+  wiz.OpenSocket(_sock)
+
+</pre>
+<hr /><h4 id = "lbl18">Listen
+</h4>
+
+<br />DESCRIPTION: Listen on socket<br />
+<br />
+PARMS:<br />
+&nbsp;&nbsp;<br />
+RETURNS: True if started; otherwise returns false.<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl19')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl19><var>PUB</var> Listen
+  <var>if</var>(wiz.IsInit(_sock))
+    wiz.StartListener(_sock)
+    <var>return</var> <var>true</var>
+  <var>return</var> <var>false</var>
+
+</pre>
+<hr /><h4 id = "lbl20">Connect
+</h4>
+
+<br />DESCRIPTION: Connect remote socket<br />
+<br />
+PARMS:<br />
+&nbsp;&nbsp;<br />
+RETURNS: Nothing<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl21')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl21><var>PUB</var> Connect
+
+  wiz.OpenRemoteSocket(_sock)
+
+</pre>
+<hr /><h4 id = "lbl22">Close
+</h4>
+
+<br />DESCRIPTION: Close socket<br />
+<br />
+PARMS:<br />
+&nbsp;&nbsp;<br />
+RETURNS: Nothing<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl23')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl23><var>PUB</var> Close
+  <var>return</var> wiz.CloseSocket(_sock)
+
+</pre>
+<hr /><h4 id = "lbl24">Receive(buffer, bytesToRead)
+</h4>
+
+<br />DESCRIPTION:<br />
+&nbsp;&nbsp;Read the Rx socket buffer into HUB memory.&nbsp;&nbsp;The W5200/W5100<br />
+&nbsp;&nbsp;use a circlar buffer. If the buffer is 100 bytes, we're<br />
+&nbsp;&nbsp;currently at 91 and receice 20 bytes the first 10 bytes fill<br />
+&nbsp;&nbsp;addresses 91-100. The remaining 10 bytes fill addresses 0-9.<br />
+<br />
+&nbsp;&nbsp;The Rx method figures ot if the buffer wraps an updates the<br />
+&nbsp;&nbsp;buffer pointers for the next read.<br />
+<br />
+PARMATERS:<br />
+&nbsp;&nbsp;buffer&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- Pointer to HUB memory<br />
+&nbsp;&nbsp;bytesToRead&nbsp;&nbsp;&nbsp;&nbsp;- Bytes to read into HUB memory<br />
+<br />
+RETURNS:<br />
+&nbsp;&nbsp;pointer to buffer or (buffer + UPD_DATA) if protocol UDP <br />
+
+<br /><a onclick ="javascript:ShowHide('lbl25')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl25><var>PUB</var> Receive(buffer, bytesToRead) | ptr
+  ptr := buffer
+  wiz.Rx(_sock, buffer, bytesToRead)
+  <var>byte</var>[buffer][bytesToRead] := NULL
+  
+  <var>if</var>(_protocol == UDP)
+    'ParseHeader(buffer, bytesToRead)
+    ptr += UPD_DATA
+
+  <var>return</var> ptr
+
+</pre>
+<hr /><h4 id = "lbl26">Send(buffer, length)
+</h4>
+
+<br />DESCRIPTION:<br />
+&nbsp;&nbsp;Write HUB memory to the socket Tx buffer.&nbsp;&nbsp;If the Tx buffer is 100<br />
+&nbsp;&nbsp;bytes, we're&nbsp;&nbsp;currently pointing to 91, and we need to transmit 20 bytes<br />
+&nbsp;&nbsp;the first 10 byte fill addresses 91-100. The remaining 10 bytes<br />
+&nbsp;&nbsp;fill addresses 0-9.<br />
+<br />
+PARMS:<br />
+&nbsp;&nbsp;buffer&nbsp;&nbsp;&nbsp;&nbsp;- Pointer to HUB memory<br />
+&nbsp;&nbsp;length&nbsp;&nbsp;&nbsp;&nbsp;- Bytes to write to the socket buffer<br />
+&nbsp;&nbsp;<br />
+RETURNS:<br />
+&nbsp;&nbsp;bytes written<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl27')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl27><var>PUB</var> Send(buffer, length) | bytesToWrite
+  'Validate max Rx length in bytes
+  bytesToWrite := length
+  <var>if</var>(bytesToWrite &gt; wiz.SocketTxSize(_sock))
+    bytesToWrite := wiz.SocketTxSize(_sock)
+
+  wiz.Tx(_sock, buffer, bytesToWrite)
+    
+  <var>return</var>  bytesToWrite
+
+</pre>
+<hr /><h4 id = "lbl28">Disconnect
+</h4>
+
+<br />DESCRIPTION: Disconnect socket<br />
+<br />
+PARMS:<br />
+&nbsp;&nbsp;<br />
+RETURNS: True if the socket is closed; otherwise returns false.<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl29')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl29><var>PUB</var> Disconnect : i
+  i := readCount := 0
+  wiz.DisconnectSocket(_sock)
+  <var>repeat</var> <var>until</var> wiz.IsClosed(_sock)
+    <var>if</var>(i++ &gt; DISCONNECT_TIMEOUT)
+      wiz.CloseSocket(_sock)
+      <var>return</var> <var>false</var>
+  <var>return</var> <var>true</var>  
+
+</pre>
+<hr /><h4 id = "lbl30">SendMac(buffer, len)
+</h4>
+
+<br />DESCRIPTION:<br />
+<br />
+PARMS:<br />
+&nbsp;&nbsp;<br />
+RETURNS:<br />
+&nbsp;&nbsp;<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl31')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl31><var>PUB</var> SendMac(buffer, len) | bytesToWrite
+  <var>ifnot</var>(_protocol == UDP)
+    <var>return</var> Send(buffer, len)
+    
+  'Validate max Rx length in bytes
+  bytesToWrite := len
+  <var>if</var>(len &gt; wiz.SocketTxSize(_sock))
+    bytesToWrite := wiz.SocketTxSize(_sock)
+
+  wiz.Tx(_sock, buffer, bytesToWrite)
+
+  <var>return</var>  bytesToWrite
+
+</pre>
+<hr /><h4 id = "lbl32">RemotePort(port)
+</h4>
+
+<br />DESCRIPTION:<br />
+<br />
+PARMS:<br />
+&nbsp;&nbsp;<br />
+RETURNS:<br />
+&nbsp;&nbsp;<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl33')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl33><var>PUB</var> RemotePort(port)
+  wiz.SetRemotePort(_sock, port)
+
+</pre>
+<hr /><h4 id = "lbl34">DeserializeWord(buffer)
+</h4>
+
+<br />DESCRIPTION:<br />
+<br />
+PARMS:<br />
+&nbsp;&nbsp;<br />
+RETURNS:<br />
+&nbsp;&nbsp;<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl35')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl35><var>PUB</var> DeserializeWord(buffer)
+<var>return</var> wiz.DeserializeWord(buffer)
+
+</pre>
+<hr /><h3 id = "lbl36">Socket Status</h3>
+<hr /><h4 id = "lbl37">Connected
+</h4>
+
+<br />DESCRIPTION: Determine if the socket is established<br />
+<br />
+PARMS:<br />
+&nbsp;&nbsp;<br />
+RETURNS: True if the socket is established; otherwise returns false. <br />
+
+<br /><a onclick ="javascript:ShowHide('lbl38')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl38><var>PUB</var> Connected
+  <var>return</var> wiz.IsEstablished(_sock)
+
+</pre>
+<hr /><h4 id = "lbl39">DataReady
+</h4>
+
+<br />DESCRIPTION:<br />
+&nbsp;&nbsp;Read socket receive size register<br />
+&nbsp;&nbsp;<br />
+PARMS:<br />
+&nbsp;&nbsp;&nbsp;&nbsp;<br />
+RETURNS:<br />
+&nbsp;&nbsp;2 bytes: Number of bytes received<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl40')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl40><var>PUB</var> DataReady
+  <var>return</var> wiz.GetRxBytesToRead(_sock)
+
+</pre>
+<hr /><h4 id = "lbl41">Available
+</h4>
+
+<br />DESCRIPTION:<br />
+<br />
+PARMS:<br />
+&nbsp;&nbsp;<br />
+RETURNS:<br />
+&nbsp;&nbsp;<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl42')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl42><var>PUB</var> Available | i, bytesToRead, tout
+  bytesToRead := i := 0
+
+  <var>if</var>(readCount++ == 0)
+    tout := _timeout 
+  <var>else</var>
+    tout := _trans_timeout
+
+  <var>repeat</var> <var>until</var> NULL &lt; bytesToRead := wiz.GetRxBytesToRead(_sock)
+    'waitcnt(((clkfreq / 1_000_000 * TIMEOUT_DELAY - 3932) #&gt; 381) + cnt) 
+    <var>if</var>(i++ &gt; tout)
+      <var>if</var>(tout == TIMEOUT)
+        readCount := 0
+        <var>return</var> -1
+      <var>else</var>
+        <var>return</var> 0 
+
+  <var>return</var> bytesToRead
+
+</pre>
+<hr /><h4 id = "lbl43">IsClosed
+</h4>
+
+<br />DESCRIPTION: Determine if the socket is closed<br />
+<br />
+PARMS:<br />
+&nbsp;&nbsp;<br />
+RETURNS: True if the socket is closed; otherwise returns false. <br />
+
+<br /><a onclick ="javascript:ShowHide('lbl44')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl44><var>PUB</var> IsClosed
+  <var>return</var> wiz.IsClosed(_sock)
+
+</pre>
+<hr /><h4 id = "lbl45">IsCloseWait
+</h4>
+
+<br />DESCRIPTION: Determine if the socket is close wait<br />
+<br />
+PARMS:<br />
+&nbsp;&nbsp;<br />
+RETURNS: True if the socket is close wait; otherwise returns false. <br />
+
+<br /><a onclick ="javascript:ShowHide('lbl46')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl46><var>PUB</var> IsCloseWait
+  <var>return</var> wiz.IsCloseWait(_sock)
+
+</pre>
+<hr /><h4 id = "lbl47">GetStatus
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl48')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl48><var>PUB</var> GetStatus
+  <var>return</var> wiz.GetSocketStatus(_sock)
+
+</pre>
+<hr /><h3 id = "lbl49">Socket Properties</h3>
+<hr /><h4 id = "lbl50">Id
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl51')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl51><var>PUB</var> Id
+  <var>return</var> _sock
+
+</pre>
+<hr /><h4 id = "lbl52">SetTimeout(value)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl53')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl53><var>PUB</var> SetTimeout(value)
+  _timeout := value
+
+</pre>
+<hr /><h4 id = "lbl54">SetTransactionTimeout(value)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl55')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl55><var>PUB</var> SetTransactionTimeout(value)
+  _trans_timeout := value
+
+</pre>
+<hr /><h4 id = "lbl56">GetUpdRemoteIP
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl57')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl57><var>PUB</var> GetUpdRemoteIP
+  <var>return</var> @_remoteIp
+
+</pre>
+<hr /><h4 id = "lbl58">GetUpdDataLength
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl59')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl59><var>PUB</var> GetUpdDataLength
+  <var>return</var> _dataLen
+
+</pre>
+<hr /><h4 id = "lbl60">GetUpdRemotePort
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl61')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl61><var>PUB</var> GetUpdRemotePort
+  <var>return</var> _remotePort
+
+</pre>
+<hr /><h4 id = "lbl62">GetPort
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl63')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl63><var>PUB</var> GetPort
+  <var>return</var> wiz.GetSocketPort(_sock)
+
+</pre>
+<hr /><h4 id = "lbl64">RemoteIp(octet3, octet2, octet1, octet0)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl65')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl65><var>PUB</var> RemoteIp(octet3, octet2, octet1, octet0)
+  wiz.RemoteIp(_sock, octet3, octet2, octet1, octet0)
+
+</pre>
+<hr /><h4 id = "lbl66">GetRemoteIP
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl67')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl67><var>PUB</var> GetRemoteIP
+  <var>return</var> wiz.GetRemoteIp(_sock)
+
+</pre>
+<hr /><h4 id = "lbl68">GetMtu
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl69')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl69><var>PUB</var> GetMtu
+  <var>return</var> wiz.GetMaximumSegmentSize(_sock)
+
+</pre>
+<hr /><h4 id = "lbl70">GetTtl
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl71')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl71><var>PUB</var> GetTtl
+  <var>return</var> wiz.GetTimeToLive(_sock)
+
+</pre>
+<hr /><h4 id = "lbl72">GetSocketIR
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl73')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl73><var>PUB</var> GetSocketIR
+  <var>return</var> wiz.GetSocketIR(_sock)
+
+</pre>
+<hr /><h4 id = "lbl74">SetSocketIR(value)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl75')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl75><var>PUB</var> SetSocketIR(value)
+  wiz.SetSocketIR(_sock, value)
+
+</pre>
+<hr /><br />
+<h2 id = "lbl76">PRIvate Spin Methods</h2>
+<hr /><h4 id = "lbl77">ParseHeader(buffer, bytesToRead)
+</h4>
+
+<br />DESCRIPTION:<br />
+<br />
+PARMS:<br />
+&nbsp;&nbsp;<br />
+RETURNS:<br />
+&nbsp;&nbsp;<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl78')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl78><var>PRI</var> ParseHeader(buffer, bytesToRead)
+  <var>if</var>(bytesToRead &gt; 8)
+    UpdHeaderIp(buffer)
+    UdpHeaderPort(buffer)
+    UdpHeaderDataLen(buffer)
+
+</pre>
+<hr /><h4 id = "lbl79">UpdHeaderIp(header)
+</h4>
+
+<br />DESCRIPTION:<br />
+<br />
+PARMS:<br />
+&nbsp;&nbsp;<br />
+RETURNS:<br />
+&nbsp;&nbsp;<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl80')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl80><var>PRI</var> UpdHeaderIp(header)
+  _remoteIp[0] := <var>byte</var>[header][UPD_HEADER_IP]
+  _remoteIp[1] := <var>byte</var>[header][UPD_HEADER_IP+1]
+  _remoteIp[2] := <var>byte</var>[header][UPD_HEADER_IP+2]
+  _remoteIp[3] := <var>byte</var>[header][UPD_HEADER_IP+3]
+
+</pre>
+<hr /><h4 id = "lbl81">UdpHeaderPort(header)
+</h4>
+
+<br />DESCRIPTION:<br />
+<br />
+PARMS:<br />
+&nbsp;&nbsp;<br />
+RETURNS:<br />
+&nbsp;&nbsp;<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl82')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl82><var>PRI</var> UdpHeaderPort(header)
+  _remotePort := DeserializeWord(header + UDP_HEADER_PORT)
+
+</pre>
+<hr /><h4 id = "lbl83">UdpHeaderDataLen(header)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl84')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl84><var>PRI</var> UdpHeaderDataLen(header)
+  _dataLen := DeserializeWord(header + UDP_HEADER_LENGTH)
+
+</pre>
+<hr /><br />
+<h2 id = "lbl85">MIT License </h2>
+<br /><a onclick ="javascript:ShowHide('lbl86')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl86>                                                    'MIT License
+
+</pre>
+<hr /><pre>
+ ______________________________________________________________________________________
+|                            TERMS OF USE: MIT License                                 |                                                            
+|______________________________________________________________________________________|
+|Permission is hereby granted, free of charge, to any person obtaining a copy of this  |
+|software and associated documentation files (the "Software"), to deal in the Software |
+|without restriction, including without limitation the rights to use, copy, modify,    |
+|merge, publish, distribute, sublicense, and/or sell copies of the Software, and to    |
+|permit persons to whom the Software is furnished to do so, subject to the following   |
+|conditions:                                                                           |
+|                                                                                      |
+|The above copyright notice and this permission notice shall be included in all copies |
+|or substantial portions of the Software.                                              |
+|                                                                                      |
+|THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,   |
+|INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A         |
+|PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT    |
+|HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF  |
+|CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE  |
+|OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                         |
+|______________________________________________________________________________________|
+</pre>
+<br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br />
+		</div>
+	</td></tr>
+</table>
+</div>
+</body>
+</html>	
