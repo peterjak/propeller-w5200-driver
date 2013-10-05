@@ -89,7 +89,7 @@ CON
 
   Zone = MST        '<- Insert your timezone
 
-''-------[ PSX/PSE CMDS ... ]-------------------------------------------------------------
+''-------[ PSX/PSE CMDS ]-----------------------------------------------------------------
   { PSX CMDS }    
   REQ_PARA_STRING   = 1
   REQ_PARA_NUMBER   = 2
@@ -115,7 +115,7 @@ CON
   PSE_CALL          = 91
   PSE_TRANSFER      = 92
 
-''-------[ Other constants  ... ]---------------------------------------------------------
+''-------[ Other Constants ]--------------------------------------------------------------
   TCP_MTU           = 1460
   BUFFER_3K         = $C00
   BUFFER_LOG        = $80
@@ -248,7 +248,7 @@ OBJ
   req               : "HttpHeader"
 
 ''
-''=======[ PUBlic Spin Methods]===========================================================
+''=======[ PUBlic Spin Methods ]==========================================================
 PUB RunServer : value                                   'Run Server
 {{
 ''RunServer:        STARTUP Server
@@ -359,7 +359,7 @@ PUB RunServer : value                                   'Run Server
   reboot                                                'ERROR - DONE!
 
 '' 
-''=======[ PRIvate Spin Methods ... ]=====================================================
+''=======[ PRIvate Spin Methods ]=========================================================
 PRI Server : handled | bytesToRead, sockId, rtcDelay, JustHeader, filename, ticks 'Main Program Loop (Spin cog 0)
 {{
 ''Server:           Main Program Loop (Spin cog 0)
