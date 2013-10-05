@@ -48,7 +48,7 @@ CON
 DAT
   time        byte  $0[8]
   mon         byte  "Jan", 0, "Feb", 0, "Mar", 0, "Apr", 0, "May", 0, "Jun", 0, "Jul", 0, "Aug", 0, "Sep", 0, "Oct", 0, "Nov", 0, "Dec", 0
-  wday        byte  "Sun", 0, "Mon", 0, "Tue", 0, "Wed", 0, "Thu", 0, "Fri", 0, "Sat", 0
+  wday        byte  "Mon", 0, "Tue", 0, "Wed", 0, "Thu", 0, "Fri", 0, "Sat", 0, "Sun", 0
   httpDate    byte  "Wed, 01 Feb 2000 01:00:00 GMT", 0
 
 'MG
@@ -99,9 +99,10 @@ PUB clockDay '' 3 Stack Longs
 
 '' ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 '' // Returns the cached day (1 - 7) from the real time clock.
+'' // MG Returns 0-6
 '' ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  return (time[3] + 1)
+  return (time[3])
 
 PUB clockDate '' 3 Stack Longs
 
@@ -191,7 +192,7 @@ PUB writeTime(second, minute, hour, day, date, month, year) | index, information
 '' // Second - Number to set the second to between 0 - 59.
 '' // Minute - Number to set the minute to between 0 - 59.
 '' // Hour - Number to set the hour to between 0 - 23.
-'' // Day - Number to set the day to between 1 - 7.
+'' // Day - Number to set the day to between 1 - 7.  MG The RTC uses 0-6
 '' // Date - Number to set the date to between 1 - 31.
 '' // Month - Number to set the month to between 1 - 12.
 '' // Year - Number to set the year to between 2000 - 2099.
@@ -212,7 +213,8 @@ PUB writeTime(second, minute, hour, day, date, month, year) | index, information
     information := ((second <# 59) #> 0)
     information[1] := ((minute <# 59) #> 0)
     information[2] := ((hour <# 23) #> 0)
-    information[3] := (((day <# 7) #> 1) - 1)
+    'information[3] := (((day <# 7) #> 1) - 1)
+    information[3] := (((day <# 6) #> 0))
     information[4] := ((date <# 31) #> 1)
     information[5] := ((month <# 12) #> 1)
     information[6] := (((year <# 2_099) #> 2_000) - 2_000)
