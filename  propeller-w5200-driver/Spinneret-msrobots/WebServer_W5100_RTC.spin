@@ -1319,6 +1319,19 @@ PRI InputAvailableBytes(port)
 }
 
 ''
+''=======[ Documentation ]================================================================
+CON                                                     'Documentation
+{{{
+This .spin file supports PhiPi's great Spin Code Documenter found at
+http://www.phipi.com/spin2html/
+
+You can at any time create a .htm Documentation out of the .spin source.
+
+If you change the .spin file you can (re)create the .htm file by uploading your .spin file
+to http://www.phipi.com/spin2html/ and then saving the the created .htm page. 
+}}
+
+''
 ''=======[ MIT License ]==================================================================
 CON                                                     'MIT License
 {{{

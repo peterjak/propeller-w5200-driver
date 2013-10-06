@@ -12,5 +12,6 @@
 10/04/2013	added spindoc comments
 		added VS2008 sources for cmdline tools
 		replaced SNTP Simple Network Time Protocol v2.01.spin by Sntp.spin
+10/05/2013	added more spindoc comments
 
 

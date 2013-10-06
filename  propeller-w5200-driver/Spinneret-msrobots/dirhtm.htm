@@ -211,9 +211,7 @@
 		<p class = "toc1">Table of Contents</p>
 		<div style = "text-align: left; margin-left: 10px;">
 			<a href= "#lbl1" class = "toc2">Preface</a><br/>
-<a onclick ="javascript:ShowHide('toc2')" href="javascript:;" class = "toc2">Global CONstants ... </a><br />
-<div id= "toc2" class = "tocgrp">
-</div>
+<a href= "#lbl2" class = "toc2">Global CONstants </a><br/>
 <a href= "#lbl4" class = "toc2">PUBlic Spin Methods</a><br/>
 <a href= "#lbl5" class = "toc4">getPasmADDR</a><br/>
 <a href= "#lbl7" class = "toc2">Assembly Cog </a><br/>
@@ -230,7 +228,8 @@
 <a href= "#lbl28" class = "toc3">Unsigned Divide </a><br/>
 <a href= "#lbl30" class = "toc3">Data Constants </a><br/>
 <a href= "#lbl32" class = "toc3">Variables </a><br/>
-<a href= "#lbl34" class = "toc2">MIT License </a><br/>
+<a href= "#lbl34" class = "toc2">Documentation </a><br/>
+<a href= "#lbl36" class = "toc2">MIT License </a><br/>
 
 		</div>
 	</div>
@@ -242,8 +241,8 @@
 <br /><br />
 AUTHOR:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Michael Sommer (@MSrobots)<br />
 COPYRIGHT:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;See LICENCE (MIT)&nbsp;&nbsp;&nbsp;&nbsp;<br />
-LAST MODIFIED:&nbsp;&nbsp;&nbsp;&nbsp;10/04/2013<br />
-VERSION:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1.0<br />
+LAST MODIFIED:&nbsp;&nbsp;&nbsp;&nbsp;10/05/2013<br />
+VERSION:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1.0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br />
 LICENSE:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MIT (see end of file)<br /><br />
 DESCRIPTION:<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;outputs html page showing directory<br />
@@ -253,7 +252,7 @@ DESCRIPTION:<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;shows root dir without parameter<br />
 <br />
 MODIFICATIONS:<br />
-10/04/2013&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;added spindoc comments<br />
+10/05/2013&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;added spindoc comments<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Michael Sommer (MSrobots)<br />
 
 <br />
@@ -289,7 +288,8 @@ MODIFICATIONS:<br />
 <var>return</var> @cmdptr
 
 </pre>
-<hr /><h2 id = "lbl7">Assembly Cog </h2>
+<hr /><br />
+<h2 id = "lbl7">Assembly Cog </h2>
 <h3 id = "lbl8">Start and Stop </h3>
 <br /><a onclick ="javascript:ShowHide('lbl9')" href="javascript:;">SOURCE CODE...</a>
 <pre class=source id=lbl9>                        <var>org</var>     0
@@ -761,9 +761,24 @@ LNDivideQuotient        <var>res</var>     1
 
 </pre>
 <hr /><br />
-<h2 id = "lbl34">MIT License </h2>
+<h2 id = "lbl34">Documentation </h2>
 <br /><a onclick ="javascript:ShowHide('lbl35')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl35>                                                    'MIT License
+<pre class=source id=lbl35>                                                    'Documentation
+
+</pre>
+<hr /><pre>
+This .spin file supports PhiPi's great Spin Code Documenter found at
+http://www.phipi.com/spin2html/
+
+You can at any time create a .htm Documentation out of the .spin source.
+
+If you change the .spin file you can (re)create the .htm file by uploading your .spin file
+to http://www.phipi.com/spin2html/ and then saving the the created .htm page. 
+</pre>
+<br />
+<h2 id = "lbl36">MIT License </h2>
+<br /><a onclick ="javascript:ShowHide('lbl37')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl37>                                                    'MIT License
 
 </pre>
 <hr /><pre>

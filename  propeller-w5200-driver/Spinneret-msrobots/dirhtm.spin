@@ -3,8 +3,8 @@
 ''
 ''AUTHOR:           Michael Sommer (@MSrobots)
 ''COPYRIGHT:        See LICENCE (MIT)    
-''LAST MODIFIED:    10/04/2013
-''VERSION:          1.0
+''LAST MODIFIED:    10/05/2013
+''VERSION:          1.0       
 ''LICENSE:          MIT (see end of file)
 ''
 ''
@@ -16,12 +16,12 @@
 ''                  shows root dir without parameter
 ''
 ''MODIFICATIONS:
-''10/04/2013        added spindoc comments
+''10/05/2013        added spindoc comments
 ''                  Michael Sommer (MSrobots)
 }}
 CON
 ''
-''=======[ Global CONstants ... ]=========================================================
+''=======[ Global CONstants ]=============================================================
   { PSX CMDS }    
   REQ_PARA_STRING  = 1
   REQ_PARA_NUMBER  = 2
@@ -505,6 +505,19 @@ LNDivideDividend        res     1
 LNDivideDivsor          res     1
 LNDivideQuotient        res     1
                         fit     496
+''
+''=======[ Documentation ]================================================================
+CON                                                     'Documentation
+{{{
+This .spin file supports PhiPi's great Spin Code Documenter found at
+http://www.phipi.com/spin2html/
+
+You can at any time create a .htm Documentation out of the .spin source.
+
+If you change the .spin file you can (re)create the .htm file by uploading your .spin file
+to http://www.phipi.com/spin2html/ and then saving the the created .htm page. 
+}}
+
 ''
 ''=======[ MIT License ]==================================================================
 CON                                                     'MIT License
