@@ -157,8 +157,8 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
   pst.char(CR)
 
   pst.str(string("Resolved IP(0)....")) 
-  remoteIP := dns.ResolveDomain(string("www.agaverobotics.com"))
-  'remoteIP := dns.ResolveDomain(string("finance.google.com"))
+  'remoteIP := dns.ResolveDomain(string("www.agaverobotics.com"))
+  remoteIP := dns.ResolveDomain(string("finance.google.com"))
   'remoteIP := dns.ResolveDomain(string("google.com"))
   'remoteIP := dns.ResolveDomain(string("www.weather.gov"))
   'remoteIP := dns.ResolveDomain(string("rcc.cfbtechnologies.com"))
@@ -186,8 +186,10 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
   pst.hex(sock.GetStatus, 2)
   pst.char(CR)
 
-  repeat until sock.Connect > 1
-    pause(500)  
+  sock.Connect
+
+  'repeat until sock.Connect > 1
+    'pause(500)  
     'sock.Open
     'pst.str(string("Status(open)......"))
     'pst.hex(sock.GetStatus, 2)
@@ -208,8 +210,8 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, remoteIP, dnsServer, total
     pause(100)
 
   pst.str(string("Sending HTTP Request", CR))
-  bytesSent := sock.Send(@request2, strsize(@request2))
-  'bytesSent := sock.Send(@google, strsize(@google))
+  'bytesSent := sock.Send(@request2, strsize(@request2))
+  bytesSent := sock.Send(@google, strsize(@google))
   'bytesSent := sock.Send(@s_google, strsize(@s_google))
   'bytesSent := sock.Send(@weather, strsize(@weather))
   'bytesSent := sock.Send(@basicAuthReq, strsize(@basicAuthReq))
