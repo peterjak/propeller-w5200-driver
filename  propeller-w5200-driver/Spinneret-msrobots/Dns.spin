@@ -1,20 +1,23 @@
-'*********************************************************************************************
-{
-AUTHOR: Mike Gebhard
-COPYRIGHT: Parallax Inc.
-LAST MODIFIED: 10/30/2012
-VERSION 1.0
-LICENSE: MIT (see end of file)
-
-DESCRIPTION:
-The DNS object
-
-}
-'*********************************************************************************************
- 
+'':::::::[ DNS ]::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+{{
+''
+''AUTHOR:           Mike Gebhard
+''COPYRIGHT:        Parallax Inc.
+''LAST MODIFIED:    10/05/2013
+''VERSION:          1.0
+''LICENSE:          MIT (see end of file)
+''
+''
+''DESCRIPTION:
+''                  The DNS object
+''
+''MODIFICATIONS:
+''10/05/2013        added minimal spindoc comments
+''                  Michael Sommer (MSrobots)
+}}
 CON
-  _clkmode = xtal1 + pll16x     
-  _xinfreq = 5_000_000
+''
+''=======[ Global CONstants ]=============================================================
 
   BUFFER_2K         = $800
   BUFFER_16         = $10
@@ -39,8 +42,8 @@ CON
 
   DNS_PORT          = 53               
        
-VAR
-
+''     
+''=======[ Global DATa ]==================================================================
 DAT
   msgId           word  $0
   dnsHeader       byte  $01, $00,               { Flags
@@ -85,10 +88,14 @@ DAT
   transId         long  $00
   null            long  $00
 
+''
+''=======[ Used OBJects ]=================================================================
 OBJ
   sock          : "Socket"
   wiz           : "W5100"
  
+''
+''=======[ PUBlic Spin Methods]===========================================================
 PUB Init(buffer, socket) | dnsPtr
 {{
 DESCRIPTION:
@@ -283,8 +290,21 @@ PUB SendReceive(buffer, len) | bytesToRead
   sock.Disconnect
   
 ''
+''=======[ Documentation ]================================================================
+CON                                                     'Documentation
+{{{
+This .spin file supports PhiPi's great Spin Code Documenter found at
+http://www.phipi.com/spin2html/
+
+You can at any time create a .htm Documentation out of the .spin source.
+
+If you change the .spin file you can (re)create the .htm file by uploading your .spin file
+to http://www.phipi.com/spin2html/ and then saving the the created .htm page. 
+}}
+
+''
 ''=======[ MIT License ]==================================================================
-CON                                                     'MIT License
+CON                                                     'MIT License 
 {{{
  ______________________________________________________________________________________
 |                            TERMS OF USE: MIT License                                 |                                                            

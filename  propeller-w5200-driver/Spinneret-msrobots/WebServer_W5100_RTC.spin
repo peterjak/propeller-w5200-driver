@@ -167,6 +167,14 @@ DAT
   xtime         byte  "00/00/0000 00:00:00</time>", CR, LF, "  <day>"
   xday          byte  "---","</day>", CR, LF, "</root>", $0
 
+
+  _newline      byte  CR, LF
+  _newlineend   byte  $0
+  _contlen      byte  "Content-Length: "
+  _contlenend   byte  $0          
+  _conttyp      byte  "Content-Type: "
+  _conttypend   byte  $0          
+
   _optallow     byte  "Allow:"
   _optallowend
   _optpublic    byte  "Public:"
@@ -194,6 +202,33 @@ DAT
   _h409         byte  "HTTP/1.1 409 Conflict"
   _h409end      byte  $0
   
+
+' now all long aligned
+
+  _css          long
+                byte   "CSS",0, "text/css", $0
+  _gif          long
+                byte   "GIF",0, "image/gif", $0
+  _html         long
+                byte   "HTM",0, "text/html", $0
+  _ico          long
+                byte   "ICO",0, "image/x-icon", $0
+  _jpg          long
+                byte   "JPG",0, "image/jpeg", $0
+  _js           long
+                byte   "JS",0,0, "application/javascript", $0
+  _pdf          long
+                byte   "PDF",0, "application/pdf", $0
+  _png          long
+                byte   "PNG",0, "image/png", $0 
+  _txt          long
+                byte   "TXT",0, "text/plain; charset=utf-8", $0  
+  _xml          long
+                byte   "XML",0, "text/xml", $0
+  _zip          long
+                byte   "ZIP",0, "application/zip", $0
+
+{  
   _css          byte  "Content-Type: text/css", $0
   _gif          byte  "Content-Type: image/gif", $0
   _html         byte  "Content-Type: text/html", $0
@@ -205,20 +240,14 @@ DAT
   _txt          byte  "Content-Type: text/plain; charset=utf-8", $0  
   _xml          byte  "Content-Type: text/xml", $0
   _zip          byte  "Content-Type: application/zip", $0
-  _contLen      byte  "Content-Length: "
-  _contlenend   byte  $0          
-  _newline      byte  CR, LF
-  _newlineend   byte  $0
-  
+}
 
-' now all long aligned
-  outBufPtr     long  0 ' used for delayed writing
-
-  pse           long
+  _pse          long
                 byte "PSE",0
-  psx           long
+  _psx          long
                 byte "PSX",0
 
+  outBufPtr     long  0 ' used for delayed writing
   buff          long
                 byte  $0[BUFFER_3K]
   sntpBuff      byte  $0[BUFFER_SNTP]
@@ -226,7 +255,7 @@ DAT
   logBuf        byte  $0[BUFFER_LOG]
   null          long  $00
   
-  contentType   long  @_css, @_gif, @_html, @_ico, @_jpg, @_js, @_pdf, @_png, @_txt, @_xml, @_zip, $0
+'  contentType   long  @_css, @_gif, @_html, @_ico, @_jpg, @_js, @_pdf, @_png, @_txt, @_xml, @_zip, $0
   mtuBuff       long  TCP_MTU
   
   longHIGH      long  0         'Expected 4-contigous variables for SNTP
@@ -433,9 +462,10 @@ PRI BuildStatusHeader(sockID, status, contentLength) | src 'write HEADER into ou
 ''BuildStatusHeader: write HEADER into outBuf
 }}
   SendStrCRLF(sockID, status)                           'write Status
+  SendBytes(sockID, @_conttyp, constant(@_conttypend-@_conttyp)) 'write text Content-Typ: 
   SendStrCRLF(sockID, GetContentType(req.GetFileNameExtension)) 'write ContentType
   if(contentLength > -1)                                'if >-1 Add content-length : value CR, LF
-    SendBytes(sockID, @_contLen, constant(@_contlenend-@_contLen))
+    SendBytes(sockID, @_contLen, constant(@_contlenend-@_contLen))'write text Content-Len
     SendStrCRLF(sockID, Dec(contentLength))
   SendCRLF(sockID)                                      'End the header with a new line
       
@@ -515,9 +545,9 @@ PRI PsxHandler(sockID, fn, JustHeader) | ext            'Handle PSX Requests
 ''PsxHandler:       Handle PSX Requests
 }}
   ext := long[req.GetFileNameExtension] & (!$202020)    'convert to upper case
-  if ext==psx '(ext==psx1) OR (ext==psx2)               'if psx extension
+  if ext==_psx                                          'if psx extension
     RESULT := PseHandler(sockID, fn, JustHeader)        ' execute
-  elseif ext==pse '(ext==pse1) OR (ext==pse2)           'if pse extension
+  elseif ext==_pse                                      'if pse extension
     RESULT := SendFlushOKorERR(sockID,true,0, 0, @_h403, constant(@_h403end-@_h403)) ' send 403 Forbidden (no direct call allowed for pse)
  
 PRI PseHandler(sockID, fn, JustHeader) | daisy, fs, psmptr, bufptr, cog, cmd, param1, param2 , param3, param4, param5, param6 'Handle PSE Requests
@@ -942,6 +972,7 @@ PRI FillDay(addressToPut)                               'outputs first 3 chars o
 {{
 ''FillDay:          Outputs first 3 chars of rtc.getDayString to addressToPut
 }}
+
   rtc.readTime
   bytemove(addressToPut, rtc.getDayString, 3)
   return addressToPut
@@ -1019,6 +1050,31 @@ PRI GetContentType(ext)                                 'returns addr of content
 {{
 ''GetContentType:   Returns addr of content type string depending on ext  
 }}
+  RESULT := @_html +4                                   'preset with text/html
+  ext := long[ext] & (!$202020)                         'convert to upper case
+  case ext
+    _css:
+      RESULT := @_css +4  
+    _gif:
+      RESULT := @_gif +4  
+    _ico:
+      RESULT := @_ico +4  
+    _jpg:
+      RESULT := @_jpg +4  
+    _js:
+      RESULT := @_js +4  
+    _pdf:
+      RESULT := @_pdf +4  
+    _png:
+      RESULT := @_png +4  
+    _txt:
+      RESULT := @_txt +4  
+    _xml:
+      RESULT := @_xml +4  
+    _zip:
+      RESULT := @_zip +4  
+
+{
   if(strcomp(ext, string("css")) OR strcomp(ext, string("CSS")))
     return @@contentType[CSS]
     
@@ -1053,6 +1109,7 @@ PRI GetContentType(ext)                                 'returns addr of content
     return @@contentType[ZIP]
     
   return @@contentType[HTML]
+}
 
 PRI Dec(value) | i, x, j                                'encode value into string (base 10)
 {{

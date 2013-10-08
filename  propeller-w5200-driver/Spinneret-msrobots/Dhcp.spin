@@ -19,7 +19,7 @@
 }}
 CON
 ''
-''=======[ Global CONstants ... ]=========================================================
+''=======[ Global CONstants ]=============================================================
 
   BUFFER_2K         = $800
   BUFFER_16         = $10
@@ -36,7 +36,7 @@ CON
   
   #0, CLOSED, TCP, UDP, IPRAW, MACRAW, PPPOE
 
-  {{ DHCP Packet Pointers }}
+  { DHCP Packet Pointers }
   DHCP_OP            = $00
   DHCP_HTYPE         = $01
   DHCP_HLEN          = $02
@@ -53,7 +53,7 @@ CON
   DHCP_MAGIC_COOKIE  = $EC
   DHCP_DHCP_OPTIONS  = $F0
 
-  {{ DHCP Options Enum}}
+  { DHCP Options Enum }
   SUBNET_MASK         = 01
   ROUTER_IP           = 03
   DOMAIN_NAME_SERVER  = 06
@@ -71,7 +71,7 @@ CON
   
   
 
-  {{ DHCP Message Types}}
+  { DHCP Message Types }
   DHCP_DISCOVER       = 1       
   DHCP_OFFER          = 2       
   DHCP_REQUEST        = 3       
@@ -80,7 +80,7 @@ CON
   DHCP_NAK            = 6       
   DHCP_RELEASE        = 7
 
-  {{ Packet Types }}
+  { Packet Types }
   #0, SUCCESS, DISCOVER_ERROR, OFFER_ERROR, REQUEST_ERROR, ACK_ERROR, DUNNO_ERROR 
 
   HOST_PORT           = 68
@@ -438,7 +438,7 @@ PRI EndDhcpOptions | len                                '?
 ''
 ''=======[ Documentation ]================================================================
 CON                                                     'Documentation
-{{{
+{{
 This .spin file supports PhiPi's great Spin Code Documenter found at
 http://www.phipi.com/spin2html/
 

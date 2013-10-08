@@ -1,0 +1,1428 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<style type="text/css">
+	body {
+		background: #404066;
+		color: #000000;
+		font: 10pt verdana, geneva, lucida, 'lucida grande', arial, helvetica, sans-serif;
+		margin: 5px 10px 10px 10px;
+		padding: 0px;
+		overflow: hidden;
+	}
+	h1 {
+		color: darkblue;
+		font :bold 16pt verdana,geneva,lucida,'lucida grande',arial,helvetica,sans-serif;
+		margin-top: 0
+	}
+	.title {
+		text-align: center;
+	}
+	h2 {
+		color:darkblue;
+		font:bold 14pt verdana,geneva,lucida,'lucida grande',arial,helvetica,sans-serif
+	}
+	h3 {
+		color:darkblue;
+		font:bold 12pt verdana,geneva,lucida,'lucida grande',arial,helvetica,sans-serif
+	}
+	h4 {
+		color:#b73235;
+		font:bold 10pt verdana,geneva,lucida,'lucida grande',arial,helvetica,sans-serif
+	}
+	pre {
+		font: 10pt parallax,courier,monospaced;
+		line-height: 97%;
+	}	
+	.source {
+		margin-left: 20px;
+		border: 1px solid #ccc;
+		overflow: auto;
+		display: none;
+		background: #f8f8e8;
+		margin-top: 12pt;
+		width: 95%;
+		padding-top: 5px;
+		padding-left: 10px;
+		max-height: 600px;
+		letter-spacing: 0px;
+	}
+	var {
+		color: #000080;
+		font-style: normal;
+		font-weight: bold;
+		letter-spacing: -1px;
+	}
+	a {
+		font-weight: bold;
+		font-size: 6pt;
+		text-decoration: none;
+		color: #0000cc;
+	}
+	.toc1 {
+		font-size: 12pt;
+		font-weight: bold;
+		vertical-align: baseline;
+		text-align: center;
+		color: #d7d0ff;
+	}		
+	.toc2 {
+		font-size: 95%;
+		font-weight: bold;
+		vertical-align: baseline;
+		color: white;
+		text-decoration: none;
+	}		
+	.toc3 {
+		font-size: 90%;
+		font-weight: normal;
+		vertical-align: baseline;
+		margin-left: 10px;
+		color: white;
+		text-decoration: none;
+	}		
+	.toc4 {
+		font-size: 85%;
+		font-weight: normal;
+		font-style: italic;
+		vertical-align: baseline;
+		margin-left: 20px;
+		color: #d7d0ff;
+		text-decoration: none;
+	}
+	.tocgrp {
+		display: none
+	}
+  hr {
+  	border: 0;
+    color: #b73235;
+    background-color: #b73235;
+    height: 1px;
+  }
+	</style>
+	<script language="JavaScript">
+		window.onload = resize;
+		window.onresize = resize;
+		var show=0;
+		function ShowHide(divId) {
+			if (document.getElementById(divId).style.display!='block') {
+				document.getElementById(divId).style.display='block';
+				if (divId.substring(0, 3) == 'toc') {
+					window.location = '#lbl' + divId.substring(3);
+				}
+			} else {
+				document.getElementById(divId).style.display='none';
+			}
+		};
+    function resize() {
+      var myWidth = 0, myHeight = 0;
+      if(typeof(window.innerWidth) == 'number') {
+        //Non-IE
+        myWidth = window.innerWidth;
+        myHeight = window.innerHeight;
+      } else if(document.documentElement && (document.documentElement.clientWidth || document.documentElement.clientHeight)) {
+        //IE 6+ in 'standards compliant mode'
+        myWidth = document.documentElement.clientWidth;
+        myHeight = document.documentElement.clientHeight;
+      } else if(document.body && (document.body.clientWidth || document.body.clientHeight)) {
+        //IE 4 compatible
+        myWidth = document.body.clientWidth;
+        myHeight = document.body.clientHeight;
+      }
+      document.getElementById("text").style.height = (myHeight - 10) + "px";
+      document.getElementById("text").style.width = (Math.min(myWidth - 250, 800)) + "px";
+      document.getElementById("toc").style.height = (myHeight - 10) + "px";
+     }	
+    function selectall(source) { 
+	    var selection, range, doc, win; 
+	    if ( (doc = source.ownerDocument)
+	    	&& (win = doc.defaultView)
+	    	&& typeof win.getSelection != 'undefined'
+	    	&& typeof doc.createRange != 'undefined' 
+	    	&& (selection = window.getSelection())
+	    	&& typeof selection.removeAllRanges != 'undefined'
+	    ) { 
+	       range = doc.createRange(); 
+	       range.selectNode(source); 
+	       selection.removeAllRanges(); 
+	       selection.addRange(range); 
+	    } else if (document.body && typeof document.body.createTextRange != 'undefined' && (range = document.body.createTextRange())) { 
+	       range.moveToElementText(source); 
+	       range.select(); 
+	    } 
+		}
+  </script>
+</head>
+<body style = "margin: 0 0 0 0;">
+<div align=center>
+<table cellpadding=0 cols=2 border=0>
+	<tr><td valign="top">
+	<div id="toc" style= "width: 200px; height: 600px; overflow: auto; background-color: #222255; border-left: solid #ffffe0"><br/>
+		<div style="background-color:#222255; width: 100%; text-align: center">
+		<img src="data:image/gif;base64,
+			R0lGODlhrwBFALMAABAIPyIiVRwQYDUrcjQmSkwnSk9OW2wrQp1PYKgxMU1KiKCeqvv7++Tk58rJ
+			0G5niiwAAAAArwBFAAAI/gADCBxIsKDBgwgTKlzIsKHDhxAjSpxIsaLFixgzatzIsaPHjyAfEhhJ
+			cmSBkyhTqlzJsqXLlzBjypxJs2bJkRhL1tzJs6fPn0BhlqyoM6jRo0iTAiUpsajKA1CjSp1KtarV
+			q1izat3KtatXqCuZOnSK0mqCs2jTql3Ltq3bt3Djyp1L123VlDgbknwqta7fv4ADCx5sF2XehXtT
+			Rl2LoLHjx5AjS55MubLly5gza97c+OwBwwQQmywLNW3jB6hTq17NurXr17Bjy55Nu7Zt1QgSfD55
+			GOHok4vPIkitoLjx48iTK1/OvLnz59CjS59u/EHu3bwV/i4QfPgD4wPC/osfT768+fPo06tfz769
+			+/fhFVjXjT2079+lhX9XMF6A//8ABijggAQWaOCBCCao4IIMxnddfQnhl99w/IXH4IUYZqjhhhwK
+			6CB9ht1H2gH6VdjhiSimqGKDAyiQm24hHiRhiRauaOONOHb4IYgF2FfQjAlQaCEARBZppJEKHqkk
+			kggCAKCTOf4HJZQMUhngklYKsCNYPcpIAGlnfWchAQaUaeaZaGZ5JZlotmmmmk+SGYB/ABhAQJQA
+			yDkSnAUGYKeAfrppwJz+bbmbjwMBKeYAAhCwAAOQRiqppA08wGedDkyqaaSVXupoAwYQaYADC/DZ
+			YZ4LgLqAA6Em+UAD/6U+aUADm7IKpaHZ/fglcCQKOUCemTYg7LDEDstApwJiCmmxzAp7rKXJEpAp
+			A5YC8MCxpm6IKqQPPApqtnS+ykCsUo7qwLnoktqqli2+yCWiAo02oYnAUivomcFCW+60495rprf6
+			0iltpNVe2wC4GNbL7cDfGmgtrQvceWWeNxFA5H+4dvkjmAmIKXCmoWJZ5KgMOGDxx8dyK3KRjpZ8
+			sgAKq2wttitum7KlJDc84MPjviylowsELfQCD0jMroueHWrQrtzRiPK6BdZ5bKv1VkprwATWKSzV
+			DD+QacE074zwmgB/LWqwUEspbsRqzrypzhnDG8Cu89ZYb9o7EzA1kf5dD4x13lvzPW3RZs988M6o
+			EZqgzZaaDXPOafNsMpx5rjY4lXEvzWuYJsI8MN7Jehtq1/X+nazBo+cLQACFG9y2tA0YfeC2nQLg
+			+ONoTynu5A4XubaVmW/MHYkd8/czyCsT+ei4VVfrd/JulzowtYJTb3jbszIge9QtW2879fvuLbnP
+			Dv8eYPAEcewxyqQO7f6qkEY8PaxCQ9r++0PHP9K09Ad9NZGuS1YBaLU9sS2vf6kCX7loBars8a5J
+			5jtfu5KWq/RtrniMQtmmNiU/fm3wg5Sy0/I2CLbDXWmA2ptd90iYJa2N61EPnF32quWhCfIIXkzL
+			z/o8l6n74U9oq/4Llg+DZr8f5q9k0xpiAkvYNhQWME7LU+L/kmWAiFWRfFH7HZMKZcN3CW94QXpA
+			jXjIgJAlj3RHel7yxCUzI6kxgCckYNQAsLxqHel2slpAmdjWpOwdi1gPRF+8wDScMd4tW81T0/Mc
+			Nj3TvTFsT3Ji1ugYv7bhMVwQgyEWT9esBtiKi0i74RdLU8gMkhF0PwMYnBaZte59MkCPNGEk5Rit
+			OlLukuNz4CafVCc3+UyQcyOkGE15yFaqkkCsrGWkXgmgWGKPllBUWdbwKLmQ6TJbgWrTL7uoNILk
+			sFfDPF4ZKdcyZCHzkqmMX+AE5MwlEYCASGLcxXZ2u/FNyYEFuP/Uq5r1SmB+M4yG/NzrjlmgZDaz
+			jqPSWTNbNzU3iesBZ5qbLU31PWi5MIaPoxVGpeStdE1rXf4UZkCRF7pngeudCnySLWel0P888o/N
+			WhaxiCYzhxXumlTU6CZnJj+SkPRo7upmokRKTEdtFGapMl3oWopJ553riQFIlTU9CMJIEc2cDpPq
+			RVGZUZe18FrkItJPQ7q5UsLyiQIbG8U8RaU9tbKtFSNJ9uxEEr6NzXNbRSRO1ca8/7BunKAMagUH
+			WdZwRumwrYQnh+rFzKg50Eo8pdJfQcrNwQazsGNErGbp5ETobTFAUW2sw0ZFLjqNCmrWCmRlNTZU
+			zJpys5p1IdH+aMPVud01rdFq4TZD6UVvEhW2sM0Trao6qaMCF0BkBaNZj6vZ0Hr0uR5dgOKYW0Pe
+			xqi1yjUsdQ/rWSVtl0DhmQ+MLPvPjmX2u+hNb4FaNB8usZawYMSgeudLX+TKh4LkVZ/xFkQejPXH
+			v2P8L7v6Ix7kvnbABS4PeAMsYP8imME1Mg+L7ntDHOr3wAdaFboeIACvOcCTDuCwABTwYU9ymMTo
+			WgB/0CWsBQxgVSIeMaley2JPDsDDnlRxgBSwKhNryaMxlrED5HOuYZ04VZ5UgAA0nC4lK4i97gLN
+			KIm3QwQNoIfBks+x4OeAFmH5WFoeV6ZcXESiXXlc/1EAmDH+VmYxeovLACIxEp+l5hcey5QKEBaP
+			txy0Fc+5ATz+cBGdbGX24ve98NXhfhN05u9c7VpD9taLSxaeR9E00pSGmHyUPOY0r/k/EEONki09
+			6QYACNKMsrSaK4XqNOsZhqnpMKVvPMxJdxnDC5aPYHskt/JW+UBndlYDbizTSi0ZzbIOsf0gNoDh
+			QkwAnfbPqgktAGej2VtGBpClYQbpOjtrAXF+dbEnDe4rwbBBxdk1rzV3wV8bKNikUrLBephqZIP1
+			WiUjmpbiJx9GRXvEn/aPpr9z7HNRWtvj+lW3tywu/jhc3CEuTsH9gxo6nfvJhqZPfeQWgAvz92un
+			LpmcwW3/sO98rdWFil+L/F0yURtstozStMRV/ez/4Nvk41q1o6llaVTDEDw6bzhSS8bo+IjXvb2x
+			YHzdvd5/J1vWgJ70MondZTZTSs6cwjfBqn31bUsaYyOkdJ2nnmerHltS4A67i4fugEJD+dBiMYjH
+			F9QtavOYwzfWcd7NrCW+23xoYuyW0Nw8NHkDvkV6r3uABC/Gvg8+gzzme+SF5mTG41nf642Prg+9
+			bt+0u0LtMXCAkesh0efotQ0u1IDOi2sMF5iL6CkOatASFSlHqCycAz18ds/73vv+9/Cpjng1DhqO
+			Y5fKoqaO8pfP/OY7f/mpeVHSNm587BZAOJzJvva3z/3ugntf+sQvPkPwQ5jym//86A+MVPCS9Pt8
+			Mzjpj7/8518Xqqgk7qJh2oi+wv/++///APh/YYF/45cYKxGACJiACriAd+ESBDgWBqgUEjiBFHgU
+			N0EUZFGBGriBHFh8DzgRcRWCIjiCJFiCJniCKJiCKoiCIdGCLviCMBiDMjiDNAiDAQEAOw==
+		">
+		</div>
+		<div style="font: bold 11pt verdana,geneva,lucida,'lucida grande',arial,helvetica,sans-serif;color:white; text-align: center; margin-bottom: 10px; margin-top: 10px">FULLDUPLEXSERIAL4PORT</div>
+		<p class = "toc1">Table of Contents</p>
+		<div style = "text-align: left; margin-left: 10px;">
+			<a href= "#lbl1" class = "toc2">Preface</a><br/>
+<a onclick ="javascript:ShowHide('toc2')" href="javascript:;" class = "toc2">Global CONstants ... </a><br />
+<div id= "toc2" class = "tocgrp">
+</div>
+<a href= "#lbl4" class = "toc2">PUBlic Spin Methods </a><br/>
+<a href= "#lbl5" class = "toc4">Init</a><br/>
+<a href= "#lbl7" class = "toc4">AddPort</a><br/>
+<a href= "#lbl9" class = "toc4">Start</a><br/>
+<a href= "#lbl11" class = "toc4">Stop</a><br/>
+<a href= "#lbl13" class = "toc4">getCogID</a><br/>
+<a href= "#lbl15" class = "toc4">rxflush</a><br/>
+<a href= "#lbl17" class = "toc4">rxHowFull</a><br/>
+<a href= "#lbl19" class = "toc4">rxcheck</a><br/>
+<a href= "#lbl21" class = "toc4">rxtime</a><br/>
+<a href= "#lbl23" class = "toc4">rx</a><br/>
+<a href= "#lbl25" class = "toc4">tx</a><br/>
+<a href= "#lbl27" class = "toc4">txflush</a><br/>
+<a href= "#lbl29" class = "toc4">str</a><br/>
+<a href= "#lbl31" class = "toc4">strn</a><br/>
+<a href= "#lbl33" class = "toc4">decl</a><br/>
+<a href= "#lbl35" class = "toc4">hex</a><br/>
+<a href= "#lbl37" class = "toc2">Assembly Cog </a><br/>
+<a href= "#lbl41" class = "toc2">Documentation </a><br/>
+<a href= "#lbl43" class = "toc2">MIT License </a><br/>
+
+		</div>
+	</div>
+	</td>
+	<td>
+		<div id="text" style= "text-align: left; padding-left: 20px; padding-right: 20px; width: 800px; height: 600px; background-color: #ffffe0; overflow: auto">
+			<h1 id = "lbl1" class = "title">FullDuplexSerial4portPlus </h1>
+
+<br />&nbsp;&nbsp;FullDuplexSerial4portPlus version 1.01<br />
+<br />
+&nbsp;&nbsp;- Tracy Allen (TTA)&nbsp;&nbsp;&nbsp;(c)22-Jan-2011&nbsp;&nbsp;&nbsp;MIT license, see end of file for terms of use.&nbsp;&nbsp;Extends existing terms of use.<br />
+&nbsp;&nbsp;- Can open up to 4 independent serial ports, using only one pasm cog for all 4.<br />
+&nbsp;&nbsp;- Supports flow control and open and inverted baud modes<br />
+&nbsp;&nbsp;- Individually configurable tx and rx buffers for all 4 ports, any size, set in CONstants section at compile time<br />
+&nbsp;&nbsp;- Part of the buffer fits within the object's hub footprint, but even so the object is restartable<br />
+&nbsp;&nbsp;- Buffers are DAT type variables, therefore a single instance of the object can be accessed throughout a complex project.<br />
+<br />
+&nbsp;&nbsp;- Modified from Tim Moore's pcFullDuplexSerial4fc, with further motivation and ideas from Duane Degn's pcFullDuplexSerial4fc128<br />
+&nbsp;&nbsp;- Changes and bug fixes include:<br />
+&nbsp;&nbsp;&nbsp;&nbsp;- Flow control is now operational when called for, with correct polarity (bug correction)<br />
+&nbsp;&nbsp;&nbsp;&nbsp;- Jitter is reduced, unused ports are properly skipped over (bug correction), operation speed is increased.<br />
+&nbsp;&nbsp;&nbsp;&nbsp;- Stop bit on reception is now checked, and if there is a framing error, the byte is not put in the buffer.<br />
+&nbsp;&nbsp;&nbsp;&nbsp;- Buffer sizes are arbitrary, each port separate rx &amp; tx up to available memory<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Changes in pasm and in Spin methods to accomodate larger buffers, major reorganization of DAT section.<br />
+&nbsp;&nbsp;&nbsp;&nbsp;- Added strn method for counted string, and rxHowFull method for buffer size.<br />
+&nbsp;&nbsp;&nbsp;&nbsp;- Cut out most of the format methods such as DEC and HEX, expecting those to be their own object calling rx, tx, str and strn methods.<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;See companion object DataIO4port.spin in order to maintain compatibility with methods in the original pcFullDuplexSerial4fc.<br />
+<br />
+&nbsp;&nbsp;- 1v01<br />
+&nbsp;&nbsp;&nbsp;&nbsp;- init method returns pointer @rxsize, for data buffers and data structure.<br />
+&nbsp;&nbsp;- 1v00<br />
+&nbsp;&nbsp;&nbsp;&nbsp;- documentation<br />
+&nbsp;&nbsp;- 0v91<br />
+&nbsp;&nbsp;&nbsp;&nbsp;- restored DEFAULTTHRESHOLD constant<br />
+&nbsp;&nbsp;&nbsp;&nbsp;- made default buffer sizes in the DAT section rather than init<br />
+&nbsp;&nbsp;&nbsp;&nbsp;- removed the numeric methods to their own companion object, dataIO4port.<br />
+&nbsp;&nbsp;- 0v3<br />
+&nbsp;&nbsp;&nbsp;&nbsp;- first public release with the jitter and flow control issues fixed, and large buffers.<br />
+<br />
+&nbsp;&nbsp;Links:<br />
+&nbsp;&nbsp;Development of this version:<br />
+&nbsp;&nbsp;--- http://forums.parallax.com/showthread.php?137349-yet-another-variant-fullDuplexSerial4portplus<br />
+&nbsp;&nbsp;Tim Moore's original pcFullDuplexSerial4fc and updates to allow flow control:<br />
+&nbsp;&nbsp;--- http://forums.parallaxinc.com/forums/default.aspx?f=25&amp;p=1&amp;m=273291#m276667<br />
+&nbsp;&nbsp;--- http://obex.parallax.com/objects/340/&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;7/24/08 version<br />
+&nbsp;&nbsp;--- http://forums.parallaxinc.com/forums/default.aspx?f=25&amp;p=1&amp;m=349173&nbsp;&nbsp;&nbsp;&nbsp;8/14/08 update, flow polarity correction, not in obex<br />
+&nbsp;&nbsp;Duane Degn's thread, larger 128 or 512 byte buffers and reusing buffer space, discussion of issues<br />
+&nbsp;&nbsp;--- http://forums.parallax.com/showthread.php?129714-Tim-Moore-s-pcFullDuplexSerial4FC-with-larger-%28512-byte%29-rx-buffer<br />
+&nbsp;&nbsp;Juergen Buchmueller, 2 port trimmed down version<br />
+&nbsp;&nbsp;--- http://forums.parallax.com/showthread.php?128184-Serial-Objects-for-SPIN-Programming&amp;p=967075&amp;viewfull=1#post967075<br />
+&nbsp;&nbsp;Serial Mirror, single port but same idea regarding buffers in the DATa space<br />
+&nbsp;&nbsp;--- http://forums.parallax.com/showthread.php?94311-SerialMirror-A-FullDuplexSerial-enhancement<br />
+&nbsp;&nbsp;--- http://obex.parallax.com/objects/189/<br />
+&nbsp;&nbsp;Re baud rates attainable, hiccups:<br />
+&nbsp;&nbsp;--- http://forums.parallaxinc.com/forums/default.aspx?f=25&amp;p=1&amp;m=282923#m282978<br />
+&nbsp;&nbsp;--- http://forums.parallaxinc.com/forums/default.aspx?f=25&amp;p=1&amp;m=334784<br />
+&nbsp;&nbsp;--- http://forums.parallax.com/showthread.php?120868-FullDuplexSerial-hiccups<br />
+&nbsp;&nbsp;Jitter, discussions of jitter in different Prop serial programs, PhiPi's development of PBnJ full duplex:<br />
+&nbsp;&nbsp;--- http://forums.parallax.com/showthread.php?129776-Anybody-aware-of-high-accuracy-(0.7-or-less)-serial-full-duplex-driver<br />
+&nbsp;&nbsp;--- http://forums.parallax.com/showthread.php?136431-Serial-objects-question<br />
+&nbsp;&nbsp;Humanoido's catalog of serial port objects<br />
+&nbsp;&nbsp;--- http://forums.parallax.com/showthread.php?128184-Serial-Objects-for-SPIN-Programming<br />
+<br />
+Tim Moore's release notes follow...&nbsp;&nbsp;&nbsp;Also note by Duane Degn.<br />
+Not all these comments apply to&nbsp;&nbsp;FullDuplexSerial4port.<br />
+<br />
+******************************************************************<br />
+*&nbsp;&nbsp;Based on&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;Full-Duplex Serial Driver v1.1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;Author: Chip Gracey&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;Copyright (c) 2006 Parallax, Inc.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;See end of file for terms of use.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;Tim Moore 2008&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;Modified to support 4 serial ports&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;It should run 1 port faster than FullDuplexSerial or run&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;up to 4 ports&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;Merged 64 byte rx buffer change&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;Merged Debug_PC (Jon Williams)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;(TTA) cut the numeric methods, see dataIO4port.spin&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;to maintain compatibility with pcFullDuplexSerial4fc&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;or use other numeric methods such as "simpleNumbers"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;Uses DAT rather than VAR so can be used in multiple objects&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;If you want multiple objects using this driver, you must&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;copy the driver to a new file and make sure version long is&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;unique in each version<br />
+*&nbsp;&nbsp;&nbsp;Added txflush&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;Optimization perf&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;&nbsp;1 port up to 750kbps&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;&nbsp;2 port up to 230kbps&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;&nbsp;3 port up to 140kbps&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;&nbsp;4 port up to 100kbps&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;Tested 4 ports to 115Kbps with 6MHz crystal&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;These are approx theoretical worse case you may get faster&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;if port is active but idle&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;Added RTS/CTS flow control&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;There is no perf penalty supporting 4 serial ports when they *<br />
+*&nbsp;&nbsp;&nbsp;are not enabled&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;There is no perf penalty supporting CTS and RTS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;Enabling CTS on any port costs 4 clocks per port&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;Enabling RTS on any port costs 32 clocks per port&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;Main Rx+Tx loop is ~256 clocks per port (without CTS/RTS)&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;compared with FullDuplexSerial at ~356 clocks&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;There is a cost to read/write a byte in the transmit/&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;receive routines. The transmit cost is greater than the&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;receive cost so between propellors you can run at max baud&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;rate. If receiving from another device, the sending device&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;needs a delay between each byte once you are above ~470kbps&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;with 1 port enabled&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;(TTA) I have not updated the following comments.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;Size:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Cog Initialzation code 1 x 8 + 4 x 25&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Cog Receive code 4 x 30 words&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Cog Transmit code 4 x 26 words&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Spin/Cog circular buffer indexes 4 x 4 words&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Used in both spin and Cog and read/written in both&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;directions&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Spin/Cog per port info 4 x 8 words&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Passed from Spin to Cog on cog initialization&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Spin per port info 4 x 1 byte&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Used by Spin&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Spin/Cog rx/tx buffer hub address 4 x 4 words&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Passed from Spin to Cog on cog initialization&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Spin/Cog rx/tx index hub address 4 x 4 words&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Passed from Spin to Cog on cog initialization&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Spin per port rx buffer 4 x 64 byte&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <br />
+*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DWD Changed to 4 x 128 bytes&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Read by Spin, written by cog&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <br />
+*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Cog per port rx state 4 x 4 words (overlayed on rx buffer) *<br />
+*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Used by Cog&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Spin per port tx buffer 4 x 16 byte&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Written by Spin, read by Cog&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Cog per port tx state 4 x 4 words (overlayed on tx buffer) *<br />
+*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Used by Cog&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Cog constants 4 words&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;A significant amount of space (4 x 16 words) is used for&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;pre-calculated information: hub addresses, per port&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;configuration. This speeds up the tx/rx routines at the cost *<br />
+*&nbsp;&nbsp;&nbsp;of this space.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;Note: There are 8 longs remaining in the cog's memory,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;expect to do some work to add features :).&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;DWD Note from Duane: Many of the longs in the cog image&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;are only used in hub RAM.&nbsp;&nbsp;There is still lots of room&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;in cog RAM. (TTA) agreed, thanks DWD!&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;&nbsp;<br />
+*&nbsp;&nbsp;&nbsp;7/1/08: Fixed bug of not receiving with only 1 port enabled&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Fixed bug of rts not working on ports 0, 2 and 3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;7/22/08: Missed a jmpret call in port 1 and 3 tx&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Fixed a bug in port 3 tx not increasing tx ptr&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;7/24/08: Added version variable to change if need multiple&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;copies of the driver&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<br />
+******************************************************************<br />
+
+<br />
+<h2 id = "lbl2">Global CONstants </h2>
+<br /><a onclick ="javascript:ShowHide('lbl3')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl3>
+  NOMODE                        = %000000
+  INVERTRX                      = %000001
+  INVERTTX                      = %000010
+  OCTX                          = %000100
+  NOECHO                        = %001000
+  INVERTCTS                     = %010000
+  INVERTRTS                     = %100000
+
+  PINNOTUSED                    = -1                    'tx/tx/cts/rts pin is not used
+  DEFAULTTHRESHOLD              = 0                     ' zero defaults to 3/4 of buffer length
+
+  BAUD1200                      = 1200
+  BAUD2400                      = 2400
+  BAUD4800                      = 4800
+  BAUD9600                      = 9600
+  BAUD19200                     = 19200
+  BAUD38400                     = 38400
+  BAUD57600                     = 57600
+  BAUD115200                    = 115200
+
+' The following constants declare the sizes of the rx and tx buffers.
+' Enter in the needed size in bytes for each rx and tx buffer
+' These values can be any size within available memory. They do not have to be a power of two.
+' Unused buffers can be reduced to 1 byte.
+  RX_SIZE0                      = 80  ' receive buffer allocations
+  RX_SIZE1                      = 80
+  RX_SIZE2                      = 80
+  RX_SIZE3                      = 80
+
+  TX_SIZE0                      = 20  ' transmit buffer allocations
+  TX_SIZE1                      = 20
+  TX_SIZE2                      = 20
+  TX_SIZE3                      = 20   '
+
+  RXTX_BUFSIZE                  = (TX_SIZE0 + TX_SIZE1 + TX_SIZE2 + TX_SIZE3 + RX_SIZE0 + RX_SIZE1 + RX_SIZE2 + RX_SIZE3)
+                                 ' total buffer footprint in bytes
+                                 ' 77 longs, 308 bytes are available for buffers within the hub footprint of the object
+                                 ' the final instruction in this program allocates additional buffer space beyond that if necessary
+                                 ' to accomodate all of the buffers.
+                                 ' if the sum totals to 308, then the buffers exactly fit within the object footprint.
+
+</pre>
+<hr /><br />
+<h2 id = "lbl4">PUBlic Spin Methods </h2>
+<hr /><h4 id = "lbl5">Init
+</h4>
+
+<br />Always call init before adding ports<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl6')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl6><var>PUB</var> Init
+  Stop
+  <var>bytefill</var>(@startfill, 0, (@endfill-@startfill))        ' initialize head/tails,port info and hub buffer pointers
+  <var>return</var> @rxsize                                        ' TTA returns pointer to data structure, buffer sizes.
+
+</pre>
+<hr /><h4 id = "lbl7">AddPort(port,rxpin,txpin,ctspin,rtspin,rtsthreshold,mode,baudrate)
+</h4>
+
+<br /> Call AddPort to define each port<br />
+ port 0-3 port index of which serial port<br />
+ rx/tx/cts/rtspin pin number&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;XXX#PINNOTUSED if not used<br />
+ rtsthreshold - buffer threshold before rts is used&nbsp;&nbsp;&nbsp;XXX#DEFAULTTHRSHOLD means use default<br />
+ mode bit 0 = invert rx&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;XXX#INVERTRX<br />
+ mode bit 1 = invert tx&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;XXX#INVERTTX<br />
+ mode bit 2 = open-drain/source tx&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;XXX#OCTX<br />
+ mode bit 3 = ignore tx echo on rx&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;XXX#NOECHO<br />
+ mode bit 4 = invert cts&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;XXX#INVERTCTS<br />
+ mode bit 5 = invert rts&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;XXX#INVERTRTS<br />
+ baudrate<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl8')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl8><var>PUB</var> AddPort(port,rxpin,txpin,ctspin,rtspin,rtsthreshold,mode,baudrate)
+  <var>if</var> cog <var>OR</var> (port &gt; 3)
+    <var>abort</var>
+  <var>if</var> rxpin &lt;&gt; -1
+    <var>long</var>[@rxmask][port] := |&lt; rxpin
+  <var>if</var> txpin &lt;&gt; -1
+    <var>long</var>[@txmask][port] := |&lt; txpin
+  <var>if</var> ctspin &lt;&gt; -1
+    <var>long</var>[@ctsmask][port] := |&lt; ctspin
+  <var>if</var> rtspin &lt;&gt; -1
+    <var>long</var>[@rtsmask][port] := |&lt; rtspin
+    <var>if</var> (rtsthreshold &gt; 0) <var>AND</var> (rtsthreshold &lt; rxsize[port])' (TTA) modified for variable buffer size
+      <var>long</var>[@rtssize][port] := rtsthreshold
+    <var>else</var>
+      <var>long</var>[@rtssize][port] := rxsize[port]*3/4          'default rts threshold 3/4 of buffer TTS ref RX_BUFSIZE
+  <var>long</var>[@rxtx_mode][port] := mode
+  <var>if</var> mode &amp; INVERTRX
+    <var>byte</var>[@rxchar][port] := $ff
+  <var>long</var>[@bit_ticks][port] := (clkfreq / baudrate)
+  <var>long</var>[@bit4_ticks][port] := <var>long</var>[@bit_ticks][port] &gt;&gt; 2
+
+</pre>
+<hr /><h4 id = "lbl9">Start
+</h4>
+
+<br /> Call start to start cog<br />
+ Start serial driver - starts a cog<br />
+ returns false if no cog available<br />
+<br />
+ tx buffers will start within the object footprint, overlaying certain locations that were initialized in spin<br />
+ for&nbsp;&nbsp;use within the cog but are not needed by spin thereafter and are not needed for object restart.<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl10')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl10><var>PUB</var> Start : okay
+  txbuff_tail_ptr := txbuff_ptr  := @buffers            ' (TTA) all buffers are calculated as offsets from this address.
+  txbuff_tail_ptr1 := txbuff_ptr1 := txbuff_ptr + txsize' base addresses of the corresponding port buffer.
+  txbuff_tail_ptr2 := txbuff_ptr2 := txbuff_ptr1 + txsize1
+  txbuff_tail_ptr3 := txbuff_ptr3 := txbuff_ptr2 + txsize2
+  rxbuff_head_ptr := rxbuff_ptr  := txbuff_ptr3 + txsize3' rx buffers follow immediately after the tx buffers, by size
+  rxbuff_head_ptr1 := rxbuff_ptr1 := rxbuff_ptr + rxsize
+  rxbuff_head_ptr2 := rxbuff_ptr2 :=  rxbuff_ptr1 + rxsize1
+  rxbuff_head_ptr3 := rxbuff_ptr3 :=  rxbuff_ptr2 + rxsize2
+                                                        ' note that txbuff_ptr ... rxbuff_ptr3 are the base addresses fixed
+                                                        ' in memory for use by both spin and pasm
+                                                        ' while txbuff_tail_ptr ... rxbuff_head_ptr3 are dynamic addresses used only by pasm
+                                                        ' and here initialized to point to the start of the buffers.
+                                                             ' the rx buffer #3 comes last, up through address @endfill
+  rx_head_ptr  := @rx_head                              ' (TTA) note: addresses of the head and tail counts are passed to the cog
+  rx_head_ptr1 := @rx_head1                             ' if that is confusing, take heart.   These are pointers to pointers to pointers
+  rx_head_ptr2 := @rx_head2
+  rx_head_ptr3 := @rx_head3
+  rx_tail_ptr  := @rx_tail
+  rx_tail_ptr1 := @rx_tail1
+  rx_tail_ptr2 := @rx_tail2
+  rx_tail_ptr3 := @rx_tail3
+  tx_head_ptr  := @tx_head
+  tx_head_ptr1 := @tx_head1
+  tx_head_ptr2 := @tx_head2
+  tx_head_ptr3 := @tx_head3
+  tx_tail_ptr  := @tx_tail
+  tx_tail_ptr1 := @tx_tail1
+  tx_tail_ptr2 := @tx_tail2
+  tx_tail_ptr3 := @tx_tail3
+  okay := cog := <var>cognew</var>(@entry, @rx_head) + 1
+
+</pre>
+<hr /><h4 id = "lbl11">Stop
+</h4>
+
+<br /> Stop serial driver - frees a cog<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl12')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl12><var>PUB</var> Stop
+  <var>if</var> cog
+    <var>cogstop</var>(cog~ - 1)
+
+</pre>
+<hr /><h4 id = "lbl13">getCogID
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl14')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl14><var>PUB</var> getCogID : <var>result</var>
+  <var>return</var> cog -1
+
+</pre>
+<hr /><h4 id = "lbl15">rxflush(port)
+</h4>
+
+<br /> Flush receive buffer, here until empty.<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl16')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl16><var>PUB</var> rxflush(port)
+  <var>repeat</var> <var>while</var> rxcheck(port) =&gt; 0
+
+</pre>
+<hr /><h4 id = "lbl17">rxHowFull(port)
+</h4>
+ returns number of chars in rx buffer<br />
+<br /><a onclick ="javascript:ShowHide('lbl18')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl18><var>PUB</var> rxHowFull(port)    ' (TTA) added method
+  <var>return</var> ((rx_head[port] - rx_tail[port]) + rxsize[port]) // rxsize[port]
+'   rx_head and rx_tail are values in the range 0=&lt; ... &lt; RX_BUFSIZE
+
+</pre>
+<hr /><h4 id = "lbl19">rxcheck(port)
+</h4>
+
+<br /> Check if byte received (never waits)<br />
+ returns -1 if no byte received, $00..$FF if byte<br />
+ (TTA) simplified references<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl20')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl20><var>PUB</var> rxcheck(port) : rxbyte
+  <var>if</var> port &gt; 3
+    <var>abort</var>
+  rxbyte--
+  <var>if</var> rx_tail[port] &lt;&gt; rx_head[port]
+    rxbyte := rxchar[port] ^ <var>byte</var>[rxbuff_ptr[port]+rx_tail[port]]
+    rx_tail[port] := (rx_tail[port] + 1) // rxsize[port]
+
+</pre>
+<hr /><h4 id = "lbl21">rxtime(port,ms)
+</h4>
+
+<br /> Wait ms milliseconds for a byte to be received<br />
+ returns -1 if no byte received, $00..$FF if byte<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl22')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl22><var>PUB</var> rxtime(port,ms) : rxbyte | t
+  t := <var>cnt</var>
+  <var>repeat</var> <var>until</var> (rxbyte := rxcheck(port)) =&gt; 0 <var>or</var> (<var>cnt</var> - t) / (clkfreq / 1000) &gt; ms
+
+</pre>
+<hr /><h4 id = "lbl23">rx(port)
+</h4>
+
+<br /> Receive byte (may wait for byte)<br />
+ returns $00..$FF<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl24')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl24><var>PUB</var> rx(port) : rxbyte
+  <var>repeat</var> <var>while</var> (rxbyte := rxcheck(port)) &lt; 0
+
+</pre>
+<hr /><h4 id = "lbl25">tx(port,txbyte)
+</h4>
+
+<br /> Send byte (may wait for room in buffer)<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl26')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl26><var>PUB</var> tx(port,txbyte)
+  <var>if</var> port &gt; 3
+    <var>abort</var>
+  <var>repeat</var> <var>until</var> (tx_tail[port] &lt;&gt; (tx_head[port] + 1) // txsize[port])
+  <var>byte</var>[txbuff_ptr[port]+tx_head[port]] := txbyte
+  tx_head[port] := (tx_head[port] + 1) // txsize[port]
+
+  <var>if</var> rxtx_mode[port] &amp; NOECHO
+    rx(port)
+
+</pre>
+<hr /><h4 id = "lbl27">txflush(port)
+</h4>
+
+<br /> Flush send buffer, here until empty.<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl28')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl28><var>PUB</var> txflush(port)
+  <var>repeat</var> <var>until</var> (<var>long</var>[@tx_tail][port] == <var>long</var>[@tx_head][port])
+
+</pre>
+<hr /><h4 id = "lbl29">str(port,stringptr)
+</h4>
+
+<br /> Send zstring<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl30')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl30><var>PUB</var> str(port,stringptr)
+  strn(port,stringptr,<var>strsize</var>(stringptr))
+
+</pre>
+<hr /><h4 id = "lbl31">strn(port,stringptr,nchar)
+</h4>
+
+<br /> Send counted string<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl32')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl32><var>PUB</var> strn(port,stringptr,nchar)
+  <var>repeat</var> nchar
+    tx(port,<var>byte</var>[stringptr++])
+
+</pre>
+<hr /><h4 id = "lbl33">decl(port,value,digits,flag)
+</h4>
+
+<br /> Send a decimal number<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl34')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl34><var>PUB</var> decl(port,value,digits,flag) | i, x
+  digits := 1 #&gt; digits &lt;# 10
+  x := value == <var>NEGX</var>                                                            'Check for max negative
+  <var>if</var> value &lt; 0
+    value := ||(value+x)                                                        'If negative, make positive; adjust for max negative
+    tx(port,"-")
+
+  i := 1_000_000_000
+  <var>if</var> flag &amp; 3
+    <var>if</var> digits &lt; 10                                      ' less than 10 digits?
+      <var>repeat</var> (10 - digits)                              '   yes, adjust divisor
+        i /= 10
+  <var>repeat</var> digits
+    <var>if</var> value =&gt; i
+      tx(port,value / i + "0")
+      value //= i
+      <var>result</var>~~
+    <var>elseif</var> (i == 1) <var>OR</var> <var>result</var> <var>OR</var> (flag &amp; 2)
+      tx(port,"0")
+    <var>elseif</var> flag &amp; 1
+      tx(port," ")
+    i /= 10
+
+</pre>
+<hr /><h4 id = "lbl35">hex(port,value, digits)
+</h4>
+
+<br /> Send a hexadecimal number<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl36')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl36><var>PUB</var> hex(port,value, digits)
+  value &lt;&lt;= (8 - digits) &lt;&lt; 2
+  <var>repeat</var> digits
+    tx(port,<var>lookupz</var>((value &lt;-= 4) &amp; $F : "0".."9", "A".."F"))
+
+</pre>
+<hr /><br />
+<h2 id = "lbl37">Assembly Cog </h2>
+<br /><a onclick ="javascript:ShowHide('lbl38')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl38>
+'***********************************
+'* Assembly language serial driver *
+'***********************************
+'
+                        <var>org</var> 0
+'
+' Entry
+'                   
+'To maximize the speed of rx and tx processing, all the mode checks are no longer inline
+'The initialization code checks the modes and modifies the rx/tx code for that mode
+'e.g. the if condition for rx checking for a start bit will be inverted if mode INVERTRX
+'is it, similar for other mode flags
+'The code is also patched depending on whether a cts or rts pin are supplied. The normal
+' routines support cts/rts processing. If the cts/rts mask is 0, then the code is patched
+'to remove the addtional code. This means I/O modes and CTS/RTS handling adds no extra code
+'in the rx/tx routines which not required.
+'Similar with the co-routine variables. If a rx or tx pin is not configured the co-routine
+'variable for the routine that handles that pin is modified so the routine is never called
+'We start with port 3 and work down to ports because we will be updating the co-routine pointers
+'and the order matters. e.g. we can update txcode3 and then update rxcode3 based on txcode3.
+'(TTA): coroutine patch was not working in the way originally described.   (TTA) patched
+'unused coroutines jmprets become simple jmps.
+' Tim's comments about the order from 3 to 0 no longer apply.
+
+' The following 8 locations are skipped at entry due to if_never.
+' The mov instruction and the destination address are here only for syntax.
+' the important thing are the source field
+' primed to contain the start address of each port routine.
+' When jmpret instructions are executed, the source adresses here are used for jumps
+' And new source addresses will be written in the process.
+entry                   
+rxcode  <var>if_never</var>        <var>mov</var>     rxcode,#receive       ' set source fields to initial entry points
+txcode  <var>if_never</var>        <var>mov</var>     txcode,#transmit
+rxcode1 <var>if_never</var>        <var>mov</var>     rxcode1,#receive1
+txcode1 <var>if_never</var>        <var>mov</var>     txcode1,#transmit1
+rxcode2 <var>if_never</var>        <var>mov</var>     rxcode2,#receive2
+txcode2 <var>if_never</var>        <var>mov</var>     txcode2,#transmit2
+rxcode3 <var>if_never</var>        <var>mov</var>     rxcode3,#receive3
+txcode3 <var>if_never</var>        <var>mov</var>     txcode3,#transmit3
+
+' INITIALIZATIONS ==============================================================================
+' port 3 initialization -------------------------------------------------------------
+                        <var>test</var>    rxtx_mode3,#OCTX <var>wz</var>   'init tx pin according to mode
+                        <var>test</var>    rxtx_mode3,#INVERTTX <var>wc</var>
+        <var>if_z_ne_c</var> <var>or</var>            <var>outa</var>,txmask3
+        <var>if_z</var>            <var>or</var>      <var>dira</var>,txmask3
+                                                      'patch tx routine depending on invert and oc
+                                                      'if invert change muxc to muxnc
+                                                      'if oc change outa to dira
+        <var>if_z_eq_c</var> <var>or</var>            txout3,domuxnc        'patch muxc to muxnc
+        <var>if_nz</var>           <var>movd</var>    txout3,#<var>dira</var>          'change destination from outa to dira
+                                                      'patch rx wait for start bit depending on invert
+                        <var>test</var>    rxtx_mode3,#INVERTRX <var>wz</var> 'wait for start bit on rx pin
+        <var>if_nz</var>           <var>xor</var>     start3,doifc2ifnc     'if_c jmp to if_nc
+                                                      'patch tx routine depending on whether cts is used
+                                                      'and if it is inverted
+                        <var>or</var>      ctsmask3,#0     <var>wz</var>    'cts pin? z not set if in use
+        <var>if_nz</var>           <var>test</var>    rxtx_mode3,#INVERTCTS <var>wc</var> 'c set if inverted
+        <var>if_nz_and_c</var>     <var>or</var>      ctsi3,doif_z_or_nc    'if_nc jmp   (TTA) reversed order to correctly invert CTS
+        <var>if_nz_and_nc</var>    <var>or</var>      ctsi3,doif_z_or_c     'if_c jmp
+                                                      'if not cts remove the test by moving
+                                                      'the transmit entry point down 1 instruction
+                                                      'and moving the jmpret over the cts test
+                                                      'and changing co-routine entry point
+        <var>if_z</var>            <var>mov</var>     txcts3,transmit3      'copy the jmpret over the cts test
+        <var>if_z</var>            <var>movs</var>    ctsi3,#txcts3         'patch the jmps to transmit to txcts0
+        <var>if_z</var>            <var>add</var>     txcode3,#1            'change co-routine entry to skip first jmpret
+                                                      'patch rx routine depending on whether rts is used
+                                                      'and if it is inverted
+                        <var>or</var>      rtsmask3,#0     <var>wz</var>
+        <var>if_nz</var>           <var>or</var>      <var>dira</var>,rtsmask3          ' (TTA) rts needs to be an output
+        <var>if_nz</var>           <var>test</var>    rxtx_mode3,#INVERTRTS <var>wc</var>
+        <var>if_nz_and_nc</var>    <var>or</var>      rts3,domuxnc          'patch muxc to muxnc
+        <var>if_z</var>            <var>mov</var>     norts3,rec3i          'patch rts code to a jmp #receive3
+        <var>if_z</var>            <var>movs</var>    start3,#receive3      'skip all rts processing                  
+
+                        <var>or</var>      txmask3,#0      <var>wz</var>       'if tx pin not used
+        <var>if_z</var>            <var>movi</var>    transmit3, #%010111_000  ' patch it out entirely by making the jmpret into a jmp (TTA)
+                        <var>or</var>      rxmask3,#0      <var>wz</var>       'ditto for rx routine
+        <var>if_z</var>            <var>movi</var>    receive3, #%010111_000   ' (TTA)
+                                                         ' in pcFullDuplexSerial4fc, the bypass was ostensibly done
+                                                         ' by patching the co-routine variables,
+                                                         ' but it was commented out, and didn't work when restored
+                                                         ' so I did it by changing the affected jmpret to jmp.
+                                                         ' Now the jitter is MUCH reduced.
+' port 2 initialization -------------------------------------------------------------
+                        <var>test</var>    rxtx_mode2,#OCTX <var>wz</var>   'init tx pin according to mode
+                        <var>test</var>    rxtx_mode2,#INVERTTX <var>wc</var>
+        <var>if_z_ne_c</var>       <var>or</var>      <var>outa</var>,txmask2
+        <var>if_z</var>            <var>or</var>      <var>dira</var>,txmask2
+        <var>if_z_eq_c</var>       <var>or</var>      txout2,domuxnc        'patch muxc to muxnc
+        <var>if_nz</var>           <var>movd</var>    txout2,#<var>dira</var>          'change destination from outa to dira
+                        <var>test</var>    rxtx_mode2,#INVERTRX <var>wz</var> 'wait for start bit on rx pin
+        <var>if_nz</var>           <var>xor</var>     start2,doifc2ifnc     'if_c jmp to if_nc
+                        <var>or</var>      ctsmask2,#0     <var>wz</var>
+        <var>if_nz</var>           <var>test</var>    rxtx_mode2,#INVERTCTS <var>wc</var>
+        <var>if_nz_and_c</var>     <var>or</var>      ctsi2,doif_z_or_nc    'if_nc jmp   (TTA) reversed order to correctly invert CTS
+        <var>if_nz_and_nc</var>    <var>or</var>      ctsi2,doif_z_or_c     'if_c jmp
+       <var>if_z</var>            <var>mov</var>     txcts2,transmit2      'copy the jmpret over the cts test
+        <var>if_z</var>            <var>movs</var>    ctsi2,#txcts2         'patch the jmps to transmit to txcts0  
+        <var>if_z</var>            <var>add</var>     txcode2,#1            'change co-routine entry to skip first jmpret
+                        <var>or</var>      rtsmask2,#0     <var>wz</var>
+        <var>if_nz</var>           <var>or</var>      <var>dira</var>,rtsmask2          ' (TTA) rts needs to be an output
+        <var>if_nz</var>           <var>test</var>    rxtx_mode2,#INVERTRTS <var>wc</var>
+        <var>if_nz_and_nc</var>    <var>or</var>      rts2,domuxnc          'patch muxc to muxnc
+        <var>if_z</var>            <var>mov</var>     norts2,rec2i          'patch to a jmp #receive2
+        <var>if_z</var>            <var>movs</var>    start2,#receive2      'skip all rts processing                  
+
+                                <var>or</var> txmask2,#0    <var>wz</var>       'if tx pin not used
+        <var>if_z</var>            <var>movi</var>    transmit2, #%010111_000   ' patch it out entirely by making the jmpret into a jmp (TTA)
+                        <var>or</var>      rxmask2,#0      <var>wz</var>        'ditto for rx routine
+        <var>if_z</var>            <var>movi</var>    receive2, #%010111_000    ' (TTA)
+
+' port 1 initialization -------------------------------------------------------------
+                        <var>test</var>    rxtx_mode1,#OCTX <var>wz</var>   'init tx pin according to mode
+                        <var>test</var>    rxtx_mode1,#INVERTTX <var>wc</var>
+        <var>if_z_ne_c</var>       <var>or</var>      <var>outa</var>,txmask1
+        <var>if_z</var>            <var>or</var>      <var>dira</var>,txmask1
+        <var>if_z_eq_c</var>       <var>or</var>      txout1,domuxnc        'patch muxc to muxnc
+        <var>if_nz</var>           <var>movd</var>    txout1,#<var>dira</var>          'change destination from outa to dira
+                        <var>test</var>    rxtx_mode1,#INVERTRX <var>wz</var> 'wait for start bit on rx pin
+        <var>if_nz</var>           <var>xor</var>     start1,doifc2ifnc     'if_c jmp to if_nc
+                        <var>or</var>      ctsmask1,#0     <var>wz</var>
+        <var>if_nz</var>           <var>test</var>    rxtx_mode1,#INVERTCTS <var>wc</var>
+        <var>if_nz_and_c</var>     <var>or</var>      ctsi1,doif_z_or_nc    'if_nc jmp   (TTA) reversed order to correctly invert CTS
+        <var>if_nz_and_nc</var>    <var>or</var>      ctsi1,doif_z_or_c     'if_c jmp
+        <var>if_z</var>            <var>mov</var>     txcts1,transmit1      'copy the jmpret over the cts test
+        <var>if_z</var>            <var>movs</var>    ctsi1,#txcts1         'patch the jmps to transmit to txcts0  
+        <var>if_z</var>            <var>add</var>     txcode1,#1            'change co-routine entry to skip first jmpret
+                                                      'patch rx routine depending on whether rts is used
+                                                      'and if it is inverted
+                        <var>or</var>      rtsmask1,#0     <var>wz</var>
+        <var>if_nz</var>           <var>or</var>      <var>dira</var>,rtsmask1          ' (TTA) rts needs to be an output
+        <var>if_nz</var>           <var>test</var>    rxtx_mode1,#INVERTRTS <var>wc</var>
+        <var>if_nz_and_nc</var>    <var>or</var>      rts1,domuxnc          'patch muxc to muxnc
+        <var>if_z</var>            <var>mov</var>     norts1,rec1i          'patch to a jmp #receive1
+        <var>if_z</var>            <var>movs</var>    start1,#receive1      'skip all rts processing                  
+
+                        <var>or</var>      txmask1,#0      <var>wz</var>       'if tx pin not used
+        <var>if_z</var>            <var>movi</var>    transmit1, #%010111_000  ' patch it out entirely by making the jmpret into a jmp (TTA)
+                        <var>or</var>      rxmask1,#0      <var>wz</var>       'ditto for rx routine
+        <var>if_z</var>            <var>movi</var>    receive1, #%010111_000   ' (TTA)
+
+' port 0 initialization -------------------------------------------------------------
+                        <var>test</var>    rxtx_mode,#OCTX <var>wz</var>    'init tx pin according to mode
+                        <var>test</var>    rxtx_mode,#INVERTTX <var>wc</var>
+        <var>if_z_ne_c</var>       <var>or</var>      <var>outa</var>,txmask
+        <var>if_z</var>            <var>or</var>      <var>dira</var>,txmask
+                                                      'patch tx routine depending on invert and oc
+                                                      'if invert change muxc to muxnc
+                                                      'if oc change out1 to dira
+        <var>if_z_eq_c</var>       <var>or</var>      txout0,domuxnc        'patch muxc to muxnc
+        <var>if_nz</var>           <var>movd</var>    txout0,#<var>dira</var>          'change destination from outa to dira
+                                                      'patch rx wait for start bit depending on invert
+                        <var>test</var>    rxtx_mode,#INVERTRX <var>wz</var>  'wait for start bit on rx pin
+        <var>if_nz</var>           <var>xor</var>     start0,doifc2ifnc     'if_c jmp to if_nc
+                                                      'patch tx routine depending on whether cts is used
+                                                      'and if it is inverted
+                        <var>or</var>      ctsmask,#0     <var>wz</var>     'cts pin? z not set if in use
+        <var>if_nz</var>           <var>or</var>      <var>dira</var>,rtsmask          ' (TTA) rts needs to be an output
+        <var>if_nz</var>           <var>test</var>    rxtx_mode,#INVERTCTS <var>wc</var> 'c set if inverted
+        <var>if_nz_and_c</var>     <var>or</var>      ctsi0,doif_z_or_nc    'if_nc jmp   (TTA) reversed order to correctly invert CTS
+        <var>if_nz_and_nc</var>    <var>or</var>      ctsi0,doif_z_or_c     'if_c jmp
+        <var>if_z</var>            <var>mov</var>     txcts0,transmit       'copy the jmpret over the cts test
+        <var>if_z</var>            <var>movs</var>    ctsi0,#txcts0         'patch the jmps to transmit to txcts0  
+        <var>if_z</var>            <var>add</var>     txcode,#1             'change co-routine entry to skip first jmpret
+                                                      'patch rx routine depending on whether rts is used
+                                                      'and if it is inverted
+                        <var>or</var>      rtsmask,#0     <var>wz</var>     'rts pin, z not set if in use
+        <var>if_nz</var>           <var>test</var>    rxtx_mode,#INVERTRTS <var>wc</var>
+        <var>if_nz_and_nc</var>    <var>or</var>      rts0,domuxnc          'patch muxc to muxnc
+        <var>if_z</var>            <var>mov</var>     norts0,rec0i          'patch to a jmp #receive
+        <var>if_z</var>            <var>movs</var>    start0,#receive       'skip all rts processing if not used
+
+                        <var>or</var>      txmask,#0      <var>wz</var>       'if tx pin not used
+        <var>if_z</var>            <var>movi</var>    transmit, #%010111_000  ' patch it out entirely by making the jmpret into a jmp (TTA)
+                        <var>or</var>      rxmask,#0      <var>wz</var>       'ditto for rx routine
+        <var>if_z</var>            <var>movi</var>    receive, #%010111_000   ' (TTA)
+'
+' MAIN LOOP  =======================================================================================
+' Receive0 -------------------------------------------------------------------------------------
+receive                 <var>jmpret</var>  rxcode,txcode         'run a chunk of transmit code, then return
+                                                      'patched to a jmp if pin not used                        
+                        <var>test</var>    rxmask,<var>ina</var>      <var>wc</var>
+start0  <var>if_c</var>            <var>jmp</var>     #norts0               'go check rts if no start bit
+                                                      ' have to check rts because other process may remove chars
+                                                      'will be patched to jmp #receive if no rts  
+
+                        <var>mov</var>     rxbits,#9             'ready to receive byte
+                        <var>mov</var>     rxcnt,bit4_ticks      '1/4 bits
+                        <var>add</var>     rxcnt,<var>cnt</var>                          
+
+:bit                    <var>add</var>     rxcnt,bit_ticks       '1 bit period
+                        
+:wait                   <var>jmpret</var>  rxcode,txcode         'run a chuck of transmit code, then return
+
+                        <var>mov</var>     t1,rxcnt              'check if bit receive period done
+                        <var>sub</var>     t1,<var>cnt</var>
+                        <var>cmps</var>    t1,#0           <var>wc</var>
+        <var>if_nc</var>           <var>jmp</var>     #:wait
+
+                        <var>test</var>    rxmask,<var>ina</var>      <var>wc</var>    'receive bit on rx pin
+                        <var>rcr</var>     rxdata,#1
+                        <var>djnz</var>    rxbits,#:bit          'get remaining bits
+                        <var>test</var>    rxtx_mode,#INVERTRX  <var>wz</var>      'find out if rx is inverted
+        <var>if_z_ne_c</var>       <var>jmp</var>     #receive              'abort if no stop bit   (TTA) (from serialMirror)
+                        <var>jmpret</var>  rxcode,txcode         'run a chunk of transmit code, then return
+                        
+                        <var>shr</var>     rxdata,#32-9          'justify and trim received byte
+
+                        <var>wrbyte</var>  rxdata,rxbuff_head_ptr'{7-22} '1wr
+                        <var>add</var>     rx_head,#1
+                        <var>cmpsub</var>  rx_head,rxsize   ' (TTA) allows non-binary buffer size
+                        <var>wrlong</var>  rx_head,rx_head_ptr   '{8}     '2wr
+                        <var>mov</var>     rxbuff_head_ptr,rxbuff_ptr 'calculate next byte head_ptr
+                        <var>add</var>     rxbuff_head_ptr,rx_head
+norts0                  <var>rdlong</var>  rx_tail,rx_tail_ptr   '{7-22 or 8} will be patched to jmp #r3 if no rts
+                                                                '1rd
+                        <var>mov</var>     t1,rx_head
+                        <var>sub</var>     t1,rx_tail  <var>wc</var>          'calculate number bytes in buffer, (TTA) add wc
+'                        and     t1,#$7F               'fix wrap
+        <var>if_c</var>            <var>add</var>     t1,rxsize           ' fix wrap, (TTA) change
+                        <var>cmps</var>    t1,rtssize      <var>wc</var>    'is it more than the threshold
+rts0                    <var>muxc</var>    <var>outa</var>,rtsmask          'set rts correctly
+
+rec0i                   <var>jmp</var>     #receive              'byte done, receive next byte
+'
+' Receive1 -------------------------------------------------------------------------------------
+'
+receive1                <var>jmpret</var>  rxcode1,txcode1       'run a chunk of transmit code, then return
+                        
+                        <var>test</var>    rxmask1,<var>ina</var>     <var>wc</var>
+start1  <var>if_c</var>            <var>jmp</var>     #norts1               'go check rts if no start bit
+
+                        <var>mov</var>     rxbits1,#9            'ready to receive byte
+                        <var>mov</var>     rxcnt1,bit4_ticks1    '1/4 bits
+                        <var>add</var>     rxcnt1,<var>cnt</var>                          
+
+:bit1                   <var>add</var>     rxcnt1,bit_ticks1     '1 bit period
+                        
+:wait1                  <var>jmpret</var>  rxcode1,txcode1       'run a chuck of transmit code, then return
+
+                        <var>mov</var>     t1,rxcnt1             'check if bit receive period done
+                        <var>sub</var>     t1,<var>cnt</var>
+                        <var>cmps</var>    t1,#0           <var>wc</var>
+        <var>if_nc</var>           <var>jmp</var>     #:wait1
+
+                        <var>test</var>    rxmask1,<var>ina</var>     <var>wc</var>    'receive bit on rx pin
+                        <var>rcr</var>     rxdata1,#1
+                        <var>djnz</var>    rxbits1,#:bit1
+
+                        <var>test</var>    rxtx_mode1,#INVERTRX  <var>wz</var>      'find out if rx is inverted
+        <var>if_z_ne_c</var>       <var>jmp</var>     #receive1              'abort if no stop bit   (TTA) (from serialMirror)
+
+                        <var>jmpret</var>  rxcode1,txcode1       'run a chunk of transmit code, then return
+                        <var>shr</var>     rxdata1,#32-9         'justify and trim received byte
+
+                        <var>wrbyte</var>  rxdata1,rxbuff_head_ptr1 '7-22
+                        <var>add</var>     rx_head1,#1
+                        <var>cmpsub</var>  rx_head1,rxsize1         ' (TTA) allows non-binary buffer size
+                        <var>wrlong</var>  rx_head1,rx_head_ptr1
+                        <var>mov</var>     rxbuff_head_ptr1,rxbuff_ptr1 'calculate next byte head_ptr
+                        <var>add</var>     rxbuff_head_ptr1,rx_head1
+norts1                  <var>rdlong</var>  rx_tail1,rx_tail_ptr1    '7-22 or 8 will be patched to jmp #r3 if no rts
+                        <var>mov</var>     t1,rx_head1
+                        <var>sub</var>     t1,rx_tail1    <var>wc</var>
+        <var>if_c</var>            <var>add</var>     t1,rxsize1           ' fix wrap, (TTA) change
+                        <var>cmps</var>    t1,rtssize1     <var>wc</var>
+rts1                    <var>muxc</var>    <var>outa</var>,rtsmask1
+
+rec1i                   <var>jmp</var>     #receive1             'byte done, receive next byte
+'
+' Receive2 -------------------------------------------------------------------------------------
+'
+receive2                <var>jmpret</var>  rxcode2,txcode2       'run a chunk of transmit code, then return
+                        
+                        <var>test</var>    rxmask2,<var>ina</var>     <var>wc</var>
+start2 <var>if_c</var>             <var>jmp</var>     #norts2               'go check rts if no start bit
+        
+                        <var>mov</var>     rxbits2,#9            'ready to receive byte
+                        <var>mov</var>     rxcnt2,bit4_ticks2    '1/4 bits
+                        <var>add</var>     rxcnt2,<var>cnt</var>                          
+
+:bit2                   <var>add</var>     rxcnt2,bit_ticks2     '1 bit period
+                        
+:wait2                  <var>jmpret</var>  rxcode2,txcode2       'run a chuck of transmit code, then return
+
+                        <var>mov</var>     t1,rxcnt2             'check if bit receive period done
+                        <var>sub</var>     t1,<var>cnt</var>
+                        <var>cmps</var>    t1,#0           <var>wc</var>
+        <var>if_nc</var>           <var>jmp</var>     #:wait2
+
+                        <var>test</var>    rxmask2,<var>ina</var>     <var>wc</var>    'receive bit on rx pin
+                        <var>rcr</var>     rxdata2,#1
+                        <var>djnz</var>    rxbits2,#:bit2
+                        <var>test</var>    rxtx_mode2,#INVERTRX  <var>wz</var>      'find out if rx is inverted
+        <var>if_z_ne_c</var>       <var>jmp</var>     #receive2              'abort if no stop bit   (TTA) (from serialMirror)
+
+                        <var>jmpret</var>  rxcode2,txcode2       'run a chunk of transmit code, then return
+                        <var>shr</var>     rxdata2,#32-9         'justify and trim received byte
+
+                        <var>wrbyte</var>  rxdata2,rxbuff_head_ptr2 '7-22
+                        <var>add</var>     rx_head2,#1
+                        <var>cmpsub</var>  rx_head2,rxsize2        '  ' (TTA) allows non-binary buffer size
+                        <var>wrlong</var>  rx_head2,rx_head_ptr2
+                        <var>mov</var>     rxbuff_head_ptr2,rxbuff_ptr2 'calculate next byte head_ptr
+                        <var>add</var>     rxbuff_head_ptr2,rx_head2
+norts2                  <var>rdlong</var>  rx_tail2,rx_tail_ptr2    '7-22 or 8 will be patched to jmp #r3 if no rts
+                        <var>mov</var>     t1,rx_head2
+                        <var>sub</var>     t1,rx_tail2    <var>wc</var>
+        <var>if_c</var>            <var>add</var>     t1,rxsize2            ' fix wrap, (TTA) change
+                        <var>cmps</var>    t1,rtssize2     <var>wc</var>
+rts2                    <var>muxc</var>    <var>outa</var>,rtsmask2
+
+rec2i                   <var>jmp</var>     #receive2             'byte done, receive next byte
+'
+' Receive3 -------------------------------------------------------------------------------------
+'
+receive3                <var>jmpret</var>  rxcode3,txcode3       'run a chunk of transmit code, then return
+
+                        <var>test</var>    rxmask3,<var>ina</var>     <var>wc</var>
+start3 <var>if_c</var>             <var>jmp</var>     #norts3               'go check rts if no start bit
+
+                        <var>mov</var>     rxbits3,#9            'ready to receive byte
+                        <var>mov</var>     rxcnt3,bit4_ticks3    '1/4 bits
+                        <var>add</var>     rxcnt3,<var>cnt</var>                          
+
+:bit3                   <var>add</var>     rxcnt3,bit_ticks3     '1 bit period
+                        
+:wait3                  <var>jmpret</var>  rxcode3,txcode3       'run a chuck of transmit code, then return
+
+                        <var>mov</var>     t1,rxcnt3             'check if bit receive period done
+                        <var>sub</var>     t1,<var>cnt</var>
+                        <var>cmps</var>    t1,#0           <var>wc</var>
+        <var>if_nc</var>           <var>jmp</var>     #:wait3
+
+                        <var>test</var>    rxmask3,<var>ina</var>     <var>wc</var>    'receive bit on rx pin
+                        <var>rcr</var>     rxdata3,#1
+                        <var>djnz</var>    rxbits3,#:bit3
+                        <var>test</var>    rxtx_mode3,#INVERTRX  <var>wz</var>      'find out if rx is inverted
+        <var>if_z_ne_c</var>       <var>jmp</var>     #receive3              'abort if no stop bit   (TTA) (from serialMirror)
+
+                        <var>jmpret</var>  rxcode3,txcode3       'run a chunk of transmit code, then return
+                        <var>shr</var>     rxdata3,#32-9         'justify and trim received byte
+
+                        <var>wrbyte</var>  rxdata3,rxbuff_head_ptr3 '7-22
+                        <var>add</var>     rx_head3,#1
+                        <var>cmpsub</var>  rx_head3,rxsize3         ' (TTA) allows non-binary buffer size
+                        <var>wrlong</var>  rx_head3,rx_head_ptr3    '8
+                        <var>mov</var>     rxbuff_head_ptr3,rxbuff_ptr3 'calculate next byte head_ptr
+                        <var>add</var>     rxbuff_head_ptr3,rx_head3
+norts3                  <var>rdlong</var>  rx_tail3,rx_tail_ptr3    '7-22 or 8, may be patched to jmp #r3 if no rts
+                        <var>mov</var>     t1,rx_head3
+                        <var>sub</var>     t1,rx_tail3    <var>wc</var>
+        <var>if_c</var>            <var>add</var>     t1,rxsize3            ' fix wrap, (TTA) change
+                        <var>cmps</var>    t1,rtssize3     <var>wc</var>    'is buffer more that 3/4 full?
+rts3                    <var>muxc</var>    <var>outa</var>,rtsmask3
+
+rec3i                   <var>jmp</var>     #receive3             'byte done, receive next byte
+'
+' TRANSMIT =======================================================================================
+'
+transmit                <var>jmpret</var>  txcode,rxcode1        'run a chunk of receive code, then return
+                                                      'patched to a jmp if pin not used                        
+                        
+txcts0                  <var>test</var>    ctsmask,<var>ina</var>     <var>wc</var>    'if flow-controlled dont send
+                        <var>rdlong</var>  t1,tx_head_ptr        '{7-22} - head[0]
+                        <var>cmp</var>     t1,tx_tail      <var>wz</var>    'tail[0]
+ctsi0   <var>if_z</var>            <var>jmp</var>     #transmit             'may be patched to if_z_or_c or if_z_or_nc
+
+                        <var>rdbyte</var>  txdata,txbuff_tail_ptr '{8}
+                        <var>add</var>     tx_tail,#1
+                        <var>cmpsub</var>     tx_tail,txsize    <var>wz</var>   ' (TTA) for individually sized buffers, will zero at rollover
+                        <var>wrlong</var>  tx_tail,tx_tail_ptr    '{8}  
+        <var>if_z</var>            <var>mov</var>     txbuff_tail_ptr,txbuff_ptr 'reset tail_ptr if we wrapped
+        <var>if_nz</var>           <var>add</var>     txbuff_tail_ptr,#1    'otherwise add 1
+                        
+                        <var>jmpret</var>  txcode,rxcode1
+
+                        <var>shl</var>     txdata,#2
+                        <var>or</var>      txdata,txbitor        'ready byte to transmit
+                        <var>mov</var>     txbits,#11
+                        <var>mov</var>     txcnt,<var>cnt</var>
+
+txbit                   <var>shr</var>     txdata,#1       <var>wc</var>
+txout0                  <var>muxc</var>    <var>outa</var>,txmask           'maybe patched to muxnc dira,txmask
+                        <var>add</var>     txcnt,bit_ticks       'ready next cnt
+
+:wait                   <var>jmpret</var>  txcode,rxcode1        'run a chunk of receive code, then return
+
+                        <var>mov</var>     t1,txcnt              'check if bit transmit period done
+                        <var>sub</var>     t1,<var>cnt</var>
+                        <var>cmps</var>    t1,#0           <var>wc</var>
+        <var>if_nc</var>           <var>jmp</var>     #:wait
+
+                        <var>djnz</var>    txbits,#txbit         'another bit to transmit?
+txjmp0                  <var>jmp</var>     ctsi0                 'byte done, transmit next byte
+'
+' Transmit1 -------------------------------------------------------------------------------------
+'
+transmit1               <var>jmpret</var>  txcode1,rxcode2       'run a chunk of receive code, then return
+                        
+txcts1                  <var>test</var>    ctsmask1,<var>ina</var>    <var>wc</var>    'if flow-controlled dont send
+                        <var>rdlong</var>  t1,tx_head_ptr1
+                        <var>cmp</var>     t1,tx_tail1     <var>wz</var>
+ctsi1   <var>if_z</var>            <var>jmp</var>     #transmit1            'may be patched to if_z_or_c or if_z_or_nc
+
+                        <var>rdbyte</var>  txdata1,txbuff_tail_ptr1
+                        <var>add</var>     tx_tail1,#1
+                        <var>cmpsub</var>     tx_tail1,txsize1   <var>wz</var>   ' (TTA) for individually sized buffers, will zero at rollover
+                        <var>wrlong</var>  tx_tail1,tx_tail_ptr1
+        <var>if_z</var>            <var>mov</var>     txbuff_tail_ptr1,txbuff_ptr1 'reset tail_ptr if we wrapped
+        <var>if_nz</var>           <var>add</var>     txbuff_tail_ptr1,#1   'otherwise add 1
+
+                        <var>jmpret</var>  txcode1,rxcode2       'run a chunk of receive code, then return
+                        
+                        <var>shl</var>     txdata1,#2
+                        <var>or</var>      txdata1,txbitor       'ready byte to transmit
+                        <var>mov</var>     txbits1,#11
+                        <var>mov</var>     txcnt1,<var>cnt</var>
+
+txbit1                  <var>shr</var>     txdata1,#1      <var>wc</var>
+txout1                  <var>muxc</var>    <var>outa</var>,txmask1          'maybe patched to muxnc dira,txmask
+                        <var>add</var>     txcnt1,bit_ticks1     'ready next cnt
+
+:wait1                  <var>jmpret</var>  txcode1,rxcode2       'run a chunk of receive code, then return
+
+                        <var>mov</var>     t1,txcnt1             'check if bit transmit period done
+                        <var>sub</var>     t1,<var>cnt</var>
+                        <var>cmps</var>    t1,#0           <var>wc</var>
+        <var>if_nc</var>           <var>jmp</var>     #:wait1
+
+                        <var>djnz</var>    txbits1,#txbit1       'another bit to transmit?
+txjmp1                  <var>jmp</var>     ctsi1                 'byte done, transmit next byte
+'
+' Transmit2 -------------------------------------------------------------------------------------
+'
+transmit2               <var>jmpret</var>  txcode2,rxcode3       'run a chunk of receive code, then return
+                        
+txcts2                  <var>test</var>    ctsmask2,<var>ina</var>    <var>wc</var>    'if flow-controlled dont send
+                        <var>rdlong</var>  t1,tx_head_ptr2
+                        <var>cmp</var>     t1,tx_tail2     <var>wz</var>
+ctsi2   <var>if_z</var>            <var>jmp</var>     #transmit2            'may be patched to if_z_or_c or if_z_or_nc
+
+                        <var>rdbyte</var>  txdata2,txbuff_tail_ptr2
+                        <var>add</var>     tx_tail2,#1
+                        <var>cmpsub</var>     tx_tail2,txsize2   <var>wz</var>   ' (TTA) for individually sized buffers, will zero at rollover
+                        <var>wrlong</var>  tx_tail2,tx_tail_ptr2
+        <var>if_z</var>            <var>mov</var>     txbuff_tail_ptr2,txbuff_ptr2 'reset tail_ptr if we wrapped
+        <var>if_nz</var>           <var>add</var>     txbuff_tail_ptr2,#1   'otherwise add 1
+
+                        <var>jmpret</var>  txcode2,rxcode3
+
+                        <var>shl</var>     txdata2,#2
+                        <var>or</var>      txdata2,txbitor       'ready byte to transmit
+                        <var>mov</var>     txbits2,#11
+                        <var>mov</var>     txcnt2,<var>cnt</var>
+
+txbit2                  <var>shr</var>     txdata2,#1      <var>wc</var>
+txout2                  <var>muxc</var>    <var>outa</var>,txmask2          'maybe patched to muxnc dira,txmask
+                        <var>add</var>     txcnt2,bit_ticks2     'ready next cnt
+
+:wait2                  <var>jmpret</var>  txcode2,rxcode3       'run a chunk of receive code, then return
+
+                        <var>mov</var>     t1,txcnt2             'check if bit transmit period done
+                        <var>sub</var>     t1,<var>cnt</var>
+                        <var>cmps</var>    t1,#0           <var>wc</var>
+        <var>if_nc</var>           <var>jmp</var>     #:wait2
+
+                        <var>djnz</var>    txbits2,#txbit2       'another bit to transmit?
+txjmp2                  <var>jmp</var>     ctsi2                 'byte done, transmit next byte
+'
+' Transmit3 -------------------------------------------------------------------------------------
+'
+transmit3               <var>jmpret</var>  txcode3,rxcode        'run a chunk of receive code, then return
+                        
+txcts3                  <var>test</var>    ctsmask3,<var>ina</var>    <var>wc</var>    'if flow-controlled dont send
+                        <var>rdlong</var>  t1,tx_head_ptr3
+                        <var>cmp</var>     t1,tx_tail3     <var>wz</var>
+ctsi3   <var>if_z</var>            <var>jmp</var>     #transmit3            'may be patched to if_z_or_c or if_z_or_nc
+
+                        <var>rdbyte</var>  txdata3,txbuff_tail_ptr3
+                        <var>add</var>     tx_tail3,#1
+                        <var>cmpsub</var>     tx_tail3,txsize3   <var>wz</var>   ' (TTA) for individually sized buffers, will zero at rollover
+                        <var>wrlong</var>  tx_tail3,tx_tail_ptr3
+        <var>if_z</var>            <var>mov</var>     txbuff_tail_ptr3,txbuff_ptr3 'reset tail_ptr if we wrapped
+        <var>if_nz</var>           <var>add</var>     txbuff_tail_ptr3,#1   'otherwise add 1
+
+                        <var>jmpret</var>  txcode3,rxcode
+
+                        <var>shl</var>     txdata3,#2
+                        <var>or</var>      txdata3,txbitor       'ready byte to transmit
+                        <var>mov</var>     txbits3,#11
+                        <var>mov</var>     txcnt3,<var>cnt</var>
+
+txbit3                  <var>shr</var>     txdata3,#1      <var>wc</var>
+txout3                  <var>muxc</var>    <var>outa</var>,txmask3          'maybe patched to muxnc dira,txmask
+                        <var>add</var>     txcnt3,bit_ticks3     'ready next cnt
+
+:wait3                  <var>jmpret</var>  txcode3,rxcode        'run a chunk of receive code, then return
+
+                        <var>mov</var>     t1,txcnt3             'check if bit transmit period done
+                        <var>sub</var>     t1,<var>cnt</var>
+                        <var>cmps</var>    t1,#0           <var>wc</var>
+        <var>if_nc</var>           <var>jmp</var>     #:wait3
+
+                        <var>djnz</var>    txbits3,#txbit3       'another bit to transmit?
+txjmp3                  <var>jmp</var>     ctsi3                 'byte done, transmit next byte
+'
+'The following are constants used by pasm for patching the code, depending on options required
+doifc2ifnc              <var>long</var>      $003c0000           'patch condition if_c to if_nc using xor
+doif_z_or_c             <var>long</var>      $00380000           'patch condition if_z to if_z_or_c using or
+doif_z_or_nc            <var>long</var>      $002c0000           'patch condition if_z to if_z_or_nc using or
+domuxnc                 <var>long</var>      $04000000           'patch muxc to muxnc using or
+txbitor                 <var>long</var>      $0401               'bits to or for transmitting, adding start and stop bits
+
+' Buffer sizes initialized from CONstants and used by both spin and pasm
+
+rxsize                  <var>long</var>      RX_SIZE0                  ' (TTA) size of the rx and tx buffers is available to pasm and spin
+rxsize1                 <var>long</var>      RX_SIZE1                  ' these values are transfered from the declared CONstants
+rxsize2                 <var>long</var>      RX_SIZE2                  ' at startup, individually configurable
+rxsize3                 <var>long</var>      RX_SIZE3
+txsize                  <var>long</var>      TX_SIZE0
+txsize1                 <var>long</var>      TX_SIZE1
+txsize2                 <var>long</var>      TX_SIZE2
+txsize3                 <var>long</var>      TX_SIZE3
+
+' Object memory from here to the end is zeroed in the init/stop method ---------------'
+' Some locations within the next set of values, after being initialized to zero, are then filled with alternative options
+' That are accessed from both spin and pasm
+' Dont Change the order of these initialized variables within port groups of 4 without modifying
+' the code to match - both spin and assembler
+
+startfill
+rxchar                <var>byte</var>      0             ' used by spin rxcheck, for inversion of received data
+rxchar1               <var>byte</var>      0
+rxchar2               <var>byte</var>      0
+rxchar3               <var>byte</var>      0
+cog                   <var>long</var>      0                   'cog flag/id
+rxtx_mode             <var>long</var>      0             ' mode setting from values passed in by addport
+rxtx_mode1            <var>long</var>      0             '
+rxtx_mode2            <var>long</var>      0
+rxtx_mode3            <var>long</var>      0
+rx_head               <var>long</var>      0             ' rx head pointer, from 0 to size of rx buffer, used in spin and pasm
+rx_head1              <var>long</var>      0             ' data is enqueued to this offset above base, rxbuff_ptr
+rx_head2              <var>long</var>      0
+rx_head3              <var>long</var>      0
+rx_tail               <var>long</var>      0             ' rx tail pointer, ditto, zero to size of rx buffer
+rx_tail1              <var>long</var>      0             ' data is dequeued from this offset above base, rxbuff_ptr
+rx_tail2              <var>long</var>      0
+rx_tail3              <var>long</var>      0
+tx_head               <var>long</var>      0             ' tx head pointer, , from 0 to size of tx buffer, used in spin and pasm
+tx_head1              <var>long</var>      0             ' data is enqueued to this offset above base, txbuff_ptr
+tx_head2              <var>long</var>      0
+tx_head3              <var>long</var>      0
+tx_tail               <var>long</var>      0             ' tx tail pointer, ditto, zero to size of rx buffer
+tx_tail1              <var>long</var>      0             ' data is transmitted from this offset above base, txbuff_ptr
+tx_tail2              <var>long</var>      0
+tx_tail3              <var>long</var>      0
+rxbuff_ptr            <var>long</var>      0             ' These are the base hub addresses of the receive buffers
+rxbuff_ptr1           <var>long</var>      0             ' initialized in spin, referenced in pasm and spin
+rxbuff_ptr2           <var>long</var>      0             ' these buffers and sizes are individually configurable
+rxbuff_ptr3           <var>long</var>      0
+txbuff_ptr            <var>long</var>      0             ' These are the base hub addresses of the transmit buffers
+txbuff_ptr1           <var>long</var>      0
+txbuff_ptr2           <var>long</var>      0
+txbuff_ptr3           <var>long</var>      0
+
+'  Start of HUB overlay ------------------------------------------------------------------------
+' Some locations within the next set of values, after being init'd to zero, are then filled from spin with options
+' That are transferred to and accessed by the pasm cog once started, but no longer needed in spin.
+' Therefore, tx and rx buffers start here and overlays the hub footprint of these variables.
+' tx_buffers come first, 0,1,2,3, then rx buffers 0,1,2,3 by offset from "buffers"
+overlay
+buffers
+txdata                <var>long</var>      0
+txbits                <var>long</var>      0
+txcnt                 <var>long</var>      0
+txdata1               <var>long</var>      0
+txbits1               <var>long</var>      0
+txcnt1                <var>long</var>      0
+txdata2               <var>long</var>      0
+txbits2               <var>long</var>      0
+txcnt2                <var>long</var>      0
+txdata3               <var>long</var>      0
+txbits3               <var>long</var>      0
+txcnt3                <var>long</var>      0
+rxdata                <var>long</var>      0
+rxbits                <var>long</var>      0
+rxcnt                 <var>long</var>      0
+rxdata1               <var>long</var>      0
+rxbits1               <var>long</var>      0
+rxcnt1                <var>long</var>      0
+rxdata2               <var>long</var>      0
+rxbits2               <var>long</var>      0
+rxcnt2                <var>long</var>      0
+rxdata3               <var>long</var>      0
+rxbits3               <var>long</var>      0
+rxcnt3                <var>long</var>      0
+t1                    <var>long</var>      0               ' this is a temporary variable used by pasm
+rxmask                <var>long</var>      0               ' a single bit set, a mask for the pin used for receive, zero if port not used for receive
+rxmask1               <var>long</var>      0
+rxmask2               <var>long</var>      0
+rxmask3               <var>long</var>      0
+txmask                <var>long</var>      0               ' a single bit set, a mask for the pin used for transmit, zero if port not used for transmit
+txmask1               <var>long</var>      0
+txmask2               <var>long</var>      0
+txmask3               <var>long</var>      0
+ctsmask               <var>long</var>      0             ' a single bit set, a mask for the pin used for cts input, zero if port not using cts
+ctsmask1              <var>long</var>      0
+ctsmask2              <var>long</var>      0
+ctsmask3              <var>long</var>      0
+rtsmask               <var>long</var>      0             ' a single bit set, a mask for the pin used for rts output, zero if port not using rts
+rtsmask1              <var>long</var>      0
+rtsmask2              <var>long</var>      0
+rtsmask3              <var>long</var>      0
+bit4_ticks            <var>long</var>      0             ' bit ticks for start bit, 1/4 of standard bit
+bit4_ticks1           <var>long</var>      0
+bit4_ticks2           <var>long</var>      0
+bit4_ticks3           <var>long</var>      0
+bit_ticks             <var>long</var>      0             ' clock ticks per bit
+bit_ticks1            <var>long</var>      0
+bit_ticks2            <var>long</var>      0
+bit_ticks3            <var>long</var>      0
+rtssize               <var>long</var>      0             ' threshold in count of bytes above which will assert rts to stop flow
+rtssize1              <var>long</var>      0
+rtssize2              <var>long</var>      0
+rtssize3              <var>long</var>      0
+rxbuff_head_ptr         <var>long</var>      0             ' Hub address of data received, base plus offset
+rxbuff_head_ptr1        <var>long</var>      0             ' pasm writes WRBYTE to hub at this address, initialized in spin to base address
+rxbuff_head_ptr2        <var>long</var>      0
+rxbuff_head_ptr3        <var>long</var>      0
+txbuff_tail_ptr         <var>long</var>      0             ' Hub address of data tranmitted, base plus offset
+txbuff_tail_ptr1        <var>long</var>      0             ' pasm reads RDBYTE from hub at this address, initialized in spin to base address
+txbuff_tail_ptr2        <var>long</var>      0
+txbuff_tail_ptr3        <var>long</var>      0
+rx_head_ptr             <var>long</var>      0             ' pointer to the hub address of where the head and tail offset pointers are stored
+rx_head_ptr1            <var>long</var>      0             ' these pointers are initialized in spin but then used only by pasm
+rx_head_ptr2            <var>long</var>      0             ' the pasm cog has to know where in the hub to find those offsets.
+rx_head_ptr3            <var>long</var>      0
+rx_tail_ptr             <var>long</var>      0
+rx_tail_ptr1            <var>long</var>      0
+rx_tail_ptr2            <var>long</var>      0
+rx_tail_ptr3            <var>long</var>      0
+tx_head_ptr             <var>long</var>      0
+tx_head_ptr1            <var>long</var>      0
+tx_head_ptr2            <var>long</var>      0
+tx_head_ptr3            <var>long</var>      0
+tx_tail_ptr             <var>long</var>      0
+tx_tail_ptr1            <var>long</var>      0
+tx_tail_ptr2            <var>long</var>      0
+tx_tail_ptr3            <var>long</var>      0
+
+</pre>
+<hr /> ----------- End of the&nbsp;&nbsp;object memory zeroed from startfill to endfill in the init/stop method ------<br />
+<br /><a onclick ="javascript:ShowHide('lbl39')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl39>endfill
+      <var>FIT</var>
+
+</pre>
+<hr /> The above is all of the necessary code that must fit in the cog<br />
+ The following are extra bytes if necessary to provide the required rx and tx buffers.<br />
+ the number required is computed from the aggregate buffer size declared, minus the above initialized but recycled variables.<br />
+<br /><a onclick ="javascript:ShowHide('lbl40')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl40>
+extra                   <var>byte</var>    0 [RXTX_BUFSIZE - (RXTX_BUFSIZE &lt;# (@extra - @overlay))]
+
+</pre>
+<hr /><br />
+<h2 id = "lbl41">Documentation </h2>
+<br /><a onclick ="javascript:ShowHide('lbl42')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl42>                                                    'Documentation
+
+</pre>
+<hr />
+This .spin file supports PhiPi's great Spin Code Documenter found at
+http://www.phipi.com/spin2html/
+
+You can at any time create a .htm Documentation out of the .spin source.
+
+If you change the .spin file you can (re)create the .htm file by uploading your .spin file
+to http://www.phipi.com/spin2html/ and then saving the the created .htm page. 
+<br />
+<br />
+<h2 id = "lbl43">MIT License </h2>
+<br /><a onclick ="javascript:ShowHide('lbl44')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl44>                                                    'MIT License
+
+</pre>
+<hr /><pre>
+ ______________________________________________________________________________________
+|                            TERMS OF USE: MIT License                                 |                                                            
+|______________________________________________________________________________________|
+|Permission is hereby granted, free of charge, to any person obtaining a copy of this  |
+|software and associated documentation files (the "Software"), to deal in the Software |
+|without restriction, including without limitation the rights to use, copy, modify,    |
+|merge, publish, distribute, sublicense, and/or sell copies of the Software, and to    |
+|permit persons to whom the Software is furnished to do so, subject to the following   |
+|conditions:                                                                           |
+|                                                                                      |
+|The above copyright notice and this permission notice shall be included in all copies |
+|or substantial portions of the Software.                                              |
+|                                                                                      |
+|THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,   |
+|INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A         |
+|PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT    |
+|HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF  |
+|CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE  |
+|OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                         |
+|______________________________________________________________________________________|
+</pre>
+<br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br />
+		</div>
+	</td></tr>
+</table>
+</div>
+</body>
+</html>	
