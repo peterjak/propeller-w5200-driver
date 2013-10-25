@@ -211,9 +211,7 @@
 		<p class = "toc1">Table of Contents</p>
 		<div style = "text-align: left; margin-left: 10px;">
 			<a href= "#lbl1" class = "toc2">Preface</a><br/>
-<a onclick ="javascript:ShowHide('toc2')" href="javascript:;" class = "toc2">Global CONstants ... </a><br />
-<div id= "toc2" class = "tocgrp">
-</div>
+<a href= "#lbl2" class = "toc2">Global CONstants </a><br/>
 <a href= "#lbl5" class = "toc2">Global DATa </a><br/>
 <a href= "#lbl7" class = "toc2">Used OBJects </a><br/>
 <a href= "#lbl9" class = "toc2">PUBlic Spin Methods</a><br/>
@@ -231,7 +229,7 @@
 <a href= "#lbl32" class = "toc4">FillTransactionID</a><br/>
 <a href= "#lbl34" class = "toc4">SendReceive</a><br/>
 <a href= "#lbl36" class = "toc2">Documentation </a><br/>
-<a href= "#lbl38" class = "toc2">MIT License </a><br/>
+<a href= "#lbl37" class = "toc2">MIT License </a><br/>
 
 		</div>
 	</div>
@@ -243,7 +241,7 @@
 <br /><br />
 AUTHOR:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Mike Gebhard<br />
 COPYRIGHT:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Parallax Inc.<br />
-LAST MODIFIED:&nbsp;&nbsp;&nbsp;&nbsp;10/05/2013<br />
+LAST MODIFIED:&nbsp;&nbsp;&nbsp;&nbsp;10/19/2013<br />
 VERSION:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1.0<br />
 LICENSE:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MIT (see end of file)<br /><br />
 DESCRIPTION:<br />
@@ -251,6 +249,7 @@ DESCRIPTION:<br />
 <br />
 MODIFICATIONS:<br />
 10/05/2013&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;added minimal spindoc comments<br />
+10/19/2013&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;moved SendReceive to socket<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Michael Sommer (MSrobots)<br />
 
 <br />
@@ -442,11 +441,12 @@ RETURNS:
   <var>bytemove</var>(ptr, @QTYPE, 4)
   ptr += 4
 
-  ptr := SendReceive(buffPtr, ptr - buffPtr)
+  ptr := sock.SendReceive(buffPtr, ptr - buffPtr)
 
-  <var>if</var>(ptr == @null)
-  
-  ParseDnsResponse(ptr)
+  <var>if</var>(ptr == -1)
+    dnsCnt := 0
+  <var>else</var>  
+    ParseDnsResponse(ptr)
   <var>return</var>  GetResolvedIp(0)
   
   'return  ptr
@@ -564,6 +564,7 @@ RETURNS:
 <br /><a onclick ="javascript:ShowHide('lbl33')" href="javascript:;">SOURCE CODE...</a>
 <pre class=source id=lbl33><var>PUB</var> FillTransactionID
   <var>word</var>[@msgId] := transId
+{
 
 </pre>
 <hr /><h4 id = "lbl34">SendReceive(buffer, len)
@@ -580,15 +581,12 @@ RETURNS:
   <var>else</var>  
     <var>RESULT</var> := sock.Receive(buffer, bytesToRead)         'Get the Rx buffer
   sock.Disconnect
+} 
 
 </pre>
 <hr /><br />
 <h2 id = "lbl36">Documentation </h2>
-<br /><a onclick ="javascript:ShowHide('lbl37')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl37>                                                    'Documentation
-
-</pre>
-<hr /><pre>
+<pre>
 This .spin file supports PhiPi's great Spin Code Documenter found at
 http://www.phipi.com/spin2html/
 
@@ -598,12 +596,8 @@ If you change the .spin file you can (re)create the .htm file by uploading your 
 to http://www.phipi.com/spin2html/ and then saving the the created .htm page. 
 </pre>
 <br />
-<h2 id = "lbl38">MIT License </h2>
-<br /><a onclick ="javascript:ShowHide('lbl39')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl39>                                                    'MIT License 
-
-</pre>
-<hr /><pre>
+<h2 id = "lbl37">MIT License </h2>
+<pre>
  ______________________________________________________________________________________
 |                            TERMS OF USE: MIT License                                 |                                                            
 |______________________________________________________________________________________|

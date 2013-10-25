@@ -3,7 +3,7 @@
 ''
 ''AUTHOR:           Mike Gebhard
 ''COPYRIGHT:        Parallax Inc.
-''LAST MODIFIED:    10/04/2013
+''LAST MODIFIED:    10/19/2013
 ''VERSION:          1.0
 ''LICENSE:          MIT (see end of file)
 ''
@@ -15,6 +15,7 @@
 ''MODIFICATIONS:
 '' 8/12/2012        original file ?
 ''10/04/2013        added minimal spindoc comments
+''10/19/2013        added async test code
 ''                  Michael Sommer (MSrobots)
 }}
 CON
@@ -255,9 +256,9 @@ PUB DriveResetHigh(pin)
   outa[pin]~~
 
 PUB SoftReset
-  Write(MODE_REG, @_mode | %1000_0000, 1)   
+  Write(MODE_REG, @_mode | %1000_0000, 1, true)   
  
-  
+''-------[ Socket Commands... ]-----------------------------------------------------------  
 PUB InitSocket(socket, protocol, port)
 {{
 ''DESCRIPTION:
@@ -276,8 +277,72 @@ PUB InitSocket(socket, protocol, port)
   SetSocketMode(socket, protocol)
   SetSocketPort(socket, port)
 
+PUB OpenSocket(socket)
+{{
+''DESCRIPTION: Open socket(n)
 ''
-''=======[ Receive data... ]==============================================================
+''PARMS:
+''  socket    - Socket ID  
+''  
+''RETURNS: Nothing
+}}
+  SetSocketCommandRegister(socket, OPEN)
+
+PUB StartListener(socket)
+{{
+''DESCRIPTION: Listen on socket(n)
+''
+''PARMS:
+''  socket    - Socket ID 
+''  
+''RETURNS: Nothing
+}}
+  SetSocketCommandRegister(socket, LISTEN)
+
+PUB FlushSocket(socket)
+{{
+''DESCRIPTION: Send data through socket(n)
+''
+''PARMS:
+''  socket    - Socket ID 
+''  
+''RETURNS: Nothing
+}}
+  SetSocketCommandRegister(socket, SEND)
+
+PUB OpenRemoteSocket(socket)
+{{
+''DESCRIPTION: Connect remote socket(n)
+''
+''PARMS:
+''  socket    - Socket ID  
+''  
+''RETURNS: Nothing
+}}
+  SetSocketCommandRegister(socket, CONNECT)  
+
+PUB DisconnectSocket(socket)
+{{
+''DESCRIPTION: Disconnect socket(n)
+''
+''PARMS:
+''  socket    - Socket ID 
+''  
+''RETURNS: Nothing
+}}
+  SetSocketCommandRegister(socket, DISCONNECT)
+
+PUB CloseSocket(socket)
+{{
+''DESCRIPTION: Close socket(n)
+''
+''PARMS:
+''  socket    - Socket ID 
+''  
+''RETURNS: Nothing
+}}
+  SetSocketCommandRegister(socket, CLOSE)
+  
 PUB Rx(socket, buffer, length) | src_mask, src_ptr, upper_size, left_size
 {{
 ''DESCRIPTION:
@@ -325,11 +390,8 @@ PUB Rx(socket, buffer, length) | src_mask, src_ptr, upper_size, left_size
 
   'Set the command register to receive
   SetSocketCommandRegister(socket, RECV) 
-  
 
-''
-''=======[ Transmit data... ]=============================================================
-PUB Tx(socket, buffer, length) | dst_mask, dst_ptr, upper_size, left_size, ptr
+PUB Tx(socket, buffer, length, waitforcompletion) | dst_mask, dst_ptr, upper_size, left_size, ptr
 {{
 ''DESCRIPTION:
 ''  Write HUB memory to the socket(n) Tx buffer.  If the Tx buffer is 100
@@ -338,12 +400,12 @@ PUB Tx(socket, buffer, length) | dst_mask, dst_ptr, upper_size, left_size, ptr
 ''  fill addresses 0-9.
 ''
 ''PARMS:
-''  socket    - Socket ID
-''  buffer    - Pointer to HUB memory
-''  length    - Bytes to write to the socket(n) buffer
+''  socket            - Socket ID
+''  buffer            - Pointer to HUB memory
+''  length            - Bytes to write to the socket(n) buffer
+''  waitforcompletion - true to wait false for async - still debug / testing
 ''  
-''RETURNS:
-''  Nothing
+''RETURNS:            - bytes written ?
 }}
   'Calculate the physical socket(n) Tx address
   ptr := GetTxWritePointer(socket)
@@ -353,19 +415,18 @@ PUB Tx(socket, buffer, length) | dst_mask, dst_ptr, upper_size, left_size, ptr
   if((dst_mask + length) > (sockTxMask[socket] + 1))
     'Wrap and write the Tx data
     upper_size := (sockTxMask[socket] + 1) - dst_mask
-    Write(dst_ptr, buffer, upper_size)
+    Write(dst_ptr, buffer, upper_size, waitforcompletion)
     buffer += upper_size
     left_size := length - upper_size
-    Write(sockTxBase[socket], buffer, left_size)
+    Write(sockTxBase[socket], buffer, left_size, waitforcompletion)
   else
-    Write(dst_ptr, buffer, length)
+    Write(dst_ptr, buffer, length, waitforcompletion)
 
   'Set Tx pointers for the next Tx
   SetTxWritePointer(socket, length+ptr)
 
   'Send
   return  FlushSocketBuffer(socket, length)
-
 
 PUB FlushSocketBuffer(socket, length) | bytesSent, ptr_txrd1, ptr_txrd2 
 {{
@@ -374,7 +435,7 @@ PUB FlushSocketBuffer(socket, length) | bytesSent, ptr_txrd1, ptr_txrd2
 ''PARMS:
 ''  socket    - Socket ID 
 ''  
-''RETURNS: Nothing
+''RETURNS:    - bytes written ?
 }}
   bytesSent := ptr_txrd1:= ptr_txrd2 := 0
   ptr_txrd1 := GetTxReadPointer(socket)
@@ -398,9 +459,64 @@ PUB FlushSocketBuffer(socket, length) | bytesSent, ptr_txrd1, ptr_txrd2
       bytesSent :=  $FFFF - ptr_txrd1 + ptr_txrd2 + 1
 
   return bytesSent
-  
+
+''-------[ Socket Status... ]-------------------------------------------------------------
+PUB IsInit(socket)
+{{
+''DESCRIPTION: Determine if the socket is initialized
 ''
-''=======[ Socket Buffer Pointer Methods... ]=============================================
+''PARMS:
+''  socket    - Socket ID 
+''  
+''RETURNS: True if the socket is initialized; otherwise returns false. 
+}}
+  return GetSocketStatus(socket) ==  SOCK_INIT
+
+PUB IsEstablished(socket)
+{{
+''DESCRIPTION: Determine if the socket is established
+''
+''PARMS:
+''  socket    - Socket ID 
+''  
+''RETURNS: True if the socket is established; otherwise returns false. 
+}}
+  return GetSocketStatus(socket) ==  SOCK_ESTABLISHED
+
+PUB IsCloseWait(socket)
+{{
+''DESCRIPTION: Determine if the socket is close wait
+''
+''PARMS:
+''  socket    - Socket ID 
+''  
+''RETURNS: True if the socket is close wait; otherwise returns false. 
+}}
+  return GetSocketStatus(socket) ==  SOCK_CLOSE_WAIT
+
+PUB IsClosed(socket)
+{{
+''DESCRIPTION: Determine if the socket is closed
+''
+''PARMS:
+''  socket    - Socket ID 
+''  
+''RETURNS: True if the socket is closed; otherwise returns false. 
+}}
+  return GetSocketStatus(socket) ==  SOCK_CLOSED
+
+PUB SocketStatus(socket)
+{{
+''DESCRIPTION: Read the status of socket(n)
+''
+''PARMS:
+''  socket    - Socket ID 
+''                                                                                                  
+''RETURNS: Byte: Socket(n) status register
+}}
+  return GetSocketStatus(socket)  
+
+''-------[ Socket Buf Ptr... ]------------------------------------------------------------
 PUB GetMaximumSegmentSize(socket)
   return ReadSocketWord(socket, S_MAX_SEGM0)
   
@@ -510,141 +626,15 @@ PUB SocketTxSize(socket)
 }}
   return sockTxMem[socket] * 1024
   
-''
-''=======[ Socket Commands... ]===========================================================
-PUB OpenSocket(socket)
-{{
-''DESCRIPTION: Open socket(n)
-''
-''PARMS:
-''  socket    - Socket ID  
-''  
-''RETURNS: Nothing
-}}
-  SetSocketCommandRegister(socket, OPEN)
-
-PUB StartListener(socket)
-{{
-''DESCRIPTION: Listen on socket(n)
-''
-''PARMS:
-''  socket    - Socket ID 
-''  
-''RETURNS: Nothing
-}}
-  SetSocketCommandRegister(socket, LISTEN)
-
-PUB FlushSocket(socket)
-{{
-''DESCRIPTION: Send data through socket(n)
-''
-''PARMS:
-''  socket    - Socket ID 
-''  
-''RETURNS: Nothing
-}}
-  SetSocketCommandRegister(socket, SEND)
-
-PUB OpenRemoteSocket(socket)
-{{
-''DESCRIPTION: Connect remote socket(n)
-''
-''PARMS:
-''  socket    - Socket ID  
-''  
-''RETURNS: Nothing
-}}
-  SetSocketCommandRegister(socket, CONNECT)  
-
-PUB DisconnectSocket(socket)
-{{
-''DESCRIPTION: Disconnect socket(n)
-''
-''PARMS:
-''  socket    - Socket ID 
-''  
-''RETURNS: Nothing
-}}
-  SetSocketCommandRegister(socket, DISCONNECT)
-
-PUB CloseSocket(socket)
-{{
-''DESCRIPTION: Close socket(n)
-''
-''PARMS:
-''  socket    - Socket ID 
-''  
-''RETURNS: Nothing
-}}
-  SetSocketCommandRegister(socket, CLOSE)
-  
-''
-''=======[ Socket Status... ]=============================================================
-PUB IsInit(socket)
-{{
-''DESCRIPTION: Determine if the socket is initialized
-''
-''PARMS:
-''  socket    - Socket ID 
-''  
-''RETURNS: True if the socket is initialized; otherwise returns false. 
-}}
-  return GetSocketStatus(socket) ==  SOCK_INIT
-
-PUB IsEstablished(socket)
-{{
-''DESCRIPTION: Determine if the socket is established
-''
-''PARMS:
-''  socket    - Socket ID 
-''  
-''RETURNS: True if the socket is established; otherwise returns false. 
-}}
-  return GetSocketStatus(socket) ==  SOCK_ESTABLISHED
-
-PUB IsCloseWait(socket)
-{{
-''DESCRIPTION: Determine if the socket is close wait
-''
-''PARMS:
-''  socket    - Socket ID 
-''  
-''RETURNS: True if the socket is close wait; otherwise returns false. 
-}}
-  return GetSocketStatus(socket) ==  SOCK_CLOSE_WAIT
-
-PUB IsClosed(socket)
-{{
-''DESCRIPTION: Determine if the socket is closed
-''
-''PARMS:
-''  socket    - Socket ID 
-''  
-''RETURNS: True if the socket is closed; otherwise returns false. 
-}}
-  return GetSocketStatus(socket) ==  SOCK_CLOSED
-
-PUB SocketStatus(socket)
-{{
-''DESCRIPTION: Read the status of socket(n)
-''
-''PARMS:
-''  socket    - Socket ID 
-''                                                                                                  
-''RETURNS: Byte: Socket(n) status register
-}}
-  return GetSocketStatus(socket)  
-
-''
-''=======[ Common Register Initialize Methods... ]========================================
+''-------[ Set/Get Properties... ]--------------------------------------------------------
 PUB SetCommonDefaults
-  Write(MODE_REG, @_mode, 19)
+  Write(MODE_REG, @_mode, 19, false)                      ' need to wait?
    'Use the default 8x2k Rx and Tx Buffers 
   SetDefault2kRxTxBuffers
 
 PUB SetCommonnMode(value)
   _mode := value & $FF
-  Write(MODE_REG, @_mode, 1)     
+  Write(MODE_REG, @_mode, 1, false)                       ' need to wait?
  
 PUB SetGateway(octet3, octet2, octet1, octet0)
   _gateway[0] := octet3
@@ -652,14 +642,14 @@ PUB SetGateway(octet3, octet2, octet1, octet0)
   _gateway[2] := octet1
   _gateway[3] := octet0 
   'long[@gateway] := octet3 << 8 + octet2 << 16 + octet1 << 24 + octet0
-  Write(GATEWAY0, @_gateway, 4)
+  Write(GATEWAY0, @_gateway, 4, false)                    ' need to wait?
 
 PUB SetSubnetMask(octet3, octet2, octet1, octet0)
   _subnetmask[0] := octet3 
   _subnetmask[1] := octet2
   _subnetmask[2] := octet1
   _subnetmask[3] := octet0
-  Write(SUBNET_MASK0, @_subnetmask, 4) 
+  Write(SUBNET_MASK0, @_subnetmask, 4, false)            ' need to wait? 
 
 PUB SetMac(octet5, octet4, octet3, octet2, octet1, octet0)
   _mac[0] := octet5 
@@ -668,25 +658,22 @@ PUB SetMac(octet5, octet4, octet3, octet2, octet1, octet0)
   _mac[3] := octet2
   _mac[4] := octet1
   _mac[5] := octet0
-  Write(MAC0, @_mac, 6)
+  Write(MAC0, @_mac, 6, false)                          ' need to wait?
 
 PUB SetIp(octet3, octet2, octet1, octet0)
   _ip[0] := octet3 
   _ip[1] := octet2
   _ip[2] := octet1
   _ip[3] := octet0
-  Write(SOURCE_IP0, @_ip, 4 )
+  Write(SOURCE_IP0, @_ip, 4, false)                     ' need to wait? 
 
 PUB RemoteIp(socket, octet3, octet2, octet1, octet0)
   workSpace[0] := octet3 
   workSpace[1] := octet2
   workSpace[2] := octet1
   workSpace[3] := octet0
-  Write(GetSocketRegister(socket, S_DEST_IP0), @workspace, 4)
+  Write(GetSocketRegister(socket, S_DEST_IP0), @workspace, 4, false)' need to wait? )
 
-
-''
-''=======[ Common Register Properties... ]================================================
 PUB GetIp
 {{
 ''DESCRIPTION:
@@ -735,8 +722,7 @@ PUB GetVersion
   {The W5100 does not have a version register}
   return ReadByte(RETRY_COUNT)
 
-''
-''=======[ DHCP and DNS... ]==============================================================
+''-------[ DHCP and DNS... ]--------------------------------------------------------------
 {{
 '' DHCP and DNS
 '' These methods are accessed by DHCP and DNS
@@ -761,11 +747,11 @@ PUB CopyRouter(source, len)
 
 PUB CopyGateway(source, len)
   bytemove(@_gateway, source, len)
-  Write(GATEWAY0, @_gateway, 4)
+  Write(GATEWAY0, @_gateway, 4, false)                  ' need to wait?
 
 PUB CopySubnet(source, len)
   bytemove(@_subnetMask, source, len)
-  Write(SUBNET_MASK0, @_subnetmask, 4)
+  Write(SUBNET_MASK0, @_subnetmask, 4, false)           ' need to wait? )
     
 PUB GetDns
   return GetDnsByIndex(0)
@@ -783,11 +769,9 @@ PUB GetRouter
   
 
 PRI IsNullIp(ipaddr)
-  return (byte[ipaddr][0] + byte[ipaddr][1] + byte[ipaddr][2] + byte[ipaddr][3]) == 0    
+  return (byte[ipaddr][0] + byte[ipaddr][1] + byte[ipaddr][2] + byte[ipaddr][3]) == 0
 
-
-''
-''=======[ Set defaults... ]=============================================================
+''-------[ Set defaults... ]--------------------------------------------------------------
 PUB SetDefault2kRxTxBuffers | i
 {{
 ''DESCRIPTION:
@@ -813,9 +797,7 @@ PUB SetDefault2kRxTxBuffers | i
     'WriteByte(GetSocketRegister(i, S_RX_MEM_SIZE) , sockRxMem[i])
     'WriteByte(GetSocketRegister(i, S_TX_MEM_SIZE) , sockTxMem[i])  
 
-
-''
-''=======[ Socket Register Methods... ]===================================================
+''-------[ Socket Register... ]-----------------------------------------------------------
 PRI SetSocketMode(socket, value)
 {{
 ''DESCRIPTION:
@@ -848,8 +830,7 @@ PUB GetSocketIR(socket)
 PUB SetSocketIR(socket, value)
   SocketWriteByte(socket, S_IR, value)
   
-''
-''=======[ Socket Helper Methods... ]=====================================================
+''-------[ Socket Helper... ]-------------------------------------------------------------
 PRI ReadSocketWord(socket, register)
 {{
 ''DESCRIPTION:
@@ -864,7 +845,7 @@ PRI ReadSocketWord(socket, register)
   
 PRI SocketWriteWord(socket, register, value)
   SerializeWord(value, @workSpace)
-  Write(GetSocketRegister(socket, register), @workSpace, 2)
+  Write(GetSocketRegister(socket, register), @workSpace, 2, false)            ' need to wait? 
 
 PRI SocketReadByte(socket, register)
   return ReadByte(GetSocketRegister(socket, register))
@@ -875,8 +856,7 @@ PRI SocketWriteByte(socket, register, value)
 PRI ReadSocketByte(socket, register)
   return ReadByte(GetSocketRegister(socket, register))
   
-''
-''=======[ Helper Methods... ]============================================================
+''-------[ Other Helper... ]--------------------------------------------------------------
 PUB SerializeWord(value, buffer)
 {{
 ''DESCRIPTION:
@@ -897,9 +877,7 @@ PUB DeserializeWord(buffer) | value
 PUB GetSocketRegister(sock, register)
   return sock * SOCKET_REG_SIZE + SOCKET_BASE_ADDRESS + register
 
-
-''
-''=======[ SPI Interface... ]=============================================================
+''-------[ SPI Interface... ]-------------------------------------------------------------
 PRI Read(register, buffer, length)
 {{
 ''DESCRIPTION:
@@ -911,9 +889,8 @@ PRI Read(register, buffer, length)
 }}
   spi.Read(register, length, buffer)
 
-PRI Write(register, buffer, length)
-  spi.Write(register, length, buffer)
-
+PRI Write(register, buffer, length, waitforcompletion)
+  return spi.Write(register, length, buffer, waitforcompletion)
     
 PRI ReadByte(register) 
   spi.Read(register, 1, @workSpace)
@@ -921,11 +898,9 @@ PRI ReadByte(register)
 
 PRI WriteByte(register, value) 
   workSpace[0] := value
-  spi.Write(register, 1, @workSpace)
+  spi.Write(register, 1, @workSpace, true)
 
-  
-''
-''=======[ Debug methods... ]=============================================================
+''-------[ Debug methods... ]-------------------------------------------------------------
 {{
 '' Debug methods
 '' Expose varaibles to higher level objects
@@ -974,7 +949,7 @@ PUB DebugSockReadByte(socket, register)
 
 ''
 ''=======[ Documentation ]================================================================
-CON                                                     'Documentation
+CON                                               
 {{{
 This .spin file supports PhiPi's great Spin Code Documenter found at
 http://www.phipi.com/spin2html/
@@ -987,7 +962,7 @@ to http://www.phipi.com/spin2html/ and then saving the the created .htm page.
 
 ''
 ''=======[ MIT License ]==================================================================
-CON                                                     'MIT License
+CON                                                  
 {{{
  ______________________________________________________________________________________
 |                            TERMS OF USE: MIT License                                 |                                                            

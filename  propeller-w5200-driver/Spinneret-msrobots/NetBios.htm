@@ -236,7 +236,7 @@
 <a href= "#lbl38" class = "toc4">CreateTransactionId</a><br/>
 </div>
 <a href= "#lbl40" class = "toc2">Documentation </a><br/>
-<a href= "#lbl42" class = "toc2">MIT License </a><br/>
+<a href= "#lbl41" class = "toc2">MIT License </a><br/>
 
 		</div>
 	</div>
@@ -248,7 +248,7 @@
 <br /><br />
 AUTHORS:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Mike Gebhard / Michael Sommer<br />
 COPYRIGHT:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;See LICENCE (MIT)&nbsp;&nbsp;&nbsp;&nbsp;<br />
-LAST MODIFIED:&nbsp;&nbsp;&nbsp;&nbsp;10/04/2013<br />
+LAST MODIFIED:&nbsp;&nbsp;&nbsp;&nbsp;10/24/2013<br />
 VERSION:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1.0<br />
 LICENSE:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MIT (see end of file)<br /><br />
 DESCRIPTION:<br />
@@ -258,7 +258,8 @@ DESCRIPTION:<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* sending Registration<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* sending NB Name Query Response&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* sending NBSTAT Name Query Response<br />
-<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* sending NB Name Query Negative Response (protecting names)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br />
 RESOURCES:<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;http://tools.ietf.org/html/rfc1001<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;http://tools.ietf.org/html/rfc1002<br />
@@ -269,6 +270,8 @@ MODIFICATIONS:<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;created NetBios shrunk down as much as possible<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;added hostname. and workgoup to Init<br />
 10/04/2013&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;added spindoc comments<br />
+10/21/2013&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;added NB Name Query Negative Response (protecting names)&nbsp;&nbsp;<br />
+10/24/2013&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;added RCODE enum&nbsp;&nbsp;<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Michael Sommer (MSrobots)<br />
 <br />
  Form a DOS prompt run nbtstat -a PROPNET.<br />
@@ -351,11 +354,25 @@ CFT_ERR&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0x7&nbsp;&nbsp;&nbsp;Name in conflict error
   NB_FLAGS                      = $38
   NB_IP                         = $3A
 
+  { RCODE Error Enum }
+  RCODE_FMT_ERR                 = $1  ' Format Error.  Request was invalidly formatted.
+  RCODE_SRV_ERR                 = $2  ' Server failure.  Problem with NBNS, cannot
+                                      ' process name.
+  RCODE_IMP_ERR                 = $4  ' Unsupported request error.  Allowable only
+                                      ' for challenging NBNS when gets an Update type
+                                      ' registration request.
+  RCODE_RFS_ERR                 = $5  ' Refused error.  For policy reasons server
+                                      ' will not register this name from this host.
+  RCODE_ACT_ERR                 = $6  ' Active error.  Name is owned by another node.
+  RCODE_CFT_ERR                 = $7  ' Name in conflict error.
+                                      ' A UNIQUE name is owned by more than one node.
+  
   { CheckSocket Enum }
   CHECKSOCKET_NOTHING           = $0
   CHECKSOCKET_NB_SEND           = $1
   CHECKSOCKET_NBSTAT_SEND       = $2
   CHECKSOCKET_OTHER             = $3
+  CHECKSOCKET_NEG_NB_SEND       = $4
 
 </pre>
 <hr />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br />
@@ -460,10 +477,10 @@ Returns:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0 success &g
   <var>bytemove</var>(@nbStatQueryResp+93,hostname,<var>strsize</var>(hostname) &lt;# 15 )               ' host FileServer
                   
   'encode names  
-  FirstLevelEncode(@wildcard, string("*"), ZERO, $00)
-  FirstLevelEncode(@encName, hostname, SPACE, $00)
-  FirstLevelEncode(@encGroup, workgroup, SPACE, $00)
-  FirstLevelEncode(@encServer, hostname, SPACE, $20)                   
+  FirstLevelEncode(@wildcard, string("*"), ZERO, $00, <var>false</var>)
+  FirstLevelEncode(@encName, hostname, SPACE, $00, <var>true</var>)
+  FirstLevelEncode(@encGroup, workgroup, SPACE, $00, <var>true</var>)
+  FirstLevelEncode(@encServer, hostname, SPACE, $20, <var>true</var>)                   
   
   'Fill in MAC &amp; IP
   <var>bytemove</var>(@nbMac, wiz.GetMac, 6)
@@ -472,7 +489,7 @@ Returns:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0 success &g
   
   ReInitSocket
   
-  'Create a unique IDs
+  'Create 3 unique IDs
   tr1 := CreateTransactionId($FFFF)
   tr2 := CreateTransactionId($FFFF)
   tr3 := CreateTransactionId($FFFF)
@@ -486,14 +503,14 @@ Returns:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0 success &g
     sendRegister(tr1, @encName, 0)                      'no group
     sendRegister(tr2, @encServer, 0)                    'no group
     sendRegister(tr3, @encGroup, $80)                   'group
-' should be inside repeat?
-  sock.Available
-  <var>repeat</var>
-      <var>if</var> CheckSocket == CHECKSOCKET_OTHER               'not sure here... check needed?
+'   should be inside repeat!
+    sock.Available
+    <var>repeat</var>
+      <var>if</var> CheckSocket == CHECKSOCKET_OTHER               
         <var>RESULT</var> := (wiz.DeserializeWord(_buffPtr+constant(FLAGS+8)) &amp; $000F)
           <var>if</var> (<var>RESULT</var>)
             <var>return</var> <var>RESULT</var>
-  <var>until</var> _lastReadSize == 0
+    <var>until</var> _lastReadSize == 0
     
   nbNameReg[2] := $28                                   'RD bit 0 - NAME OVERWRITE DEMAND
   sendRegister(tr1, @encName, 0)                        'no group
@@ -509,7 +526,7 @@ Returns:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;see CheckSoc
                     buffer contains last received request/response
 <br />
 <br /><a onclick ="javascript:ShowHide('lbl12')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl12><var>PUB</var> CheckSocket  | avail, needed, ptr, name             'checks NetBios Name Service and if there processes one request
+<pre class=source id=lbl12><var>PUB</var> CheckSocket  | avail, needed, ptr, name, flag_s, protect, register   'checks NetBios Name Service and if there processes one request
   _lastReadSize := 0
   <var>if</var> sock.DataReady &gt; 0                                 'Any Data ?
     <var>if</var> ((avail := waitForCountBytes(8)) =&gt; 8)           'Header Data in the buffer?
@@ -519,15 +536,21 @@ Returns:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;see CheckSoc
         sock.Receive(_buffPtr+8, needed)
         _lastReadSize := needed + 8                     'remember last block size
         <var>RESULT</var> := CHECKSOCKET_OTHER                     'return typ 3 other as default
-        
-        <var>ifnot</var> ((<var>byte</var>[_buffPtr+constant(FLAGS+8)] &amp; $80) == $80) ' just requests no responses            
+        flag_s := <var>byte</var>[_buffPtr+constant(FLAGS+8)]
+        <var>ifnot</var> ((flag_s &amp; $80) == $80)                   'just requests no responses            
           ptr := 0                                      'nothing
+          protect := <var>false</var>                              'no
+          register := <var>false</var>
+          <var>if</var> ((flag_s&gt;&gt;3) == 5)                          'what op? is it register? 
+             register := <var>true</var>                           'yes
           name := _buffPtr+constant(QUERY+1+8)          'adress of query name
           <var>byte</var>[@ipResp-2] := 0                          'no group
           <var>if</var> <var>strcomp</var>(name,@encName)                     'query for host workstation?
             ptr := @encName
+            protect := register
           <var>elseif</var> <var>strcomp</var>(name,@encServer)               'query for host server?
             ptr := @encServer
+            protect := register
           <var>elseif</var> <var>strcomp</var>(name,@wildcard)                'query for wildcard?
             ptr := @wildcard
           <var>elseif</var> <var>strcomp</var>(name,@encGroup)                'query for group?
@@ -537,11 +560,19 @@ Returns:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;see CheckSoc
           <var>if</var> ptr                                        'query for me?  
             <var>case</var> wiz.DeserializeWord(_buffPtr + constant(NB_1+8)) 'what typ?
               NB:  
-                sendResponse(ptr, @nbPosQueryResp, constant(@enbPosQueryResp - @nbPosQueryResp))            
-                <var>RESULT</var> := CHECKSOCKET_NB_SEND           'return typ 1 response (nbpos host/group)
+                <var>if</var> protect
+                    nbPosQueryResp[3] := RCODE_ACT_ERR  ' RCODE  ACT_ERR     0x6   Active error.  Name is owned by another node.  
+                    sendResponse(ptr, @nbPosQueryResp, constant(@enbPosQueryResp - @nbPosQueryResp))            
+                    <var>RESULT</var> := CHECKSOCKET_NEG_NB_SEND   'return typ 4 response (nbneg host)
+                <var>else</var>
+                  <var>ifnot</var> register
+                    nbPosQueryResp[3] := 0              ' no RCODE
+                    sendResponse(ptr, @nbPosQueryResp, constant(@enbPosQueryResp - @nbPosQueryResp))            
+                    <var>RESULT</var> := CHECKSOCKET_NB_SEND       'return typ 1 response (nbpos host/group)
               NB_STAT:
-                sendResponse(ptr, @nbStatQueryResp, constant(@enbStatQueryResp - @nbStatQueryResp))            
-                <var>RESULT</var> := CHECKSOCKET_NBSTAT_SEND       'return typ 2 response (nbstat host/group)
+                <var>ifnot</var> register
+                  sendResponse(ptr, @nbStatQueryResp, constant(@enbStatQueryResp - @nbStatQueryResp))            
+                  <var>RESULT</var> := CHECKSOCKET_NBSTAT_SEND     'return typ 2 response (nbstat host/group)
 
 </pre>
 <hr /><h4 id = "lbl13">DisconnectSocket
@@ -570,23 +601,23 @@ Returns:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;see CheckSoc
   sock.Open
 
 </pre>
-<hr /><h4 id = "lbl17">SendQuery(queryname, pad, suffix, nbstat)
+<hr /><h4 id = "lbl17">SendQuery(queryname, pad, suffix, nbstatIP)
 </h4>
 
 <br />SendQuery:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Still Debug - send Query<br />
 
 <br /><a onclick ="javascript:ShowHide('lbl18')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl18><var>PUB</var> SendQuery(queryname, pad, suffix, nbstat)           'Still Debug - send Query
-  <var>if</var> nbstat
+<pre class=source id=lbl18><var>PUB</var> SendQuery(queryname, pad, suffix, nbstatIP)           'Still Debug - send Query
+  <var>if</var> nbstatIP
     <var>byte</var>[@nbNameQueryReq+3]  := $00                     'no Broadcast
     <var>byte</var>[@enbNameQueryReq-3] := NB_STAT                 'nb status query
-    sock.RemoteIp(192, 168, 1, 105)  
+    sock.RemoteIp(<var>byte</var>[nbstatIP][0], <var>byte</var>[nbstatIP][1], <var>byte</var>[nbstatIP][2], <var>byte</var>[nbstatIP][3])
   <var>else</var>
     <var>byte</var>[@nbNameQueryReq+3]  := $10                     'Broadcast
     <var>byte</var>[@enbNameQueryReq-3] := NB                      'nb name query 
     sock.RemoteIp($FF, $FF, $FF, $FF)  
   <var>RESULT</var> := <var>word</var>[@nbNameQueryReq] := CreateTransactionId($FFFF) 
-  FirstLevelEncode(@nbNameQueryReq+13, queryname, pad, suffix)
+  FirstLevelEncode(@nbNameQueryReq+13, queryname, pad, suffix, <var>true</var>)
   sock.Send(@nbNameQueryReq, constant(@enbNameQueryReq - @nbNameQueryReq))
   sock.Available  '?
 
@@ -676,16 +707,19 @@ Returns:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;see CheckSoc
         <var>RESULT</var> := 0
 
 </pre>
-<hr /><h4 id = "lbl34">FirstLevelEncode(dest, source, pad, suffix)
+<hr /><h4 id = "lbl34">FirstLevelEncode(dest, source, pad, suffix, touppercase)
 </h4>
 
 <br />FirstLevelEncode: Encode Name<br />
 
 <br /><a onclick ="javascript:ShowHide('lbl35')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl35><var>PRI</var> FirstLevelEncode(dest, source, pad, suffix) | char, size 'Encode the name
+<pre class=source id=lbl35><var>PRI</var> FirstLevelEncode(dest, source, pad, suffix, touppercase) | char, size 'Encode the name
   size := <var>strsize</var>(source) &lt;# 15  
   <var>repeat</var> size                                           'Encode the name
     char := <var>byte</var>[source++] &amp; $FF
+    <var>if</var> char =&gt; "a"
+      <var>if</var> touppercase
+        char := char &amp; (!$20)
     <var>byte</var>[dest++] := (char &gt;&gt; 4) + $41
     <var>byte</var>[dest++] := (char &amp; $0F) + $41    
   <var>repeat</var> 15 - size                                      'Pad spaces/zeros
@@ -728,11 +762,7 @@ Returns:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;see CheckSoc
 </pre>
 <hr /><br />
 <h2 id = "lbl40">Documentation </h2>
-<br /><a onclick ="javascript:ShowHide('lbl41')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl41>                                                    'Documentation
-
-</pre>
-<hr /><pre>
+<pre>
 This .spin file supports PhiPi's great Spin Code Documenter found at
 http://www.phipi.com/spin2html/
 
@@ -742,12 +772,8 @@ If you change the .spin file you can (re)create the .htm file by uploading your 
 to http://www.phipi.com/spin2html/ and then saving the the created .htm page. 
 </pre>
 <br />
-<h2 id = "lbl42">MIT License </h2>
-<br /><a onclick ="javascript:ShowHide('lbl43')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl43>                                                    'MIT License
-
-</pre>
-<hr /><pre>
+<h2 id = "lbl41">MIT License </h2>
+<pre>
  ______________________________________________________________________________________
 |                            TERMS OF USE: MIT License                                 |                                                            
 |______________________________________________________________________________________|

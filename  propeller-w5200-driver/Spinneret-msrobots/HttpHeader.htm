@@ -249,7 +249,7 @@
 <a href= "#lbl59" class = "toc4">GetBodyTokenCount</a><br/>
 </div>
 <a href= "#lbl61" class = "toc2">Documentation </a><br/>
-<a href= "#lbl63" class = "toc2">MIT License </a><br/>
+<a href= "#lbl62" class = "toc2">MIT License </a><br/>
 
 		</div>
 	</div>
@@ -302,7 +302,7 @@ MODIFICATIONS:<br />
   ext             <var>long</var>
                   <var>byte</var>  $0[3], $0               ' needs to be long alignt
 
-  index           <var>byte</var>  "index.htm", $0
+  index           <var>byte</var>  "/index.htm", $0
   sectionTokenCnt <var>byte</var>  $0[HEADER_SECTIONS_LEN]
   tokens          <var>byte</var>  $0 
   null            <var>long</var>  $0
@@ -399,8 +399,11 @@ MODIFICATIONS:<br />
 </h4>
 <br /><a onclick ="javascript:ShowHide('lbl20')" href="javascript:;">SOURCE CODE...</a>
 <pre class=source id=lbl20><var>PUB</var> GetFileName
-  <var>if</var> sectionTokenCnt[URL_PARTS] == sectionTokenCnt[BODY]' complete request Path &amp; File 
-    <var>return</var> tokenPtr[1]                                  ' without get-params (?&amp;...)
+  <var>if</var> sectionTokenCnt[URL_PARTS] == sectionTokenCnt[BODY]' complete request Path &amp; File
+    <var>if</var> <var>strsize</var>(tokenPtr[1])&gt;1
+      <var>return</var> tokenPtr[1]                                ' without get-params (?&amp;...)
+    <var>else</var>
+      <var>return</var> @index
   <var>else</var>                                                  ' Filename already tokenized
     <var>return</var> tokenPtr[sectionTokenCnt[URL_PARTS]-1]         ' last URL token ? one less?
 {  
@@ -532,10 +535,11 @@ MODIFICATIONS:<br />
   'Return if body does not contain data                 
   <var>if</var>(ptr == (buff + len))                              
     sectionTokenCnt[URL_PARTS] := sectionTokenCnt[BODY] := sectionTokenCnt[HEADER_LINES] 
-    <var>return</var>
+    <var>return</var> 0
 
   'Decode POST data
   <var>if</var>(<var>strcomp</var>(tokenPtr[0], string("POST")))
+    <var>result</var> := ptr
     DecodeString(ptr)
                                                         ' just tokenize Body on POST
     'Tokenize the body
@@ -543,17 +547,21 @@ MODIFICATIONS:<br />
     <var>repeat</var> <var>until</var> ptr &gt; (buff + len)-1
       <var>if</var>(IsPostToken(<var>byte</var>[ptr]))    
         <var>byte</var>[ptr++] := 0
-        isToken := <var>true</var>
+        <var>if</var>(IsPostToken(<var>byte</var>[ptr]))
+          tokenPtr[tokens++] := ptr -1
+        <var>else</var>
+          isToken := <var>true</var>
       <var>else</var>
         <var>if</var>(isToken)
-          <var>if</var>(<var>byte</var>[ptr] == $20)
-            ptr++
+'          if(byte[ptr] == $20)
+'            ptr++
           tokenPtr[tokens++] := ptr++
           isToken := <var>false</var>
         <var>else</var>        
           ptr++
           
     sectionTokenCnt[URL_PARTS] := sectionTokenCnt[BODY] := tokens
+    'return 1
 
 </pre>
 <hr /><h4 id = "lbl33">TokenizeFilename 
@@ -701,11 +709,7 @@ MODIFICATIONS:<br />
 </pre>
 <hr /><br />
 <h2 id = "lbl61">Documentation </h2>
-<br /><a onclick ="javascript:ShowHide('lbl62')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl62>                                                    'Documentation
-
-</pre>
-<hr /><pre>
+<pre>
 This .spin file supports PhiPi's great Spin Code Documenter found at
 http://www.phipi.com/spin2html/
 
@@ -715,12 +719,8 @@ If you change the .spin file you can (re)create the .htm file by uploading your 
 to http://www.phipi.com/spin2html/ and then saving the the created .htm page. 
 </pre>
 <br />
-<h2 id = "lbl63">MIT License </h2>
-<br /><a onclick ="javascript:ShowHide('lbl64')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl64>                                                    'MIT License
-
-</pre>
-<hr /><pre>
+<h2 id = "lbl62">MIT License </h2>
+<pre>
  ______________________________________________________________________________________
 |                            TERMS OF USE: MIT License                                 |                                                            
 |______________________________________________________________________________________|

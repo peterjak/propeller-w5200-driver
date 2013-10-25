@@ -3,7 +3,7 @@
 ''
 ''AUTHOR:           Mike Gebhard
 ''COPYRIGHT:        Parallax Inc.
-''LAST MODIFIED:    10/04/2013
+''LAST MODIFIED:    10/19/2013
 ''VERSION:          1.0
 ''LICENSE:          MIT (see end of file)
 ''
@@ -15,6 +15,7 @@
 ''MODIFICATIONS:
 '' 8/12/2012        original file 
 ''10/04/2013        added minimal spindoc comments
+''10/19/2013        added async test code
 ''                  Michael Sommer (MSrobots)
 }}
 ''
@@ -58,7 +59,19 @@ PUB ReStart
 PUB GetCogId
   return cog-1
     
-PUB Write(addr, numberOfBytes, source)
+PUB Write(addr, numberOfBytes, source, waitforcompletion)
+{{
+''DESCRIPTION:
+''  Write HUB memory to the socket(n) Tx buffer.  
+''
+''PARMS:
+''  addr              - Pointer to WIZ buffer
+''  numberOfBytes     - Bytes to write to the socket(n) buffer
+''  source            - Pointer to HUB memory
+''  waitforcompletion - true to wait false for async - still debug / testing
+''  
+''RETURNS:            - bytes written
+}}
 
   'ReStart  
 
@@ -73,7 +86,8 @@ PUB Write(addr, numberOfBytes, source)
 
     _cmd := ($F0 << 24) + (addr << 8) + byte[source]
 
-    repeat until _cmd == 0
+    if (waitforcompletion == true)
+       repeat until _cmd == 0
 
     ' return bytes written
     return( numberOfBytes )
@@ -85,6 +99,17 @@ PUB Write(addr, numberOfBytes, source)
 
 
 PUB Read(addr, numberOfBytes, dest_buffer_ptr) | _index, _data, _spi_word
+{{
+''DESCRIPTION:
+''  Read the Rx socket(n) buffer into HUB memory.  
+''
+''PARMATERS:
+''  addr              - Pointer to WIZ buffer
+''  numberOfBytes     - Bytes to read into HUB memory
+''  dest_buffer_ptr   - Pointer to HUB memory
+''
+''RETURNS:            - bytes read
+}}
 
   'ReStart
     
@@ -375,7 +400,7 @@ t2                  res     1
                         
 ''
 ''=======[ Documentation ]================================================================
-CON                                                     'Documentation
+CON                                                  
 {{{
 This .spin file supports PhiPi's great Spin Code Documenter found at
 http://www.phipi.com/spin2html/
@@ -388,7 +413,7 @@ to http://www.phipi.com/spin2html/ and then saving the the created .htm page.
 
 ''
 ''=======[ MIT License ]==================================================================
-CON                                                     'MIT License
+CON                                                
 {{{
  ______________________________________________________________________________________
 |                            TERMS OF USE: MIT License                                 |                                                            

@@ -222,7 +222,7 @@
 <a href= "#lbl17" class = "toc4">Read</a><br/>
 <a href= "#lbl19" class = "toc2">Assembly Cog </a><br/>
 <a href= "#lbl21" class = "toc2">Documentation </a><br/>
-<a href= "#lbl23" class = "toc2">MIT License </a><br/>
+<a href= "#lbl22" class = "toc2">MIT License </a><br/>
 
 		</div>
 	</div>
@@ -234,7 +234,7 @@
 <br /><br />
 AUTHOR:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Mike Gebhard<br />
 COPYRIGHT:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Parallax Inc.<br />
-LAST MODIFIED:&nbsp;&nbsp;&nbsp;&nbsp;10/04/2013<br />
+LAST MODIFIED:&nbsp;&nbsp;&nbsp;&nbsp;10/19/2013<br />
 VERSION:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1.0<br />
 LICENSE:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MIT (see end of file)<br /><br />
 DESCRIPTION:<br />
@@ -242,6 +242,7 @@ DESCRIPTION:<br />
 MODIFICATIONS:<br />
  8/12/2012&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;original file <br />
 10/04/2013&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;added minimal spindoc comments<br />
+10/19/2013&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;added async test code<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Michael Sommer (MSrobots)<br />
 
 <br />
@@ -307,10 +308,22 @@ MODIFICATIONS:<br />
   <var>return</var> cog-1
 
 </pre>
-<hr /><h4 id = "lbl15">Write(addr, numberOfBytes, source)
+<hr /><h4 id = "lbl15">Write(addr, numberOfBytes, source, waitforcompletion)
 </h4>
+
+<br />DESCRIPTION:<br />
+&nbsp;&nbsp;Write HUB memory to the socket(n) Tx buffer.&nbsp;&nbsp;<br />
+<br />
+PARMS:<br />
+&nbsp;&nbsp;addr&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- Pointer to WIZ buffer<br />
+&nbsp;&nbsp;numberOfBytes&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- Bytes to write to the socket(n) buffer<br />
+&nbsp;&nbsp;source&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- Pointer to HUB memory<br />
+&nbsp;&nbsp;waitforcompletion - true to wait false for async - still debug / testing<br />
+&nbsp;&nbsp;<br />
+RETURNS:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- bytes written<br />
+
 <br /><a onclick ="javascript:ShowHide('lbl16')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl16><var>PUB</var> Write(addr, numberOfBytes, source)
+<pre class=source id=lbl16><var>PUB</var> Write(addr, numberOfBytes, source, waitforcompletion)
 
   'ReStart  
 
@@ -325,7 +338,8 @@ MODIFICATIONS:<br />
 
     _cmd := ($F0 &lt;&lt; 24) + (addr &lt;&lt; 8) + <var>byte</var>[source]
 
-    <var>repeat</var> <var>until</var> _cmd == 0
+    <var>if</var> (waitforcompletion == <var>true</var>)
+       <var>repeat</var> <var>until</var> _cmd == 0
 
     ' return bytes written
     <var>return</var>( numberOfBytes )
@@ -337,6 +351,17 @@ MODIFICATIONS:<br />
 </pre>
 <hr /><h4 id = "lbl17">Read(addr, numberOfBytes, dest_buffer_ptr)
 </h4>
+
+<br />DESCRIPTION:<br />
+&nbsp;&nbsp;Read the Rx socket(n) buffer into HUB memory.&nbsp;&nbsp;<br />
+<br />
+PARMATERS:<br />
+&nbsp;&nbsp;addr&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- Pointer to WIZ buffer<br />
+&nbsp;&nbsp;numberOfBytes&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- Bytes to read into HUB memory<br />
+&nbsp;&nbsp;dest_buffer_ptr&nbsp;&nbsp;&nbsp;- Pointer to HUB memory<br />
+<br />
+RETURNS:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- bytes read<br />
+
 <br /><a onclick ="javascript:ShowHide('lbl18')" href="javascript:;">SOURCE CODE...</a>
 <pre class=source id=lbl18><var>PUB</var> Read(addr, numberOfBytes, dest_buffer_ptr) | _index, _data, _spi_word
 
@@ -632,11 +657,7 @@ t2                  <var>res</var>     1
 </pre>
 <hr /><br />
 <h2 id = "lbl21">Documentation </h2>
-<br /><a onclick ="javascript:ShowHide('lbl22')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl22>                                                    'Documentation
-
-</pre>
-<hr /><pre>
+<pre>
 This .spin file supports PhiPi's great Spin Code Documenter found at
 http://www.phipi.com/spin2html/
 
@@ -646,12 +667,8 @@ If you change the .spin file you can (re)create the .htm file by uploading your 
 to http://www.phipi.com/spin2html/ and then saving the the created .htm page. 
 </pre>
 <br />
-<h2 id = "lbl23">MIT License </h2>
-<br /><a onclick ="javascript:ShowHide('lbl24')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl24>                                                    'MIT License
-
-</pre>
-<hr /><pre>
+<h2 id = "lbl22">MIT License </h2>
+<pre>
  ______________________________________________________________________________________
 |                            TERMS OF USE: MIT License                                 |                                                            
 |______________________________________________________________________________________|

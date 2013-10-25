@@ -3,7 +3,7 @@
 ''
 ''AUTHORS:          Mike Gebhard / Michael Sommer
 ''COPYRIGHT:        See LICENCE (MIT)    
-''LAST MODIFIED:    10/04/2013
+''LAST MODIFIED:    10/24/2013
 ''VERSION:          1.0
 ''LICENSE:          MIT (see end of file)
 ''
@@ -15,7 +15,8 @@
 ''                * sending Registration
 ''                * sending NB Name Query Response                                          
 ''                * sending NBSTAT Name Query Response
-''
+''                * sending NB Name Query Negative Response (protecting names)                                         
+''                
 ''RESOURCES:
 ''                  http://tools.ietf.org/html/rfc1001
 ''                  http://tools.ietf.org/html/rfc1002
@@ -26,6 +27,8 @@
 ''                  created NetBios shrunk down as much as possible
 ''                  added hostname. and workgoup to Init
 ''10/04/2013        added spindoc comments
+''10/21/2013        added NB Name Query Negative Response (protecting names)  
+''10/24/2013        added RCODE enum  
 ''                  Michael Sommer (MSrobots)
 ''
 '' Form a DOS prompt run nbtstat -a PROPNET.
@@ -108,11 +111,25 @@ CON
   NB_FLAGS                      = $38
   NB_IP                         = $3A
 
+  { RCODE Error Enum }
+  RCODE_FMT_ERR                 = $1  ' Format Error.  Request was invalidly formatted.
+  RCODE_SRV_ERR                 = $2  ' Server failure.  Problem with NBNS, cannot
+                                      ' process name.
+  RCODE_IMP_ERR                 = $4  ' Unsupported request error.  Allowable only
+                                      ' for challenging NBNS when gets an Update type
+                                      ' registration request.
+  RCODE_RFS_ERR                 = $5  ' Refused error.  For policy reasons server
+                                      ' will not register this name from this host.
+  RCODE_ACT_ERR                 = $6  ' Active error.  Name is owned by another node.
+  RCODE_CFT_ERR                 = $7  ' Name in conflict error.
+                                      ' A UNIQUE name is owned by more than one node.
+  
   { CheckSocket Enum }
   CHECKSOCKET_NOTHING           = $0
   CHECKSOCKET_NB_SEND           = $1
   CHECKSOCKET_NBSTAT_SEND       = $2
   CHECKSOCKET_OTHER             = $3
+  CHECKSOCKET_NEG_NB_SEND       = $4
 
 ''     
 ''=======[ Global DATa ]==================================================================
@@ -209,10 +226,10 @@ PUB Init(buffer, socket, hostname , workgroup) | tr1, tr2, tr3 'Init NetBios and
   bytemove(@nbStatQueryResp+93,hostname,strsize(hostname) <# 15 )               ' host FileServer
                   
   'encode names  
-  FirstLevelEncode(@wildcard, string("*"), ZERO, $00)
-  FirstLevelEncode(@encName, hostname, SPACE, $00)
-  FirstLevelEncode(@encGroup, workgroup, SPACE, $00)
-  FirstLevelEncode(@encServer, hostname, SPACE, $20)                   
+  FirstLevelEncode(@wildcard, string("*"), ZERO, $00, false)
+  FirstLevelEncode(@encName, hostname, SPACE, $00, true)
+  FirstLevelEncode(@encGroup, workgroup, SPACE, $00, true)
+  FirstLevelEncode(@encServer, hostname, SPACE, $20, true)                   
   
   'Fill in MAC & IP
   bytemove(@nbMac, wiz.GetMac, 6)
@@ -221,7 +238,7 @@ PUB Init(buffer, socket, hostname , workgroup) | tr1, tr2, tr3 'Init NetBios and
   
   ReInitSocket
   
-  'Create a unique IDs
+  'Create 3 unique IDs
   tr1 := CreateTransactionId($FFFF)
   tr2 := CreateTransactionId($FFFF)
   tr3 := CreateTransactionId($FFFF)
@@ -235,21 +252,21 @@ PUB Init(buffer, socket, hostname , workgroup) | tr1, tr2, tr3 'Init NetBios and
     sendRegister(tr1, @encName, 0)                      'no group
     sendRegister(tr2, @encServer, 0)                    'no group
     sendRegister(tr3, @encGroup, $80)                   'group
-' should be inside repeat?
-  sock.Available
-  repeat
-      if CheckSocket == CHECKSOCKET_OTHER               'not sure here... check needed?
+'   should be inside repeat!
+    sock.Available
+    repeat
+      if CheckSocket == CHECKSOCKET_OTHER               
         RESULT := (wiz.DeserializeWord(_buffPtr+constant(FLAGS+8)) & $000F)
           if (RESULT)
             return RESULT
-  until _lastReadSize == 0
+    until _lastReadSize == 0
     
   nbNameReg[2] := $28                                   'RD bit 0 - NAME OVERWRITE DEMAND
   sendRegister(tr1, @encName, 0)                        'no group
   sendRegister(tr2, @encServer, 0)                      'no group
   sendRegister(tr3, @encGroup, $80)                     'group    
 
-PUB CheckSocket  | avail, needed, ptr, name             'checks NetBios Name Service and if there processes one request
+PUB CheckSocket  | avail, needed, ptr, name, flag_s, protect, register   'checks NetBios Name Service and if there processes one request
 {{
 ''CheckSocket:      Checks NetBios Name Service and if there processes one request
 ''Returns:          see CheckSocket Enum values in CON section
@@ -264,15 +281,21 @@ PUB CheckSocket  | avail, needed, ptr, name             'checks NetBios Name Ser
         sock.Receive(_buffPtr+8, needed)
         _lastReadSize := needed + 8                     'remember last block size
         RESULT := CHECKSOCKET_OTHER                     'return typ 3 other as default
-        
-        ifnot ((byte[_buffPtr+constant(FLAGS+8)] & $80) == $80) ' just requests no responses            
+        flag_s := byte[_buffPtr+constant(FLAGS+8)]
+        ifnot ((flag_s & $80) == $80)                   'just requests no responses            
           ptr := 0                                      'nothing
+          protect := false                              'no
+          register := false
+          if ((flag_s>>3) == 5)                          'what op? is it register? 
+             register := true                           'yes
           name := _buffPtr+constant(QUERY+1+8)          'adress of query name
           byte[@ipResp-2] := 0                          'no group
           if strcomp(name,@encName)                     'query for host workstation?
             ptr := @encName
+            protect := register
           elseif strcomp(name,@encServer)               'query for host server?
             ptr := @encServer
+            protect := register
           elseif strcomp(name,@wildcard)                'query for wildcard?
             ptr := @wildcard
           elseif strcomp(name,@encGroup)                'query for group?
@@ -282,11 +305,19 @@ PUB CheckSocket  | avail, needed, ptr, name             'checks NetBios Name Ser
           if ptr                                        'query for me?  
             case wiz.DeserializeWord(_buffPtr + constant(NB_1+8)) 'what typ?
               NB:  
-                sendResponse(ptr, @nbPosQueryResp, constant(@enbPosQueryResp - @nbPosQueryResp))            
-                RESULT := CHECKSOCKET_NB_SEND           'return typ 1 response (nbpos host/group)
+                if protect
+                    nbPosQueryResp[3] := RCODE_ACT_ERR  ' RCODE  ACT_ERR     0x6   Active error.  Name is owned by another node.  
+                    sendResponse(ptr, @nbPosQueryResp, constant(@enbPosQueryResp - @nbPosQueryResp))            
+                    RESULT := CHECKSOCKET_NEG_NB_SEND   'return typ 4 response (nbneg host)
+                else
+                  ifnot register
+                    nbPosQueryResp[3] := 0              ' no RCODE
+                    sendResponse(ptr, @nbPosQueryResp, constant(@enbPosQueryResp - @nbPosQueryResp))            
+                    RESULT := CHECKSOCKET_NB_SEND       'return typ 1 response (nbpos host/group)
               NB_STAT:
-                sendResponse(ptr, @nbStatQueryResp, constant(@enbStatQueryResp - @nbStatQueryResp))            
-                RESULT := CHECKSOCKET_NBSTAT_SEND       'return typ 2 response (nbstat host/group)
+                ifnot register
+                  sendResponse(ptr, @nbStatQueryResp, constant(@enbStatQueryResp - @nbStatQueryResp))            
+                  RESULT := CHECKSOCKET_NBSTAT_SEND     'return typ 2 response (nbstat host/group)
      
 PUB DisconnectSocket | tmp                              'processes all outstanding requests and disconnect Multi-Socket
 {{
@@ -306,20 +337,20 @@ PUB ReInitSocket | tmp                                  'ReInit Mult-Socket for 
   sock.RemotePort(137)
   sock.Open
 
-PUB SendQuery(queryname, pad, suffix, nbstat)           'Still Debug - send Query
+PUB SendQuery(queryname, pad, suffix, nbstatIP)           'Still Debug - send Query
 {{
 ''SendQuery:        Still Debug - send Query
 }}
-  if nbstat
+  if nbstatIP
     byte[@nbNameQueryReq+3]  := $00                     'no Broadcast
     byte[@enbNameQueryReq-3] := NB_STAT                 'nb status query
-    sock.RemoteIp(192, 168, 1, 105)  
+    sock.RemoteIp(byte[nbstatIP][0], byte[nbstatIP][1], byte[nbstatIP][2], byte[nbstatIP][3])
   else
     byte[@nbNameQueryReq+3]  := $10                     'Broadcast
     byte[@enbNameQueryReq-3] := NB                      'nb name query 
     sock.RemoteIp($FF, $FF, $FF, $FF)  
   RESULT := word[@nbNameQueryReq] := CreateTransactionId($FFFF) 
-  FirstLevelEncode(@nbNameQueryReq+13, queryname, pad, suffix)
+  FirstLevelEncode(@nbNameQueryReq+13, queryname, pad, suffix, true)
   sock.Send(@nbNameQueryReq, constant(@enbNameQueryReq - @nbNameQueryReq))
   sock.Available  '?
 
@@ -380,13 +411,16 @@ PRI WaitForCountBytes(count)                            'wait for count bytes on
         ReInitSocket                                    
         RESULT := 0
       
-PRI FirstLevelEncode(dest, source, pad, suffix) | char, size 'Encode the name
+PRI FirstLevelEncode(dest, source, pad, suffix, touppercase) | char, size 'Encode the name
 {{
 ''FirstLevelEncode: Encode Name
 }}
   size := strsize(source) <# 15  
   repeat size                                           'Encode the name
     char := byte[source++] & $FF
+    if char => "a"
+      if touppercase
+        char := char & (!$20)
     byte[dest++] := (char >> 4) + $41
     byte[dest++] := (char & $0F) + $41    
   repeat 15 - size                                      'Pad spaces/zeros
@@ -420,7 +454,7 @@ PRI CreateTransactionId(mask)                           'Create Random Transacti
 
 ''
 ''=======[ Documentation ]================================================================
-CON                                                     'Documentation
+CON                                                     
 {{{
 This .spin file supports PhiPi's great Spin Code Documenter found at
 http://www.phipi.com/spin2html/
@@ -433,7 +467,7 @@ to http://www.phipi.com/spin2html/ and then saving the the created .htm page.
 
 ''
 ''=======[ MIT License ]==================================================================
-CON                                                     'MIT License
+CON                                                  
 {{{
  ______________________________________________________________________________________
 |                            TERMS OF USE: MIT License                                 |                                                            

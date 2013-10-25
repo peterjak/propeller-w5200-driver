@@ -221,30 +221,29 @@
 <a href= "#lbl10" class = "toc3">Main Program </a><br/>
 <a href= "#lbl12" class = "toc3">Stop </a><br/>
 <a href= "#lbl14" class = "toc3">Send Spin Cmds </a><br/>
-<a href= "#lbl16" class = "toc3">data constants </a><br/>
-<a href= "#lbl18" class = "toc3">Send String bufptr </a><br/>
-<a href= "#lbl20" class = "toc3">Copy Cog to Hub </a><br/>
-<a href= "#lbl22" class = "toc3">Copy Hub to Hub </a><br/>
-<a href= "#lbl24" class = "toc3">time out </a><br/>
-<a href= "#lbl26" class = "toc3">date out </a><br/>
-<a href= "#lbl28" class = "toc3">decimal out </a><br/>
-<a href= "#lbl30" class = "toc3">Unsigned Divide </a><br/>
-<a href= "#lbl32" class = "toc3">Data Constants </a><br/>
-<a href= "#lbl34" class = "toc3">Variables </a><br/>
-<a href= "#lbl36" class = "toc2">Documentation </a><br/>
-<a href= "#lbl38" class = "toc2">MIT License </a><br/>
+<a href= "#lbl16" class = "toc3">Send String bufptr </a><br/>
+<a href= "#lbl18" class = "toc3">Copy Cog to Hub </a><br/>
+<a href= "#lbl20" class = "toc3">Copy Hub to Hub </a><br/>
+<a href= "#lbl22" class = "toc3">time out </a><br/>
+<a href= "#lbl24" class = "toc3">date out </a><br/>
+<a href= "#lbl26" class = "toc3">decimal out </a><br/>
+<a href= "#lbl28" class = "toc3">Unsigned Divide </a><br/>
+<a href= "#lbl30" class = "toc3">Data </a><br/>
+<a href= "#lbl32" class = "toc3">Variables </a><br/>
+<a href= "#lbl34" class = "toc2">Documentation </a><br/>
+<a href= "#lbl35" class = "toc2">MIT License </a><br/>
 
 		</div>
 	</div>
 	</td>
 	<td>
 		<div id="text" style= "text-align: left; padding-left: 20px; padding-right: 20px; width: 800px; height: 600px; background-color: #ffffe0; overflow: auto">
-			<h1 id = "lbl1" class = "title">directory as DataTable </h1>
+			<h1 id = "lbl1" class = "title">Directory as DataTable </h1>
 
 <br /><br />
 AUTHOR:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Michael Sommer (@MSrobots)<br />
 COPYRIGHT:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;See LICENCE (MIT)&nbsp;&nbsp;&nbsp;&nbsp;<br />
-LAST MODIFIED:&nbsp;&nbsp;&nbsp;&nbsp;10/04/2013<br />
+LAST MODIFIED:&nbsp;&nbsp;&nbsp;&nbsp;10/24/2013<br />
 VERSION:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1.0<br />
 LICENSE:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MIT (see end of file)<br /><br />
 DESCRIPTION:<br />
@@ -258,30 +257,45 @@ DESCRIPTION:<br />
 <br />
 MODIFICATIONS:<br />
 10/04/2013&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;added spindoc comments<br />
+10/19/2013&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;added comments<br />
+10/24/2013&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;added comments<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Michael Sommer (MSrobots)<br />
 
 <br />
 <h2 id = "lbl2">Global CONstants </h2>
 <br /><a onclick ="javascript:ShowHide('lbl3')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl3>  { PSX CMDS }  
-  REQ_PARA_STRING  = 1
-  REQ_PARA_NUMBER  = 2
-  REQ_FILENAME     = 3
-  REQ_HEADER_STRING= 4
-  REQ_HEADER_NUMBER= 5
+<pre class=source id=lbl3>
+  { PSX/PSE CMDS }    
+    
+  REQ_PARA_STRING   = 1  ' get Hubaddress of GET parameter (as string)
+  REQ_PARA_NUMBER   = 2  ' get Value of GET parameter (as long)
+  REQ_FILENAME      = 3  ' get Hubaddress of Request  
+  REQ_HEADER_STRING = 4  ' get Hubaddress of HEADER parameter (as string)
+  REQ_HEADER_NUMBER = 5  ' get Value of HEADER parameter (as long)
+  REQ_POST_STRING   = 6  ' get Hubaddress of POST parameter (as string)
+  REQ_POST_NUMBER   = 7  ' get Value of POST parameter (as long)
   
-  SEND_FILE_EXT    = 11
-  SEND_SIZE_HEADER = 12
-  SEND_DATA        = 13
-  SEND_STRING      = 14
-  SEND_FLUSH       = 15
+  SEND_FILE_EXT     = 11 ' set FileExtension and content-type for response
+  SEND_SIZE_HEADER  = 12 ' send size and HEADER of response to socket (buffered)
+  SEND_DATA         = 13 ' send number of bytes to socket (buffered)
+  SEND_STRING       = 14 ' send string to socket (buffered)
+  SEND_FLUSH        = 15 ' flush buffer to wiznet
+  SEND_FILE_CONTENT = 16 ' send content of file to socket (buffered)       
   
-  CHANGE_DIRECTORY = 21
-  LIST_ENTRIES     = 22
-  LIST_ENTRY_ADDR  = 23
+  CHANGE_DIRECTORY  = 21 ' change to Directory on SD
+  LIST_ENTRIES      = 22 ' list Entries (first/next)
+  LIST_ENTRY_ADDR   = 23 ' get Hubaddress of Directory cache Entry (FAT Dir Entry)       
+  CREATE_DIRECTORY  = 24 ' create new Directory       
+  DELETE_ENTRY      = 25 ' delete File or Directory             
+  FILE_WRITE_BLOCK  = 26 ' open file, read block, close file       
+  FILE_READ_BLOCK   = 27 ' open file, write block, close file       
 
-  PSE_CALL         = 91
-  PSE_TRANSFER     = 92
+  QUERY_DNS         = 41 ' resolves name to ip with DNS
+  QUERY_NETBIOS     = 42 ' send NetBios Query
+  CHECK_NETBIOS     = 43 ' poll next answer
+  
+  PSE_CALL          = 91 ' call submodul in new COG and return
+  PSE_TRANSFER      = 92 ' call submodul in same COG (DasyChain)
 
 </pre>
 <hr /><br />
@@ -480,40 +494,52 @@ sendspincmdwait         <var>rdlong</var>  cmdin,          cmdptr
 sendspincmd_ret         <var>ret</var>
 
 </pre>
-<hr /><h3 id = "lbl16">data constants </h3>
+<hr /><h3 id = "lbl16">Send String bufptr </h3><br />
+sendstringbuf:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sends String from Hub Buffer bufptr to the socket/browser (buffered)<br />
+<br />
+PARMS:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- none&nbsp;&nbsp;&nbsp;<br />
+&nbsp;&nbsp;<br />
+RETURNS:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- none<br />
+<br />
+
 <br /><a onclick ="javascript:ShowHide('lbl17')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl17>zero                    <var>long</var>    0
-minusone                <var>long</var>    -1
-space                   <var>long</var>    32
-incDest1                <var>long</var>    1 &lt;&lt; 9
-fileext                 <var>long</var>
-                        <var>byte</var>    "xml",0
-c1980                   <var>long</var>    1980
-
-</pre>
-<hr /><h3 id = "lbl18">Send String bufptr </h3>sendstringbuf:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sends String from Hub Buffer bufptr to the socket/browser<br />
-
-<br /><a onclick ="javascript:ShowHide('lbl19')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl19>sendstringbuf           <var>mov</var>     par1,           bufptr         ' send string from Output hub-buff 
+<pre class=source id=lbl17>sendstringbuf           <var>mov</var>     par1,           bufptr         ' send string from Output hub-buff 
                         <var>mov</var>     cmdout,         #SEND_STRING
                         <var>call</var>    #sendspincmd                   
 sendstringbuf_ret       <var>ret</var>
 
 </pre>
-<hr /><h3 id = "lbl20">Copy Cog to Hub </h3>cog2hub:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;copy count longs from Cog to Hub<br />
+<hr /><h3 id = "lbl18">Copy Cog to Hub </h3><br />
+cog2hub:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;copy count longs from Cog to Hub<br />
+<br />
+PARMS:<br />
+&nbsp;&nbsp;cog2hub&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- use "movd cog2hub, #COGlabel" to set source address in cog<br />
+&nbsp;&nbsp;count&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- number of longs to copy<br />
+&nbsp;&nbsp;outptr&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- hubaddress destination<br />
+&nbsp;&nbsp;<br />
+RETURNS:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- none - outptr get incremented accordingly (by 4 each long)<br />
+<br />
 
-<br /><a onclick ="javascript:ShowHide('lbl21')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl21>cog2hub                 <var>wrlong</var>  0-0,            outptr
+<br /><a onclick ="javascript:ShowHide('lbl19')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl19>cog2hub                 <var>wrlong</var>  0-0,            outptr
                         <var>add</var>     cog2hub,        incDest1
                         <var>add</var>     outptr,         #4
                         <var>djnz</var>    count,          #cog2hub
 cog2hub_ret             <var>ret</var>
 
 </pre>
-<hr /><h3 id = "lbl22">Copy Hub to Hub </h3>strhub2hub:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;copy strsize bytes from Hub to Hub<br />
+<hr /><h3 id = "lbl20">Copy Hub to Hub </h3><br />
+strhub2hub:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;copy string size bytes from Hub to Hub. zero will not be copied<br />
+<br />
+PARMS:<br />
+&nbsp;&nbsp;par1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- hubaddress source<br />
+&nbsp;&nbsp;outptr&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- hubaddress destination<br />
+<br />
+RETURNS:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- none - par1 and outptr get incremented each byte written<br />
+<br />
 
-<br /><a onclick ="javascript:ShowHide('lbl23')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl23>strhub2hub              <var>rdbyte</var>  tmp,            par1
+<br /><a onclick ="javascript:ShowHide('lbl21')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl21>strhub2hub              <var>rdbyte</var>  tmp,            par1
                         <var>cmp</var>     tmp,            zero <var>wz</var>
               <var>if_z</var>      <var>jmp</var>     #strhub2hub_ret
                         <var>add</var>     par1,           #1
@@ -523,10 +549,10 @@ cog2hub_ret             <var>ret</var>
 strhub2hub_ret          <var>ret</var>
 
 </pre>
-<hr /><h3 id = "lbl24">time out </h3>timeout:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Decodes FAT time value to string<br />
+<hr /><h3 id = "lbl22">time out </h3>timeout:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Decodes FAT time value to string<br />
 
-<br /><a onclick ="javascript:ShowHide('lbl25')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl25>'  return (directoryEntryCache[23] &gt;&gt; 3)    mod hour
+<br /><a onclick ="javascript:ShowHide('lbl23')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl23>'  return (directoryEntryCache[23] &gt;&gt; 3)    mod hour
 '  return (directoryEntryCache[15] &gt;&gt; 3) create hour
 '  return (((directoryEntryCache[23] &amp; $7) &lt;&lt; 3) | (directoryEntryCache[22] &gt;&gt; 5)) mod minute
 '  return (((directoryEntryCache[15] &amp; $7) &lt;&lt; 3) | (directoryEntryCache[14] &gt;&gt; 5))  create  minute
@@ -563,10 +589,10 @@ timeout                 <var>rdbyte</var>  par2,           outptr
 timeout_ret             <var>ret</var>
 
 </pre>
-<hr /><h3 id = "lbl26">date out </h3>dateout:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Decodes FAT date value to string<br />
+<hr /><h3 id = "lbl24">date out </h3>dateout:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Decodes FAT date value to string<br />
 
-<br /><a onclick ="javascript:ShowHide('lbl27')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl27>' return ((directoryEntryCache[25] &gt;&gt; 1) + 1_980) mod year
+<br /><a onclick ="javascript:ShowHide('lbl25')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl25>' return ((directoryEntryCache[25] &gt;&gt; 1) + 1_980) mod year
 ' return ((directoryEntryCache[19] &gt;&gt; 1) + 1_980)  access year
 ' return ((directoryEntryCache[17] &gt;&gt; 1) + 1_980)   create year
 dateout                 <var>rdbyte</var>  par2,           outptr         ' get entry day/month1
@@ -602,11 +628,18 @@ dateout                 <var>rdbyte</var>  par2,           outptr         ' get 
 dateout_ret             <var>ret</var>
 
 </pre>
-<hr /><h3 id = "lbl28">decimal out </h3>decoutback:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;outputs par1 as decimal. starting at offset outptr with last <br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;digit, decrementing outptr<br />
+<hr /><h3 id = "lbl26">decimal out </h3><br />
+decoutback:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;outputs par1 as decimal. starting at OFFSET outptr with last <br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;digit, decrementing outptr. so we will output right justified.<br />
+PARMS:<br />
+&nbsp;&nbsp;par1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- value to output decimal<br />
+&nbsp;&nbsp;outptr&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- hubaddress after last (rightmost) digit. decremented before write of each digit<br />
+&nbsp;&nbsp;<br />
+RETURNS:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- none - par1 unchanged, outptr at pos of first (leftmost) digit<br />
+<br />
 
-<br /><a onclick ="javascript:ShowHide('lbl29')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl29>decoutback              <var>add</var>     outptr,                 bufptr
+<br /><a onclick ="javascript:ShowHide('lbl27')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl27>decoutback              <var>add</var>     outptr,                 bufptr
                         <var>mov</var>     LNDivideDividend,       par1
 decoutloop              <var>sub</var>     outptr,                 #1
                         <var>mov</var>     LNDivideDivsor,         #10
@@ -619,13 +652,22 @@ decoutloop              <var>sub</var>     outptr,                 #1
 decoutback_ret          <var>ret</var>
 
 </pre>
-<hr /><h3 id = "lbl30">Unsigned Divide </h3>LNDivide:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Just put the thing you want to divide in the dividend<br />
+<hr /><h3 id = "lbl28">Unsigned Divide </h3><br />
+LNDivide:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Just put the thing you want to divide in the dividend<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;and the thing you want to divide by in the divisor.<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Then the result will appear in the quotient and<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the remainder will appear in the dividend.<br />
+PARMS:<br />
+&nbsp;&nbsp;LNDivideDividend&nbsp;&nbsp;- value to divide<br />
+&nbsp;&nbsp;LNDivideDivsor&nbsp;&nbsp;&nbsp;&nbsp;- value to divide by<br />
+&nbsp;&nbsp;<br />
+RETURNS:<br />
+&nbsp;&nbsp;LNDivideQuotient&nbsp;&nbsp;- value of the result of division<br />
+&nbsp;&nbsp;LNDivideDividend&nbsp;&nbsp;- value of the remainder<br />
+<br />
 
-<br /><a onclick ="javascript:ShowHide('lbl31')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl31>LNDivide                <var>mov</var>     LNDivideQuotient,       #0                           ' Setup to divide.
+<br /><a onclick ="javascript:ShowHide('lbl29')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl29>LNDivide                <var>mov</var>     LNDivideQuotient,       #0                           ' Setup to divide.
                         <var>mov</var>     LNDivideBuffer,         #0                           '
                         <var>mov</var>     LNDivideCounter,        #32                          '
 
@@ -645,9 +687,17 @@ LNDivideLoopPost        <var>cmpsub</var>  LNDivideDividend,       LNDivideBuffe
 LNDivide_ret            <var>ret</var>                                                          ' Return. Remainder in dividend on exit.
 
 </pre>
-<hr /><h3 id = "lbl32">Data Constants </h3>
-<br /><a onclick ="javascript:ShowHide('lbl33')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl33>xmlschema               <var>long</var>
+<hr /><h3 id = "lbl30">Data </h3>
+<br /><a onclick ="javascript:ShowHide('lbl31')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl31>zero                    <var>long</var>    0
+minusone                <var>long</var>    -1
+space                   <var>long</var>    32
+incDest1                <var>long</var>    1 &lt;&lt; 9
+fileext                 <var>long</var>
+                        <var>byte</var>    "xml",0
+c1980                   <var>long</var>    1980
+                        
+xmlschema               <var>long</var>
                         <var>byte</var>    "&lt;?xml version=",34,"1.0",34,"?&gt;",13,10,"&lt;xs:schema id=",34
                         <var>byte</var>    "ds"                        
                         <var>byte</var>    34," xmlns=",34,34," xmlns:xs=",34,"http://www.w3.<var>org</var>/2001/XMLSchema",34," xmlns:msdata=",34,"urn:schemas-microsoft-com:xml-msdata",34,"&gt;&lt;xs:element name=",34                        
@@ -698,21 +748,17 @@ xmlfooter               <var>long</var>
 xmlfooter_end           <var>long</var>
 
 </pre>
-<hr /><h3 id = "lbl34">Variables </h3>
-<br /><a onclick ="javascript:ShowHide('lbl35')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl35>cmdin                   <var>res</var>     1
+<hr /><h3 id = "lbl32">Variables </h3>
+<br /><a onclick ="javascript:ShowHide('lbl33')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl33>cmdin                   <var>res</var>     1
 
                         ' res 1                    ' still 1 long free !
                         <var>fit</var>     496
 
 </pre>
 <hr /><br />
-<h2 id = "lbl36">Documentation </h2>
-<br /><a onclick ="javascript:ShowHide('lbl37')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl37>                                                    'Documentation
-
-</pre>
-<hr /><pre>
+<h2 id = "lbl34">Documentation </h2>
+<pre>
 This .spin file supports PhiPi's great Spin Code Documenter found at
 http://www.phipi.com/spin2html/
 
@@ -722,12 +768,8 @@ If you change the .spin file you can (re)create the .htm file by uploading your 
 to http://www.phipi.com/spin2html/ and then saving the the created .htm page. 
 </pre>
 <br />
-<h2 id = "lbl38">MIT License </h2>
-<br /><a onclick ="javascript:ShowHide('lbl39')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl39>                                                    'MIT License
-
-</pre>
-<hr /><pre>
+<h2 id = "lbl35">MIT License </h2>
+<pre>
  ______________________________________________________________________________________
 |                            TERMS OF USE: MIT License                                 |                                                            
 |______________________________________________________________________________________|

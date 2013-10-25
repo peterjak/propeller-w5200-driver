@@ -3,7 +3,7 @@
 ''
 ''AUTHOR:           Mike Gebhard
 ''COPYRIGHT:        Parallax Inc.
-''LAST MODIFIED:    10/05/2013
+''LAST MODIFIED:    10/19/2013
 ''VERSION:          1.0
 ''LICENSE:          MIT (see end of file)
 ''
@@ -13,6 +13,7 @@
 ''
 ''MODIFICATIONS:
 ''10/05/2013        added minimal spindoc comments
+''10/19/2013        moved SendReceive to socket
 ''                  Michael Sommer (MSrobots)
 }}
 CON
@@ -175,11 +176,12 @@ PUB ResolveDomain(url) | ptr, dnsPtr
   bytemove(ptr, @QTYPE, 4)
   ptr += 4
 
-  ptr := SendReceive(buffPtr, ptr - buffPtr)
+  ptr := sock.SendReceive(buffPtr, ptr - buffPtr)
 
-  if(ptr == @null)
-  
-  ParseDnsResponse(ptr)
+  if(ptr == -1)
+    dnsCnt := 0
+  else  
+    ParseDnsResponse(ptr)
   return  GetResolvedIp(0)
   
   'return  ptr
@@ -276,7 +278,7 @@ PUB CreateTransactionId(mask)
 
 PUB FillTransactionID
   word[@msgId] := transId
-
+{
 PUB SendReceive(buffer, len) | bytesToRead 
   RESULT := @null
   bytesToRead := 0
@@ -288,10 +290,10 @@ PUB SendReceive(buffer, len) | bytesToRead
   else  
     RESULT := sock.Receive(buffer, bytesToRead)         'Get the Rx buffer
   sock.Disconnect
-  
+} 
 ''
 ''=======[ Documentation ]================================================================
-CON                                                     'Documentation
+CON                                                    
 {{{
 This .spin file supports PhiPi's great Spin Code Documenter found at
 http://www.phipi.com/spin2html/
@@ -304,7 +306,7 @@ to http://www.phipi.com/spin2html/ and then saving the the created .htm page.
 
 ''
 ''=======[ MIT License ]==================================================================
-CON                                                     'MIT License 
+CON                                                                  
 {{{
  ______________________________________________________________________________________
 |                            TERMS OF USE: MIT License                                 |                                                            

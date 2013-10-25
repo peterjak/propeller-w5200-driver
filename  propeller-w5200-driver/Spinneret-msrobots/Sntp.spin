@@ -158,7 +158,7 @@ PUB HumanTime(Offset,TimeStampAddress)|i,Seconds,Days,Years,LYrs,DW,DD,HH,MM,SS,
 
 ''
 ''=======[ Documentation ]================================================================
-CON                                                     'Documentation
+CON                                                  
 {{{
 This .spin file supports PhiPi's great Spin Code Documenter found at
 http://www.phipi.com/spin2html/
@@ -171,7 +171,7 @@ to http://www.phipi.com/spin2html/ and then saving the the created .htm page.
 
 ''
 ''=======[ MIT License ]==================================================================
-CON                                                     'MIT License
+CON                                                   
 {{{
  ______________________________________________________________________________________
 |                            TERMS OF USE: MIT License                                 |                                                            

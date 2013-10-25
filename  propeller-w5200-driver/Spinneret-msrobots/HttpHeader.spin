@@ -44,7 +44,7 @@ DAT
   ext             long
                   byte  $0[3], $0               ' needs to be long alignt
 
-  index           byte  "index.htm", $0
+  index           byte  "/index.htm", $0
   sectionTokenCnt byte  $0[HEADER_SECTIONS_LEN]
   tokens          byte  $0 
   null            long  $0
@@ -113,8 +113,11 @@ PUB GetUrlPart(value)
     return EnumerateHeader(value)
      
 PUB GetFileName
-  if sectionTokenCnt[URL_PARTS] == sectionTokenCnt[BODY]' complete request Path & File 
-    return tokenPtr[1]                                  ' without get-params (?&...)
+  if sectionTokenCnt[URL_PARTS] == sectionTokenCnt[BODY]' complete request Path & File
+    if strsize(tokenPtr[1])>1
+      return tokenPtr[1]                                ' without get-params (?&...)
+    else
+      return @index
   else                                                  ' Filename already tokenized
     return tokenPtr[sectionTokenCnt[URL_PARTS]-1]         ' last URL token ? one less?
 {  
@@ -220,10 +223,11 @@ PUB TokenizeHeader(buff, len)
   'Return if body does not contain data                 
   if(ptr == (buff + len))                              
     sectionTokenCnt[URL_PARTS] := sectionTokenCnt[BODY] := sectionTokenCnt[HEADER_LINES] 
-    return
+    return 0
 
   'Decode POST data
   if(strcomp(tokenPtr[0], string("POST")))
+    result := ptr
     DecodeString(ptr)
                                                         ' just tokenize Body on POST
     'Tokenize the body
@@ -231,18 +235,22 @@ PUB TokenizeHeader(buff, len)
     repeat until ptr > (buff + len)-1
       if(IsPostToken(byte[ptr]))    
         byte[ptr++] := 0
-        isToken := true
+        if(IsPostToken(byte[ptr]))
+          tokenPtr[tokens++] := ptr -1
+        else
+          isToken := true
       else
         if(isToken)
-          if(byte[ptr] == $20)
-            ptr++
+'          if(byte[ptr] == $20)
+'            ptr++
           tokenPtr[tokens++] := ptr++
           isToken := false
         else        
           ptr++
           
     sectionTokenCnt[URL_PARTS] := sectionTokenCnt[BODY] := tokens
-
+    'return 1
+    
 PUB TokenizeFilename 
   ifnot sectionTokenCnt[URL_PARTS] == sectionTokenCnt[BODY]' Filename already tokenized
     ptr := tokenPtr[1]
@@ -338,7 +346,7 @@ PUB GetBodyTokenCount
 
 ''
 ''=======[ Documentation ]================================================================
-CON                                                     'Documentation
+CON                                                  
 {{{
 This .spin file supports PhiPi's great Spin Code Documenter found at
 http://www.phipi.com/spin2html/
@@ -351,7 +359,7 @@ to http://www.phipi.com/spin2html/ and then saving the the created .htm page.
 
 ''
 ''=======[ MIT License ]==================================================================
-CON                                                     'MIT License
+CON                                                 
 {{{
  ______________________________________________________________________________________
 |                            TERMS OF USE: MIT License                                 |                                                            

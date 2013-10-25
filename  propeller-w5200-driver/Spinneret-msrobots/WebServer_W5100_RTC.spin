@@ -3,7 +3,7 @@
 ''
 ''AUTHORS:          Mike Gebhard / Michael Sommer
 ''COPYRIGHT:        Parallax Inc.
-''LAST MODIFIED:    10/04/2013
+''LAST MODIFIED:    10/19/2013
 ''VERSION:          1.0
 ''LICENSE:          MIT (see end of file)
 ''
@@ -21,6 +21,10 @@
 '' 8/31/2013        added support for OPTIONS,HEAD,PUT,MKCOL,DELETE (minimal PROPFIND)
 ''                  added SetHostname to DHCP
 ''                  added support for dynamic PASM pages/responses (and some demos)     
+'' 9/01/2013        added propfind.spin - pasm propfind handler 
+''                  - (not complete yet) - (compile to binary rename propfind.pse and put on sd-root)
+''                  added dirhtm.spin - pasm demo - (compile to binary rename dirhtm.psx and put on sd-root)
+''                  added dirxml.spin - pasm demo - (compile to binary rename dirxml.psx and put on sd-root)
 '' 9/26/2013        commented out alot of unused methods
 ''                  commented sourcecode and added some spindoc comments
 ''                  added netbios
@@ -28,6 +32,12 @@
 '' 9/30/2013        replaced PST by fullDuplexSerial4port
 ''10/04/2013        added spindoc comments
 ''                  replaced SNTP Simple Network Time Protocol v2.01.spin by Sntp.spin
+''10/19/2013        added Dns to main program
+''                  added testpost.spin - pasm demo - (compile to binary rename testpost.psx and put on sd-root)
+''                  added dnsquery.spin - pasm demo - (compile to binary rename dnsquery.psx and put on sd-root)
+''10/24/2013        added nbquery.spin  - pasm demo - (compile to binary rename nbquery.psx and put on sd-root)
+''                  added nbtstat.spin  - pasm demo - (compile to binary rename nbtstat.psx and put on sd-root)
+''               
 ''                  Michael Sommer (MSrobots)
 }}
 CON                                                     
@@ -44,13 +54,28 @@ CON
   _xinfreq          = 5_000_000
   
   'wiz.SetMac($00, $08, $DC, $16, $F1, $32)             'MAC Mike G
-
-  MAC_1             = $00                               'MAC MSrobots          ' 
+  MAC_1             = $00                                
+  MAC_2             = $08
+  MAC_3             = $DC
+  MAC_4             = $16
+  MAC_5             = $F1
+  MAC_6             = $32
+  
+{
+  MAC_1             = $00                               'MAC1 MSrobots          
   MAC_2             = $08
   MAC_3             = $DC
   MAC_4             = $16
   MAC_5             = $F0
   MAC_6             = $4F
+
+  MAC_1             = $00                               'MAC2 MSrobots          
+  MAC_2             = $08
+  MAC_3             = $DC
+  MAC_4             = $16
+  MAC_5             = $F6
+  MAC_6             = $40
+}
 
   { Serial IO PINs } 
   USB_Rx            = 31
@@ -90,30 +115,36 @@ CON
   Zone = MST        '<- Insert your timezone
 
 ''-------[ PSX/PSE CMDS ]-----------------------------------------------------------------
-  { PSX CMDS }    
-  REQ_PARA_STRING   = 1
-  REQ_PARA_NUMBER   = 2
-  REQ_FILENAME      = 3
-  REQ_HEADER_STRING = 4
-  REQ_HEADER_NUMBER = 5
+    
+  REQ_PARA_STRING   = 1  ' get Hubaddress of GET parameter (as string)
+  REQ_PARA_NUMBER   = 2  ' get Value of GET parameter (as long)
+  REQ_FILENAME      = 3  ' get Hubaddress of Request  
+  REQ_HEADER_STRING = 4  ' get Hubaddress of HEADER parameter (as string)
+  REQ_HEADER_NUMBER = 5  ' get Value of HEADER parameter (as long)
+  REQ_POST_STRING   = 6  ' get Hubaddress of POST parameter (as string)
+  REQ_POST_NUMBER   = 7  ' get Value of POST parameter (as long)
   
-  SEND_FILE_EXT     = 11
-  SEND_SIZE_HEADER  = 12
-  SEND_DATA         = 13
-  SEND_STRING       = 14
-  SEND_FLUSH        = 15
-  SEND_FILE_CONTENT = 16        
+  SEND_FILE_EXT     = 11 ' set FileExtension and content-type for response
+  SEND_SIZE_HEADER  = 12 ' send size and HEADER of response to socket (buffered)
+  SEND_DATA         = 13 ' send number of bytes to socket (buffered)
+  SEND_STRING       = 14 ' send string to socket (buffered)
+  SEND_FLUSH        = 15 ' flush buffer to wiznet
+  SEND_FILE_CONTENT = 16 ' send content of file to socket (buffered)       
   
-  CHANGE_DIRECTORY  = 21
-  LIST_ENTRIES      = 22
-  LIST_ENTRY_ADDR   = 23        
-  CREATE_DIRECTORY  = 24        ' todo (MKcol already there)
-  DELETE_ENTRY      = 25        ' todo (Delete already there)      
-  FILE_WRITE_BLOCK  = 26        
-  FILE_READ_BLOCK   = 27        
+  CHANGE_DIRECTORY  = 21 ' change to Directory on SD
+  LIST_ENTRIES      = 22 ' list Entries (first/next)
+  LIST_ENTRY_ADDR   = 23 ' get Hubaddress of Directory cache Entry (FAT Dir Entry)       
+  CREATE_DIRECTORY  = 24 ' create new Directory       
+  DELETE_ENTRY      = 25 ' delete File or Directory             
+  FILE_WRITE_BLOCK  = 26 ' open file, read block, close file       
+  FILE_READ_BLOCK   = 27 ' open file, write block, close file       
+
+  QUERY_DNS         = 41 ' resolves name to ip with DNS
+  QUERY_NETBIOS     = 42 ' send NetBios Query
+  CHECK_NETBIOS     = 43 ' poll next answer
   
-  PSE_CALL          = 91
-  PSE_TRANSFER      = 92
+  PSE_CALL          = 91 ' call submodul in new COG and return
+  PSE_TRANSFER      = 92 ' call submodul in same COG (DasyChain)
 
 ''-------[ Other Constants ]--------------------------------------------------------------
   TCP_MTU           = 1460
@@ -133,10 +164,11 @@ CON
 '' YOU MAY NEED TO CHANGE hostname AND workgroup HERE TO AVOID CONFLICTS IN YOUR NETWORK
 ''
 }}
-DAT                                                      
-  hostname      byte  "PROPNET",0 '<- you need to change this if you have more then one spineret
-  'workgroup     byte  "WORKGROUP", 0
-  workgroup     byte  "MSROBOTS", 0
+DAT
+                                   ' please use UPPERCASE for Names                                                  
+  hostname      byte  "PROPNET",0  '<- you need to change this if you have more then one spinneret
+  workgroup     byte  "WORKGROUP", 0
+  'workgroup     byte  "MSROBOTS", 0
   
   version       byte  "1.2", $0
   
@@ -223,29 +255,17 @@ DAT
                 byte   "PNG",0, "image/png", $0 
   _txt          long
                 byte   "TXT",0, "text/plain; charset=utf-8", $0  
+  _spi          long
+                byte   "SPI",0, "text/plain", $0  
   _xml          long
                 byte   "XML",0, "text/xml", $0
   _zip          long
                 byte   "ZIP",0, "application/zip", $0
 
-{  
-  _css          byte  "Content-Type: text/css", $0
-  _gif          byte  "Content-Type: image/gif", $0
-  _html         byte  "Content-Type: text/html", $0
-  _ico          byte  "Content-Type: image/x-icon", $0
-  _jpg          byte  "Content-Type: image/jpeg", $0
-  _js           byte  "Content-Type: application/javascript", $0
-  _pdf          byte  "Content-Type: application/pdf", $0
-  _png          byte  "Content-Type: image/png", $0 
-  _txt          byte  "Content-Type: text/plain; charset=utf-8", $0  
-  _xml          byte  "Content-Type: text/xml", $0
-  _zip          byte  "Content-Type: application/zip", $0
-}
-
   _pse          long
-                byte "PSE",0
+                byte   "PSE",0
   _psx          long
-                byte "PSX",0
+                byte   "PSX",0
 
   outBufPtr     long  0 ' used for delayed writing
   buff          long
@@ -255,7 +275,6 @@ DAT
   logBuf        byte  $0[BUFFER_LOG]
   null          long  $00
   
-'  contentType   long  @_css, @_gif, @_html, @_ico, @_jpg, @_js, @_pdf, @_png, @_txt, @_xml, @_zip, $0
   mtuBuff       long  TCP_MTU
   
   longHIGH      long  0         'Expected 4-contigous variables for SNTP
@@ -273,6 +292,7 @@ OBJ
   sock[SOCKETS]     : "Socket"
   dhcp              : "Dhcp"
   netbios           : "NetBios"
+  dns               : "Dns"
   sntp              : "Sntp" 
   req               : "HttpHeader"
 
@@ -321,7 +341,7 @@ PUB RunServer : value                                   'Run Server
   PrintStrStr(string(CR, "COG[0]: Spinneret Web Server v"),@version)
   PrintStr(string(CR, "COG[1]: Parallax Serial Terminal"))
   PrintStrDecStr(string(CR, "COG["), sd.GetCogId, string("]: SD Driver - "))
-  PrintStr(value) 
+  PrintStr(value)
   PrintStrDecStr(string(CR, "COG["), wiz.GetCogId, string("]: Started W5100 SPI Driver - "))   
   PrintStrDec(string("WizNet 5100 Connected; Reg(0x19) = "), wizver)    
   PrintStr(string(CR, "COG[n]: 4 COGs in Use"))   
@@ -334,7 +354,7 @@ PUB RunServer : value                                   'Run Server
   '--------------------------------------------------- 
   'Invoke NetBios to register hostname and group
   '---------------------------------------------------
-  PrintStr(string(CR, "Register with NetBios ... ")) 
+  PrintStr(string(CR, "Register with NetBios ... "))
   value := netbios.Init(@Buff, MULTIUSE_SOCK, @hostname, @workgroup)
   if value > 0                                          'if you end up here the name could not be registered
     PrintStrDec(string("NetBios Error ID: "), value)    ' most common is name conflict of hostname - rename hostname at top of first dat section
@@ -403,9 +423,15 @@ PRI Server : handled | bytesToRead, sockId, rtcDelay, JustHeader, filename, tick
         if(rtc.clockHour == dhcpRenew)                  '  if needed 
           RenewDhcpLease                                '    renew DHCP 
         rtcDelay~                                       '  reset timeout
-
-        if InputAvailableBytes(0) > 0                                
-          bytesToRead := 0 ' do nothing yet, debug      todo
+         
+{                       
+      if ser.rxHowFull(0) > 0
+          handled := ser.rx(0) 
+'          if handled
+'              FileWriteBlock(filename, position, addressToGet, count)
+              PrintStrDec(string(CR, "WRITE: "), handled) 
+              FileWriteBlock(string("/test.txt"), -1, @handled, 1)
+}
         
       sockId := ++sockId // constant(HTTPSOCKETS+1)     '  check next socket 
     until sock[sockId].Connected                        'until any (sockID) socket is connected
@@ -446,7 +472,7 @@ PRI Server : handled | bytesToRead, sockId, rtcDelay, JustHeader, filename, tick
         elseif FileHandler(sockId, filename, JustHeader, false)'if file on sd send it - done with this request!
         elseif RenderDynamic(sockId, JustHeader)        'if RenderDynamic send it  - done with this request! 
         else
-          sock[sockId].Send(@_404, constant(@_404end - @_404)) ' if all fail send 404  - done with this request! 
+          sock[sockId].Send(@_404, constant(@_404end - @_404)) ' if all fail send 404        - done with this request! 
     sock[sockId].Disconnect                             'reset just USED socket - and leave all other sockets alone - all done!  
     'sock[sockId].Close                                 'Close the socket, reset the interupt register and reopen listener
     'sock[sockId].SetSocketIR($FF)                       '?needed?
@@ -486,7 +512,7 @@ PRI FileHandler(sockID, fn, JustHeader, NoHeader) | fs, bytes 'Handle static Fil
         else                                            
           bytes := mtuBuff                              'else send mtu bytes
         sd.readFromFile(@buff, bytes)                   'read (remaining) bytes into buffer
-        fs -= sock[sockID].Send(@buff, bytes)           'send buffer and subtract size send
+        fs -= sock[sockID].SendAsync(@buff, bytes, false)      'send buffer and subtract size send
       until fs =< 0        
     sd.closeFile
     outBufPtr := @Buff                                  'reset bufptr   
@@ -578,11 +604,11 @@ PRI PseHandler(sockID, fn, JustHeader) | daisy, fs, psmptr, bufptr, cog, cmd, pa
           PrintStr(fn)                                  
           repeat 
             case cmd                                    'commands from PASM cog to spin
-              REQ_PARA_STRING:                          'PASM request Param as String
+              REQ_PARA_STRING:                          'PASM request Get  Parameter as String
                 param1 := req.Get(@param1)              'Param1-4 CONTAIN string up to 15 letter+0
                 param2 := strsize(param1)               'Param2 returns string size
                 cmd := -1                               'Param1 returns address of string
-              REQ_PARA_NUMBER:                          'PASM request Param as Number
+              REQ_PARA_NUMBER:                          'PASM request Get  Parameter as Number
                 param2 := req.Get(@param1)              'Param1-4 CONTAIN string up to 15 letter+0
                 param1 := StrToBase(param2 , 10)        'Param1 returns value as long
                 param2 := strsize(param2)               'Param2 returns string size
@@ -590,12 +616,21 @@ PRI PseHandler(sockID, fn, JustHeader) | daisy, fs, psmptr, bufptr, cog, cmd, pa
               REQ_FILENAME:                             'PASM request org. Filename
                 param1 := req.GetFileName               '(used by propfind)
                 cmd := -1                               'Param1 returns address of string   
-              REQ_HEADER_STRING:                        'PASM request Header as string (used by propfind)
+              REQ_HEADER_STRING:                        'PASM request Header Parameter as string (used by propfind)
                 param1 := req.Header(@param1)           'Param1-4 CONTAIN key up to 15 letter+0
                 param2 := strsize(param1)               'Param2 returns string size
                 cmd := -1                               'return address of string in Param1
-              REQ_HEADER_NUMBER:                        'PASM request Header as number (used by propfind)
+              REQ_HEADER_NUMBER:                        'PASM request Header Parameter as number (used by propfind)
                 param2 := req.Header(@param1)           'Param1-4 CONTAIN string up to 15 letter+0
+                param1 := StrToBase(param2 , 10)        'Param1 returns value as long
+                param2 := strsize(param2)               'Param2 returns string size
+                cmd := -1                               'return value as long in Param1                
+              REQ_POST_STRING:                          'PASM request Post Parameter as string 
+                param1 := req.Post(@param1)             'Param1-4 CONTAIN key up to 15 letter+0
+                param2 := strsize(param1)               'Param2 returns string size
+                cmd := -1                               'return address of string in Param1
+              REQ_POST_NUMBER:                          'PASM request Post Parameter as number
+                param2 := req.Post(@param1)             'Param1-4 CONTAIN string up to 15 letter+0
                 param1 := StrToBase(param2 , 10)        'Param1 returns value as long
                 param2 := strsize(param2)               'Param2 returns string size
                 cmd := -1                               'return value as long in Param1                
@@ -636,13 +671,41 @@ PRI PseHandler(sockID, fn, JustHeader) | daisy, fs, psmptr, bufptr, cog, cmd, pa
               LIST_ENTRY_ADDR:                          'PASM needs sd directoryEntryCache    
                 param1 := sd.GetADDRdirectoryEntryCache 'addr EntryCache
                 cmd := -1                               'idle - back to PASM
+              CREATE_DIRECTORY:                         'param1 addr string path 
+                param1 := (sd.deleteEntry(param1) == true)      
+                cmd := -1                               'idle - back to PASM
+              DELETE_ENTRY:                             'param1 addr string path filename
+                param1 := (sd.deleteEntry(param1) == true)      
+                cmd := -1                               'idle - back to PASM
               FILE_WRITE_BLOCK:                         'param1-4 filename, position, addressToGet, count
                 param1 := FileWriteBlock(param1, param2, param3, param4)
                 cmd := -1                               'idle - back to PASM
               FILE_READ_BLOCK:                          'param1-4 filename, position, addressToPut, count 
                 param1 := FileReadBlock(param1, param2, param3, param4)
                 cmd := -1                               'idle - back to PASM
-                
+              QUERY_DNS:                          '     'param1 addr string query name
+                SendFlushOutBuf(sockID)                 'flush out if not done yet
+                netbios.DisconnectSocket
+                dns.Init(@Buff, MULTIUSE_SOCK)
+                param1 := dns.ResolveDomain(param1)     'param1 result 0 or address IP
+                netbios.ReInitSocket 
+                cmd := -1                               'idle - back to PASM
+              QUERY_NETBIOS: 
+                SendFlushOutBuf(sockID)                 'flush out if not done yet
+                repeat until (NetBios.CheckSocket == 0)
+                param2 := NetBios.SendQuery(param1, netbios#SPACE,0, param2)   ' returns transid ?
+                if NetBios.CheckSocket>0                ' now answer in buff?
+                   param1 := @Buff
+                else
+                   param1 := @Null            
+                cmd := -1                               'idle - back to PASM
+              CHECK_NETBIOS:
+                if NetBios.CheckSocket>0                ' now answer in buff?
+                   param1 := @Buff
+                else
+                   param1 := @Null            
+                cmd := -1                               'idle - back to PASM
+              
               PSE_CALL:                                 'call pse
                 SendFlushOutBuf(sockID)                 'flush out if not done yet
                 fs := strsize(bufptr)                   'size request
@@ -815,7 +878,7 @@ PRI ValidateParameters(pin, value)
     return false
 
   return true
-
+                                                  
 ''-------[ DHCP Handling ... ]------------------------------------------------------------
 PRI RenewDhcpLease                                      'renews DHCP lease
 {{
@@ -886,7 +949,7 @@ PRI SyncSntpTime | ptr                                  'runs SNTP request and i
   sock[MULTIUSE_SOCK].RemotePort(SNTP_PORT)
   sntp.CreateUDPtimeheader(@sntpBuff)                   'create request
   ptr := SntpSendReceive(@sntpBuff, 48)                 'send and wait for answer
-  if(ptr == @null)
+  if(ptr == -1)
     RESULT := false                                     'no answer - DONE!
   else
     'Set the time
@@ -906,7 +969,7 @@ PRI SntpSendReceive(buffer, len) | bytesToRead          'sends SNTP request and 
 {{
 ''SntpSendReceive:  Sends SNTP request and waits for answer
 }}
-  RESULT := @null
+  RESULT := -1
   sock[MULTIUSE_SOCK].Open                              'Open socket and Send Message
   sock[MULTIUSE_SOCK].Send(buffer, len)
   pause(500)                                            'needed?
@@ -1045,72 +1108,47 @@ PRI FileReadBlock(filename, position, addressToPut, count) 'Read count bytes fro
         RESULT := sd.fileSeek(position)                 'todo result now position ?   or exeception
       sd.readFromFile(addressToPut, count)
       sd.closeFile
-     
+
 PRI GetContentType(ext)                                 'returns addr of content type string depending on ext
 {{
 ''GetContentType:   Returns addr of content type string depending on ext  
 }}
-  RESULT := @_html +4                                   'preset with text/html
+  ext := long[ext] & (!$202020)                         'convert to upper case  
+  RESULT := lookupz(lookdown(ext: _css, _gif, _ico, _jpg, _js, _pdf, _png,_txt,_spi,_xml,_zip): @_html, @_css, @_gif, @_ico, @_jpg, @_js, @_pdf, @_png,@_txt,@_spi,@_xml,@_zip) + 4
+{
+PRI GetContentType1(ext)                                'returns addr of content type string depending on ext
+{{
+''GetContentType:   Returns addr of content type string depending on ext  
+}}
+  RESULT := @_html                                      'preset with text/html
   ext := long[ext] & (!$202020)                         'convert to upper case
+  
   case ext
     _css:
-      RESULT := @_css +4  
+      RESULT := @_css
     _gif:
-      RESULT := @_gif +4  
+      RESULT := @_gif  
     _ico:
-      RESULT := @_ico +4  
+      RESULT := @_ico  
     _jpg:
-      RESULT := @_jpg +4  
+      RESULT := @_jpg  
     _js:
-      RESULT := @_js +4  
+      RESULT := @_js  
     _pdf:
-      RESULT := @_pdf +4  
+      RESULT := @_pdf  
     _png:
-      RESULT := @_png +4  
+      RESULT := @_png  
     _txt:
-      RESULT := @_txt +4  
+      RESULT := @_txt  
+    _spi:
+      RESULT := @_spi  
     _xml:
-      RESULT := @_xml +4  
+      RESULT := @_xml  
     _zip:
-      RESULT := @_zip +4  
-
-{
-  if(strcomp(ext, string("css")) OR strcomp(ext, string("CSS")))
-    return @@contentType[CSS]
-    
-  if(strcomp(ext, string("gif")) OR strcomp(ext, string("GIF")))
-    return @@contentType[GIF]
-    
-  if(strcomp(ext, string("htm")) OR strcomp(ext, string("HTM")))
-    return @@contentType[HTML]
-    
-  if(strcomp(ext, string("ico")) OR strcomp(ext, string("ICO")))
-    return @@contentType[ICO]
-    
-  if(strcomp(ext, string("jpg")) OR strcomp(ext, string("JPG")))
-    return @@contentType[JPG]
-    
-  if(strcomp(ext, string("js")) OR strcomp(ext, string("JS")))
-    return @@contentType[JS]
-    
-  if(strcomp(ext, string("pdf")) OR strcomp(ext, string("PDF")))
-    return @@contentType[PDF]
-    
-  if(strcomp(ext, string("png")) OR strcomp(ext, string("PNG")))
-    return @@contentType[PNG]
-    
-  if(strcomp(ext, string("txt")) OR strcomp(ext, string("TXT")))
-    return @@contentType[TXT]
-    
-  if(strcomp(ext, string("xml")) OR strcomp(ext, string("XML")))
-    return @@contentType[XML]
-    
-  if(strcomp(ext, string("zip")) OR strcomp(ext, string("ZIP")))
-    return @@contentType[ZIP]
-    
-  return @@contentType[HTML]
+      RESULT := @_zip
+      
+  RESULT += 4
 }
-
 PRI Dec(value) | i, x, j                                'encode value into string (base 10)
 {{
 ''Dec:              Converts value to zero terminated string representation. (base 10) 
@@ -1196,7 +1234,7 @@ PRI SendFlushOutBuf(sockID) | ptr, size                 'flush outBuf to socket 
 }}
   ifnot outBufPtr == @Buff                              'flush needed?
     size := outBufPtr - @Buff
-    sock[sockID].Send(@Buff,size)                       'rest of buff
+    sock[sockID].Send(@Buff,size)                             'rest of buff
   outBufPtr := @Buff                                    'reset outBufPtr
 
 PRI SendFlushOKorERR(sockID, iserr, okaddr, oksize, erraddr, errsize) 'send one of two responses depending on iserr and flush out to socket
@@ -1217,7 +1255,7 @@ PRI PrintStatus(sockID)                                 'Debug output one HttpSo
 ''PrintStatus:      Debug output one HttpSockets
 }}
   PrintStrDecStr(string("Status ("),sockID, string(")......."))
-  PrintHex(wiz.GetSocketStatus(sockID), 2)
+  ser.hex(0,wiz.GetSocketStatus(sockID), 2)
   PrintChar(13)
 
 PRI PrintAllStatuses | i                                'Debug output all HttpSockets
@@ -1230,7 +1268,7 @@ PRI PrintAllStatuses | i                                'Debug output all HttpSo
     PrintStr(string("  "))
   PrintChar(CR)
   repeat i from 0 to HTTPSOCKETS
-    PrintHex(wiz.GetSocketStatus(i), 2)
+    ser.hex(0,wiz.GetSocketStatus(i), 2)
     PrintChar($20)
   PrintChar(CR)
       
@@ -1241,10 +1279,12 @@ PRI nbDebug(nbs, showdata)                              'Debug output NetBios Ch
   if (nbs>netbios#CHECKSOCKET_NOTHING)
     PrintStrDec(string(CR,"NB size "), netbios.GetLastReadSize)
     PrintStr(string(" op "))    
-    PrintHex((byte[@buff+constant(netbios#FLAGS+8)]>>3),2) ' what op?
+    ser.hex(0,(byte[@buff+constant(netbios#FLAGS+8)]>>3),2) ' what op?
     PrintStr(string(" typ "))    
-    PrintHex(wiz.DeserializeWord(@buff + constant(netbios#NB_1+8)),4) ' what typ?
+    ser.hex(0,wiz.DeserializeWord(@buff + constant(netbios#NB_1+8)),4) ' what typ?
     case nbs
+      netbios#CHECKSOCKET_NEG_NB_SEND:
+        PrintStr(string(" send NegQueryResp  "))
       netbios#CHECKSOCKET_NB_SEND:
         PrintStr(string(" send PosQueryResp  "))
       netbios#CHECKSOCKET_NBSTAT_SEND:
@@ -1264,8 +1304,7 @@ PRI DisplayUdpHeader(buffer)                            'Debug output UDP packag
 {{
 ''DisplayUdpHeader: Debug output UDP package
 }}
-  PrintStr(string(CR, "Message from:......."))
-  PrintIp(buffer)
+  PrintStrIP(string(CR, "Message from:......."),buffer)
   PrintChar(":")
   PrintDec(wiz.DeserializeWord(buffer + 4))
   PrintStrDec(string(" Size:"), wiz.DeserializeWord(buffer + 6))
@@ -1343,15 +1382,6 @@ PRI PrintStr(addressToGet)                              'wrapper for Serial
 }}
   ser.str(0,addressToGet)                                 
 
-PRI PrintHex(value, digits)                             'wrapper for Serial
-{{
-''PrintHex:         Print Hex
-}}
-  ser.hex(0,value, digits)
-
-PRI InputAvailableBytes(port)
-  RESULT := ser.rxHowFull(port)
-
 {            
   'PST.dec(netbios.SendQuery(string("MSROBOTS"),0,false))   ' trans id
 '  netbios.SendQuery(string("MSROBOTS"),0,true)
@@ -1377,7 +1407,7 @@ PRI InputAvailableBytes(port)
 
 ''
 ''=======[ Documentation ]================================================================
-CON                                                     'Documentation
+CON                                                
 {{{
 This .spin file supports PhiPi's great Spin Code Documenter found at
 http://www.phipi.com/spin2html/
@@ -1390,7 +1420,7 @@ to http://www.phipi.com/spin2html/ and then saving the the created .htm page.
 
 ''
 ''=======[ MIT License ]==================================================================
-CON                                                     'MIT License
+CON                                                  
 {{{
  ______________________________________________________________________________________
 |                            TERMS OF USE: MIT License                                 |                                                            

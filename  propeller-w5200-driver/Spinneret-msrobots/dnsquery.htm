@@ -207,7 +207,7 @@
 			N0EUZFGBGriBHFh8DzgRcRWCIjiCJFiCJniCKJiCKoiCIdGCLviCMBiDMjiDNAiDAQEAOw==
 		">
 		</div>
-		<div style="font: bold 11pt verdana,geneva,lucida,'lucida grande',arial,helvetica,sans-serif;color:white; text-align: center; margin-bottom: 10px; margin-top: 10px">DIRHTM</div>
+		<div style="font: bold 11pt verdana,geneva,lucida,'lucida grande',arial,helvetica,sans-serif;color:white; text-align: center; margin-bottom: 10px; margin-top: 10px">DNSQUERY</div>
 		<p class = "toc1">Table of Contents</p>
 		<div style = "text-align: left; margin-left: 10px;">
 			<a href= "#lbl1" class = "toc2">Preface</a><br/>
@@ -221,21 +221,19 @@
 <a href= "#lbl14" class = "toc3">Send String bufptr </a><br/>
 <a href= "#lbl16" class = "toc3">Copy Cog to Hub </a><br/>
 <a href= "#lbl18" class = "toc3">Copy Hub to Hub </a><br/>
-<a href= "#lbl20" class = "toc3">time out </a><br/>
-<a href= "#lbl22" class = "toc3">date out </a><br/>
-<a href= "#lbl24" class = "toc3">decimal out </a><br/>
-<a href= "#lbl26" class = "toc3">Unsigned Divide </a><br/>
-<a href= "#lbl28" class = "toc3">Data </a><br/>
-<a href= "#lbl30" class = "toc3">Variables </a><br/>
-<a href= "#lbl32" class = "toc2">Documentation </a><br/>
-<a href= "#lbl33" class = "toc2">MIT License </a><br/>
+<a href= "#lbl20" class = "toc3">decimal out </a><br/>
+<a href= "#lbl22" class = "toc3">Unsigned Divide </a><br/>
+<a href= "#lbl24" class = "toc3">Data </a><br/>
+<a href= "#lbl26" class = "toc3">Variables </a><br/>
+<a href= "#lbl28" class = "toc2">Documentation </a><br/>
+<a href= "#lbl29" class = "toc2">MIT License </a><br/>
 
 		</div>
 	</div>
 	</td>
 	<td>
 		<div id="text" style= "text-align: left; padding-left: 20px; padding-right: 20px; width: 800px; height: 600px; background-color: #ffffe0; overflow: auto">
-			<h1 id = "lbl1" class = "title">Directory as Html Table </h1>
+			<h1 id = "lbl1" class = "title">Dns Query </h1>
 
 <br /><br />
 AUTHOR:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Michael Sommer (@MSrobots)<br />
@@ -244,18 +242,17 @@ LAST MODIFIED:&nbsp;&nbsp;&nbsp;&nbsp;10/24/2013<br />
 VERSION:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1.0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br />
 LICENSE:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MIT (see end of file)<br /><br />
 DESCRIPTION:<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;outputs html page showing directory<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;compile and save output as dirhtm.binary.<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rename to dirhtm.psx and save to sd<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;call in webrowser as dirhtm.psx[?p=/path]<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;shows root dir without parameter<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;simple DNS Query Form<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;compile and save output as dnsquery.binary.<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rename to dnsquery.psx and save to sd<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;call in webrowser as dnsquery.psx<br />
 <br />
 MODIFICATIONS:<br />
-10/05/2013&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;added spindoc comments<br />
+10/09/2013&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;created&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br />
 10/24/2013&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;added comments<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Michael Sommer (MSrobots)<br />
 
-<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br />
 <h2 id = "lbl2">Global CONstants </h2>
 <br /><a onclick ="javascript:ShowHide('lbl3')" href="javascript:;">SOURCE CODE...</a>
 <pre class=source id=lbl3>
@@ -323,43 +320,20 @@ count                   <var>rdlong</var>  bufptr,         par1ptr        ' init
 </pre>
 <hr /><h3 id = "lbl10">Main Program </h3>
 <br /><a onclick ="javascript:ShowHide('lbl11')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl11>main                        
-                        <var>add</var>     pathptr,        bufptr         ' now pathptr hubadress last 64 bytes buf
+<pre class=source id=lbl11>main                    <var>add</var>     postptr,        bufptr         ' now postptr hubadress last 64 bytes outputbuffer
 
-getpath                 <var>mov</var>     par1,           #"p"           ' get string parameter "p"
-                        <var>mov</var>     cmdout,         #REQ_PARA_STRING
+                        <var>mov</var>     par1,           #"p"           ' get string parameter "p"
+                        <var>mov</var>     cmdout,         #REQ_POST_STRING
                         <var>call</var>    #sendspincmd                   ' result is string in par1
-                        <var>rdbyte</var>  par2,           par1           ' check if string is null
-                        <var>cmp</var>     par2,           zero <var>wz</var>        ' if so
-              <var>if_z</var>      <var>mov</var>     par1,           zero           '    mark unused
-                        <var>cmp</var>     par1,           zero <var>wz</var>        ' path there ?
-              <var>if_z</var>      <var>mov</var>     par1,           #"/"           ' if not write "/" 
-              <var>if_z</var>      <var>wrlong</var>  par1,           pathptr        '
-              <var>if_z</var>      <var>jmp</var>     #parsdone
 
-                        <var>mov</var>     tmp,            par1           ' save ptr
-                        <var>mov</var>     cmdout,         #CHANGE_DIRECTORY
-                        <var>call</var>    #sendspincmd                   ' change directory
+                        <var>mov</var>     outptr,         postptr        ' save post content of textbox "p" at end of outputbuffer                
+                        <var>call</var>    #strhub2hub                    ' copy p
                         
-                        'par1 contains err or directory?
-
-                        <var>mov</var>     outptr,         pathptr        ' save path at end of buf                
-                        <var>mov</var>     par1,           tmp            ' param back  path 
-                        <var>call</var>    #strhub2hub                    ' copy path
-                        
-                        <var>mov</var>     par1,           outptr         ' check if path ends with "/"
-                        <var>sub</var>     par1,           #1
-                        <var>rdbyte</var>  par1,           par1
-                        <var>cmp</var>     par1,           #"/" <var>wz</var>                               
-              <var>if_nz</var>     <var>mov</var>     par1,           #"/"           ' if not 
-              <var>if_nz</var>     <var>wrbyte</var>  par1,           outptr         '        add "/"
-              <var>if_nz</var>     <var>add</var>     outptr,         #1
-                        <var>mov</var>     par1,           zero
-                        <var>wrbyte</var>  par1,           outptr         ' terminate string
+                        <var>wrbyte</var>  zero,           outptr         ' terminate string
                         
                          ' now done with parameter
                         
-parsdone                <var>mov</var>     par1,           fileext        ' send file extension
+                        <var>mov</var>     par1,           fileext        ' send file extension
                         <var>mov</var>     cmdout,         #SEND_FILE_EXT
                         <var>call</var>    #sendspincmd                   ' set file ext 
 
@@ -368,161 +342,39 @@ parsdone                <var>mov</var>     par1,           fileext        ' send
                         <var>mov</var>     cmdout,         #SEND_SIZE_HEADER
                         <var>call</var>    #sendspincmd                   ' send Header and content type/size
 
-                        <var>mov</var>     outptr,         bufptr         ' copy header
-                        <var>movd</var>    cog2hub,        #htmheader
-                        <var>mov</var>     count,          #htmfirstrow-htmheader              
+                        <var>mov</var>     outptr,         bufptr         ' copy htm
+                        <var>movd</var>    cog2hub,        #htm
+                        <var>mov</var>     count,          #htm_end-htm              
                         <var>call</var>    #cog2hub                       ' to Output Hub Buffer
-                        <var>call</var>    #sendstringbuf                 ' send header
-                       
-tableheader             <var>mov</var>     outptr,         bufptr         ' copy htm table column header
-                        <var>movd</var>    cog2hub,        #htmfirstrow   
-                        <var>mov</var>     count,          #htmrow-htmfirstrow
-                        <var>call</var>    #cog2hub                       ' to Output Hub Buffer
-                        <var>call</var>    #sendstringbuf                 ' send table column header
                         
-startrows               <var>mov</var>     rownr,          zero
-              
-                        <var>mov</var>     cmdout,         #LIST_ENTRY_ADDR
-                        <var>call</var>    #sendspincmd                   
-                        <var>mov</var>     entryptr,       par1           ' get ptr to direntrycache
-                        
-                        <var>mov</var>     par1,           #"W"
-                        <var>mov</var>     cmdout,         #LIST_ENTRIES
-                        <var>call</var>    #sendspincmd                   ' list first entry
-                         
-nextrow                 <var>mov</var>     tmp,            par1           ' get ptr to name
-                        <var>rdbyte</var>  par1,           par1           ' get first byte
-                        <var>cmp</var>     par1,           zero <var>wz</var>        ' test for empty name
-              <var>if_z</var>      <var>jmp</var>     #sendfooter                    ' and done with rows
+                        <var>mov</var>     par1,           postptr        ' send string postptr aka textbox "p" 
+                        <var>mov</var>     cmdout,         #QUERY_DNS
+                        <var>call</var>    #sendspincmd                   ' now we have the hub address of the ip in par1
 
-                        <var>mov</var>     outptr,         bufptr         
-                        <var>movd</var>    cog2hub,        #htmrow        ' copy empty row
-                        <var>mov</var>     count,          #htmfooter-htmrow              
-                        <var>call</var>    #cog2hub                       ' to Output Hub Buffer                                    
-
-                        ' now patch values in Output Hub Buffer
-
-                    '    result or= (directoryEntryCache[12] &amp; $10) 
-                        <var>mov</var>     outptr,         entryptr       ' 12 is Directory? 
-                        <var>add</var>     outptr,         #12            
-                        <var>rdbyte</var>  par1,           outptr
-                        <var>and</var>     par1,           #$10
-                        <var>cmp</var>     par1,           zero      <var>wz</var>     ' zero if no dir
-              <var>if_nz</var>     <var>jmp</var>     #writename
-                                   
-                        <var>mov</var>     outptr,         bufptr         ' if no dir set dir = "0" 
-                        <var>add</var>     outptr,         #(@htmdir-@htmrow) ' offset in bytes !
-                        <var>mov</var>     par1,           #"0"
-                        <var>wrbyte</var>  par1,           outptr         ' write "0" ... no dir
-                        
-                        <var>mov</var>     outptr,         bufptr         ' if no dir clear linkbuffer
-                        <var>add</var>     outptr,         #(@htmfirstlink-@htmrow) ' offset in bytes !
-                        <var>mov</var>     par1,           space
-                        <var>mov</var>     count,          #15            ' first 15 byte contain link to self
-clearnext               <var>wrbyte</var>  par1,           outptr
-                        <var>add</var>     outptr,         #1
-                        <var>djnz</var>    count,          #clearnext
-                                      
-writename               <var>mov</var>     par2,           tmp            ' save for link      
-                        <var>mov</var>     par1,           tmp                  
-                        <var>mov</var>     outptr,         bufptr         ' copy filename to name
-                        <var>add</var>     outptr,         #(@htmfirstname-@htmrow) ' offset in bytes !
-                        <var>call</var>    #strhub2hub
-
-                        <var>mov</var>     outptr,         bufptr         ' copy path
-                        <var>add</var>     outptr,         #(@htmfirstlink-@htmrow) ' offset in bytes !
-                        
-                        <var>rdbyte</var>  par1,           outptr         ' check first byte
-                        <var>cmp</var>     par1,           space <var>wz</var>       ' if space no dir
-              <var>if_nz</var>     <var>add</var>     outptr,         #14            ' directory call dirhtm.psm with path
-
-                        <var>mov</var>     cmdin,          outptr         ' tmp storage to check root
-                        
-                        <var>mov</var>     par1,           pathptr
-                        <var>call</var>    #strhub2hub                    ' write path
-                      
-                        <var>rdbyte</var>  par1,           par2
-                        <var>cmp</var>     par1,           #"." <var>wz</var>        ' check for . and .. NO NAMe !
-              <var>if_nz</var>     <var>jmp</var>     #linkname                      ' else write link name
-              
-                        <var>sub</var>     outptr,         #1             ' remove last "/" of path
-                        <var>wrbyte</var>  space,          outptr         
-                        <var>mov</var>     par1,           par2           ' check for ..
-                        <var>add</var>     par1,           #1    
-                        <var>rdbyte</var>  par1,           par1
-                        <var>cmp</var>     par1,           #"." <var>wz</var>        ' check for .. NO NAMe !
-              <var>if_nz</var>     <var>jmp</var>     #getsize                       ' else done go getsize
-              
-searchparent            <var>sub</var>     outptr,         #1             ' search next /
-                        <var>rdbyte</var>  par1,           outptr
-                        <var>cmp</var>     par1,           #"/" <var>wz</var>
-              <var>if_nz</var>     <var>wrbyte</var>  space,          outptr
-              <var>if_nz</var>     <var>jmp</var>     #searchparent
-
-                        <var>cmp</var>     outptr,         cmdin <var>wz</var>, <var>wc</var>   ' tmp storage ... adr parameter
-              <var>if_a</var>      <var>wrbyte</var>  space,          outptr                      
-                        <var>jmp</var>     #getsize                       ' no link
-
-linkname                <var>mov</var>     par1,           par2           ' name back   htm - link 
-                        <var>call</var>    #strhub2hub                    ' write link name
-                                                
-getsize                 <var>mov</var>     outptr,         entryptr
-                        <var>add</var>     outptr,         #28            ' get entry size
-                        <var>mov</var>     count,          #4
-                        <var>mov</var>     par1,           zero
-                                                
-readlong                <var>rdbyte</var>  tmp,            outptr
-                        <var>or</var>      par1,           tmp
-                        <var>ror</var>     par1,           #8
-                        <var>add</var>     outptr,         #1
-                        <var>djnz</var>    count,          #readlong
-
-                        <var>mov</var>     outptr,         #(@htmlastsize-@htmrow) ' offset in bytes !
+                        <var>mov</var>     tmp,            #"."           ' output ip at address par1 to outputbuffer
+                        <var>mov</var>     outptr,         #(@ip_end-@htm) ' starting from the end. 
+                        <var>add</var>     outptr,         bufptr         ' outptr now hub adress of pos in outputbuffer
+                        <var>mov</var>     par2,           par1           
+                        <var>add</var>     par2,           #3             ' par2 now address of last byte ip
+                        <var>rdbyte</var>  par1,           par2           ' read 4.byte of ip             
+                        <var>call</var>    #decoutback                    ' output decimal
+                        <var>sub</var>     outptr,         #1
+                        <var>wrbyte</var>  tmp,            outptr         ' put dot
+                        <var>sub</var>     par2,           #1
+                        <var>rdbyte</var>  par1,           par2           ' read 3.byte of ip             
+                        <var>call</var>    #decoutback                    ' output decimal
+                        <var>sub</var>     outptr,         #1
+                        <var>wrbyte</var>  tmp,            outptr         ' put dot                         
+                        <var>sub</var>     par2,           #1
+                        <var>rdbyte</var>  par1,           par2           ' read 2.byte of ip             
+                        <var>call</var>    #decoutback                    ' output decimal
+                        <var>sub</var>     outptr,         #1
+                        <var>wrbyte</var>  tmp,            outptr         ' put dot 
+                        <var>sub</var>     par2,           #1
+                        <var>rdbyte</var>  par1,           par2           ' read 1.byte of ip             
                         <var>call</var>    #decoutback                    ' output decimal
 
-                        <var>mov</var>     outptr,         entryptr       ' 16 create 
-                        <var>add</var>     outptr,         #16            
-                        <var>mov</var>     cmdin,          #(@htmcreated-@htmrow+4) ' offset in bytes !
-                        <var>call</var>    #dateout
-                        <var>mov</var>     outptr,         entryptr       ' 14 create 
-                        <var>add</var>     outptr,         #14            ' get entry time
-                        <var>call</var>    #timeout                        
-
-                        <var>mov</var>     outptr,         entryptr       ' 24 mod
-                        <var>add</var>     outptr,         #24            ' get entry day/month1
-                        <var>mov</var>     cmdin,          #(@htmmodified-@htmrow+4) ' offset in bytes !
-                        <var>call</var>    #dateout
-                        <var>mov</var>     outptr,         entryptr       ' 22 mod
-                        <var>add</var>     outptr,         #22            ' get entry time                        
-                        <var>call</var>    #timeout                        
-                         
-                        <var>mov</var>     outptr,         entryptr       ' 18 acessed just date
-                        <var>add</var>     outptr,         #18            ' get entry day/month1
-                        <var>mov</var>     cmdin,          #(@htmacessed-@htmrow+4) ' offset in bytes !
-                        <var>call</var>    #dateout
-                       
-                        <var>add</var>     rownr,          #1
-                        <var>mov</var>     outptr,         #(@htmlastrownr-@htmrow) ' offset in bytes !
-                        <var>mov</var>     par1,           rownr
-                        <var>call</var>    #decoutback                    ' output decimal write rownr  
-
-                        <var>call</var>    #sendstringbuf                 ' send row
-
-                        <var>mov</var>     par1,           #"N"
-                        <var>mov</var>     cmdout,         #LIST_ENTRIES
-                        <var>call</var>    #sendspincmd                   ' list next entry                                                                           
-                        <var>jmp</var>     #nextrow                       ' and do it again
-                       
-sendfooter              <var>mov</var>     outptr,         bufptr         
-                        <var>movd</var>    cog2hub,        #htmfooter        ' Transfer footer into hub-buff
-                        <var>mov</var>     count,          #htmfooter_end-htmfooter       
-sendusageschemaexit     <var>call</var>    #cog2hub                       ' copy footer to Output Hub Buffer
-                        <var>call</var>    #sendstringbuf                 ' send footer
-
-                        <var>mov</var>     par2,           #"/"           ' string in par2
-                        <var>mov</var>     par1,           par2ptr        ' hubadr par2
-                        <var>mov</var>     cmdout,         #CHANGE_DIRECTORY
-                        <var>call</var>    #sendspincmd                   ' change directory
+                        <var>call</var>    #sendstringbuf                 ' now send outputbuffer
 
 main_ret                <var>ret</var>                                    ' done
 
@@ -550,7 +402,7 @@ RETURNS:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <br />
 
 <br /><a onclick ="javascript:ShowHide('lbl15')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl15>sendstringbuf           <var>mov</var>     par1,           bufptr         ' send string from Output hub-buff 
+<pre class=source id=lbl15>sendstringbuf           <var>mov</var>     par1,           bufptr         ' send string from outputbuffer 
                         <var>mov</var>     cmdout,         #SEND_STRING
                         <var>call</var>    #sendspincmd                   
 sendstringbuf_ret       <var>ret</var>
@@ -582,7 +434,6 @@ PARMS:<br />
 &nbsp;&nbsp;par1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- hubaddress source<br />
 &nbsp;&nbsp;outptr&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- hubaddress destination<br />
 <br />
-&nbsp;&nbsp;<br />
 RETURNS:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- none - par1 and outptr get incremented each byte written<br />
 <br />
 
@@ -597,87 +448,8 @@ RETURNS:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 strhub2hub_ret          <var>ret</var>                                    
 
 </pre>
-<hr /><h3 id = "lbl20">time out </h3>timeout:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Decodes FAT time value to string<br />
-
-<br /><a onclick ="javascript:ShowHide('lbl21')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl21>'  return (directoryEntryCache[23] &gt;&gt; 3)    mod hour
-'  return (directoryEntryCache[15] &gt;&gt; 3) create hour
-'  return (((directoryEntryCache[23] &amp; $7) &lt;&lt; 3) | (directoryEntryCache[22] &gt;&gt; 5)) mod minute
-'  return (((directoryEntryCache[15] &amp; $7) &lt;&lt; 3) | (directoryEntryCache[14] &gt;&gt; 5))  create  minute
-'  return ((directoryEntryCache[22] &amp; $1F) &lt;&lt; 1)   mod second
-'  return (((directoryEntryCache[14] &amp; $1F) &lt;&lt; 1) +  (directoryEntryCache[13] / 100)) create second
-'  tmp 23 15     mod 23 create 15
- ' par2 22 14
-
-timeout                 <var>rdbyte</var>  par2,           outptr
-                        <var>add</var>     outptr,         #1             ' get entry time
-                        <var>rdbyte</var>  tmp,            outptr
-
-                        <var>mov</var>     par1,           tmp            
-                        <var>shr</var>     par1,           #3
-                        <var>mov</var>     outptr,         cmdin          ' offset in bytes !
-                        <var>add</var>     outptr,         #9            
-                        <var>call</var>    #decoutback                    ' output decimal hour
-
-                        <var>and</var>     tmp,            #7
-                        <var>shl</var>     tmp,            #3
-                        <var>mov</var>     par1,           par2
-                        <var>shr</var>     par1,           #5
-                        <var>or</var>      par1,           tmp
-                        <var>mov</var>     outptr,         cmdin          ' offset in bytes !
-                        <var>add</var>     outptr,         #12
-                        <var>call</var>    #decoutback                    ' output decimal  minutes
-
-                        <var>mov</var>     par1,           par2
-                        <var>and</var>     par1,           #$1F
-                        <var>shl</var>     par1,           #1
-                        <var>mov</var>     outptr,         cmdin          ' offset in bytes !
-                        <var>add</var>     outptr,         #15
-                        <var>call</var>    #decoutback                    ' output decimal  seconds
-timeout_ret             <var>ret</var>
-
-</pre>
-<hr /><h3 id = "lbl22">date out </h3>dateout:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Decodes FAT date value to string<br />
-
-<br /><a onclick ="javascript:ShowHide('lbl23')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl23>' return ((directoryEntryCache[25] &gt;&gt; 1) + 1_980) mod year
-' return ((directoryEntryCache[19] &gt;&gt; 1) + 1_980)  access year
-' return ((directoryEntryCache[17] &gt;&gt; 1) + 1_980)   create year
-dateout                 <var>rdbyte</var>  par2,           outptr         ' get entry day/month1
-                        <var>add</var>     outptr,         #1             
-                        <var>rdbyte</var>  tmp,            outptr         ' get entry month2/year
-
-                        <var>mov</var>     par1,           tmp            ' get entry year 
-                        <var>shr</var>     par1,           #1
-                        <var>add</var>     par1,           c1980          ' write year
-                        <var>mov</var>     outptr,         cmdin          ' offset in bytes !
-                        <var>call</var>    #decoutback                    ' output decimal
-
-' return (((directoryEntryCache[25] &amp; $1) &lt;&lt; 3) | (directoryEntryCache[24] &gt;&gt; 5)) 
-' return (((directoryEntryCache[19] &amp; $1) &lt;&lt; 3) | (directoryEntryCache[18] &gt;&gt; 5)) access                      
-' return (((directoryEntryCache[17] &amp; $1) &lt;&lt; 3) | (directoryEntryCache[16] &gt;&gt; 5))  create month
-                        <var>and</var>     tmp,            #1
-                        <var>shl</var>     tmp,            #3
-                        <var>mov</var>     par1,           par2
-                        <var>shr</var>     par1,           #5
-                        <var>or</var>      par1,           tmp
-                        <var>mov</var>     outptr,         cmdin          ' offset in bytes !
-                        <var>add</var>     outptr,         #3
-                        <var>call</var>    #decoutback                    ' output decimal  month
-                        
-' return (directoryEntryCache[24] &amp; $1F) mod day
-' return (directoryEntryCache[18] &amp; $1F)  access day                        
-' return (directoryEntryCache[16] &amp; $1F) create   day
-                        <var>mov</var>     par1,           par2
-                        <var>and</var>     par1,           #$1F           ' write day par1  
-                        <var>mov</var>     outptr,         cmdin          ' offset in bytes !
-                        <var>add</var>     outptr,         #6
-                        <var>call</var>    #decoutback                    ' output decimal day
-dateout_ret             <var>ret</var>
-
-</pre>
-<hr /><h3 id = "lbl24">decimal out </h3><br />
-decoutback:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;outputs par1 as decimal. starting at OFFSET outptr with last <br />
+<hr /><h3 id = "lbl20">decimal out </h3><br />
+decoutback:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;outputs par1 as decimal. starting at HUBADDRESS outptr with last <br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;digit, decrementing outptr. so we will output right justified.<br />
 PARMS:<br />
 &nbsp;&nbsp;par1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- value to output decimal<br />
@@ -686,9 +458,8 @@ PARMS:<br />
 RETURNS:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- none - par1 unchanged, outptr at pos of first (leftmost) digit<br />
 <br />
 
-<br /><a onclick ="javascript:ShowHide('lbl25')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl25>
-decoutback              <var>add</var>     outptr,                 bufptr
+<br /><a onclick ="javascript:ShowHide('lbl21')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl21>decoutback              
                         <var>mov</var>     LNDivideDividend,       par1
 decoutloop              <var>sub</var>     outptr,                 #1
                         <var>mov</var>     LNDivideDivsor,         #10
@@ -701,7 +472,7 @@ decoutloop              <var>sub</var>     outptr,                 #1
 decoutback_ret          <var>ret</var>
 
 </pre>
-<hr /><h3 id = "lbl26">Unsigned Divide </h3><br />
+<hr /><h3 id = "lbl22">Unsigned Divide </h3><br />
 LNDivide:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Just put the thing you want to divide in the dividend<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;and the thing you want to divide by in the divisor.<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Then the result will appear in the quotient and<br />
@@ -715,8 +486,8 @@ RETURNS:<br />
 &nbsp;&nbsp;LNDivideDividend&nbsp;&nbsp;- value of the remainder<br />
 <br />
 
-<br /><a onclick ="javascript:ShowHide('lbl27')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl27>LNDivide                <var>mov</var>     LNDivideQuotient,       #0                           ' Setup to divide.
+<br /><a onclick ="javascript:ShowHide('lbl23')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl23>LNDivide                <var>mov</var>     LNDivideQuotient,       #0                           ' Setup to divide.
                         <var>mov</var>     LNDivideBuffer,         #0                           '
                         <var>mov</var>     LNDivideCounter,        #32                          '
 
@@ -736,71 +507,41 @@ LNDivideLoopPost        <var>cmpsub</var>  LNDivideDividend,       LNDivideBuffe
 LNDivide_ret            <var>ret</var>                                                          ' Return. Remainder in dividend on exit.
 
 </pre>
-<hr /><h3 id = "lbl28">Data </h3>
-<br /><a onclick ="javascript:ShowHide('lbl29')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl29>zero                    <var>long</var>    0
+<hr /><h3 id = "lbl24">Data </h3>
+<br /><a onclick ="javascript:ShowHide('lbl25')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl25>zero                    <var>long</var>    0
 minusone                <var>long</var>    -1
 space                   <var>long</var>    32
 incDest1                <var>long</var>    1 &lt;&lt; 9
 fileext                 <var>long</var>
                         <var>byte</var>    "htm",0
-c1980                   <var>long</var>    1980
-pathptr                 <var>long</var>    $400 - $40                     ' last 64 bytes buffer
+postptr                 <var>long</var>    $400 - $40                     ' last 64 bytes buffer
                         
-htmheader               <var>long</var>
-                        <var>byte</var>    "&lt;html&gt;", 13, 10,"&lt;head&gt;", 13, 10,"&lt;title&gt;Directory&lt;/title&gt;",13,10 
+htm                     <var>long</var>
+                        <var>byte</var>    "&lt;html&gt;", 13, 10,"&lt;head&gt;", 13, 10,"&lt;title&gt;<var>Test</var> Dns Query&lt;/title&gt;",13,10 
                         <var>byte</var>    "&lt;style type=",34,"text/css",34,"&gt;"
-                        <var>byte</var>    "table {border-collapse: collapse; border: 1px solid black;} "
+                        <var>byte</var>    "table {border-collapse: collapse; border: 1px solid black; cellpadding: 5px;} "
                         <var>byte</var>    "table td, table th {border: 1px solid black; } "
                         <var>byte</var>    "&lt;/style&gt;",13,10 
                         <var>byte</var>    "&lt;/head&gt;", 13, 10
-                        <var>byte</var>    "&lt;body&gt;", 13, 10,"&lt;table cellpadding=",34,"5px",34,"&gt;", 13, 10, 0
-
-htmfirstrow             <var>long</var>
-                        <var>byte</var>    "&lt;tr&gt;&lt;th&gt;<var>NR</var>&lt;/th&gt;&lt;th&gt;NAME&lt;/th&gt;&lt;th&gt;SIZE&lt;/th&gt;&lt;th&gt;DIR&lt;/th&gt;&lt;th&gt;CREATE&lt;/th&gt;&lt;th&gt;MODIFY&lt;/th&gt;&lt;th&gt;ACCESS&lt;/th&gt;&lt;/tr&gt;",13,10,0
-htmrow                  <var>long</var>
-                        <var>byte</var>    "&lt;tr&gt;"
-                        <var>byte</var>    "&lt;td align=",34,"right",34,"&gt;"
-                        <var>byte</var>    " "[10] 
-htmlastrownr            <var>byte</var>    "&lt;/td&gt;"
-                        <var>byte</var>    "&lt;td&gt;&lt;a href=",34
-htmfirstlink            <var>byte</var>    "/dirhtm.psx?p="
-                        <var>byte</var>    " "[76] ,34,"&gt;"                               
-htmfirstname            <var>byte</var>    " "[12]
-                        <var>byte</var>    "&lt;/a&gt;&lt;/td&gt;"
-                        <var>byte</var>    "&lt;td align=",34,"right",34,"&gt;"
-                        <var>byte</var>    " "[10]
-htmlastsize             <var>byte</var>    "&lt;/td&gt;"
-                        <var>byte</var>    "&lt;td align=",34,"right",34,"&gt;"
-htmdir                  <var>byte</var>    "1"
-                        <var>byte</var>    "&lt;/td&gt;" 
-                        <var>byte</var>    "&lt;td&gt;" 
-htmcreated              <var>byte</var>    "0000-00-00 00:00:00"
-                        <var>byte</var>    "&lt;/td&gt;" 
-                        <var>byte</var>    "&lt;td&gt;" 
-htmmodified             <var>byte</var>    "0000-00-00 00:00:00"
-                        <var>byte</var>    "&lt;/td&gt;" 
-                        <var>byte</var>    "&lt;td&gt;" 
-htmacessed              <var>byte</var>    "0000-00-00 00:00:00"
-                        <var>byte</var>    "&lt;/td&gt;" 
-                        <var>byte</var>    "&lt;/tr&gt;", 13, 10, 0
-
-htmfooter               <var>long</var>                                                                                                                              
-                        <var>byte</var>    "&lt;/table&gt;&lt;/body&gt;&lt;/html&gt;", 13, 10, 0
-htmfooter_end           <var>long</var>
+                        <var>byte</var>    "&lt;body&gt;", 13, 10,"&lt;form action=",34,"dnsquery.psx",34," method=",34,"post",34,"&gt;"
+                        <var>byte</var>    "&lt;table&gt;", 13, 10, "&lt;tr&gt;&lt;th colspan=",34,"3",34,"&gt;<var>Test</var> Dns Query&lt;/th&gt;&lt;/tr&gt;",13,10
+                        <var>byte</var>    "&lt;tr&gt;&lt;td&gt;NAME&lt;/td&gt;&lt;td&gt;&lt;input type=",34,"text",34," name=",34,"p",34," /&gt;&lt;/td&gt;"
+                        <var>byte</var>    "&lt;td&gt;&lt;input type=",34,"submit",34," name=",34,"submit",34," value=",34,"Submit",34," /&gt;&lt;/td&gt;&lt;/tr&gt;",13,10
+                        <var>byte</var>    "&lt;tr&gt;&lt;td colspan=",34,"3",34,"&gt;"
+                        <var>byte</var>    " "[15]
+IP_end                  <var>byte</var>    "&lt;/td&gt;&lt;/tr&gt;",13,10
+                        <var>byte</var>    "&lt;/table&gt;&lt;/form&gt;&lt;/body&gt;&lt;/html&gt;", 13, 10, 0
+htm_end                 <var>long</var>
 
 </pre>
-<hr /><h3 id = "lbl30">Variables </h3>
-<br /><a onclick ="javascript:ShowHide('lbl31')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl31>cmdin                   <var>res</var>     1
+<hr /><h3 id = "lbl26">Variables </h3>
+<br /><a onclick ="javascript:ShowHide('lbl27')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl27>cmdin                   <var>res</var>     1
 cmdout                  <var>res</var>     1
 par1                    <var>res</var>     1
 par2                    <var>res</var>     1
-
-rownr                   <var>res</var>     1
 tmp                     <var>res</var>     1
-entryptr                <var>res</var>     1
-
 LNDivideBuffer          <var>res</var>     1
 LNDivideCounter         <var>res</var>     1
 LNDivideDividend        <var>res</var>     1
@@ -810,7 +551,7 @@ LNDivideQuotient        <var>res</var>     1
 
 </pre>
 <hr /><br />
-<h2 id = "lbl32">Documentation </h2>
+<h2 id = "lbl28">Documentation </h2>
 <pre>
 This .spin file supports PhiPi's great Spin Code Documenter found at
 http://www.phipi.com/spin2html/
@@ -821,7 +562,7 @@ If you change the .spin file you can (re)create the .htm file by uploading your 
 to http://www.phipi.com/spin2html/ and then saving the the created .htm page. 
 </pre>
 <br />
-<h2 id = "lbl33">MIT License </h2>
+<h2 id = "lbl29">MIT License </h2>
 <pre>
  ______________________________________________________________________________________
 |                            TERMS OF USE: MIT License                                 |                                                            

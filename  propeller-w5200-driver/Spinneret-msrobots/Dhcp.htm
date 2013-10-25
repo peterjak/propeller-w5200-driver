@@ -233,30 +233,31 @@
 <a href= "#lbl39" class = "toc4">DoDhcp</a><br/>
 <a href= "#lbl41" class = "toc4">RenewDhcp</a><br/>
 <a href= "#lbl43" class = "toc4">SendReceive</a><br/>
-<a href= "#lbl45" class = "toc4">UpdRxLen</a><br/>
-<a onclick ="javascript:ShowHide('toc47')" href="javascript:;" class = "toc2">PRIvate Spin Methods ... </a><br />
-<div id= "toc47" class = "tocgrp">
-<a href= "#lbl48" class = "toc4">DiscoverOffer</a><br/>
-<a href= "#lbl50" class = "toc4">RequestAck</a><br/>
-<a href= "#lbl52" class = "toc4">InitRequest</a><br/>
-<a href= "#lbl54" class = "toc4">Discover</a><br/>
-<a href= "#lbl56" class = "toc4">Offer</a><br/>
-<a href= "#lbl58" class = "toc4">Request</a><br/>
-<a href= "#lbl60" class = "toc4">Ack</a><br/>
-<a href= "#lbl62" class = "toc4">GetSetIp</a><br/>
-<a href= "#lbl64" class = "toc4">FillOpHTypeHlenHops</a><br/>
-<a href= "#lbl66" class = "toc4">CreateTransactionId</a><br/>
-<a href= "#lbl68" class = "toc4">FillLeaseTime</a><br/>
-<a href= "#lbl70" class = "toc4">FillTransactionID</a><br/>
-<a href= "#lbl72" class = "toc4">FillMac</a><br/>
-<a href= "#lbl74" class = "toc4">FillServerIp</a><br/>
-<a href= "#lbl76" class = "toc4">FillMagicCookie</a><br/>
-<a href= "#lbl78" class = "toc4">WriteDhcpOption</a><br/>
-<a href= "#lbl80" class = "toc4">ReadDhcpOption</a><br/>
-<a href= "#lbl82" class = "toc4">EndDhcpOptions</a><br/>
+<a href= "#lbl45" class = "toc4">SendReceive</a><br/>
+<a href= "#lbl47" class = "toc4">UpdRxLen</a><br/>
+<a onclick ="javascript:ShowHide('toc49')" href="javascript:;" class = "toc2">PRIvate Spin Methods ... </a><br />
+<div id= "toc49" class = "tocgrp">
+<a href= "#lbl50" class = "toc4">DiscoverOffer</a><br/>
+<a href= "#lbl52" class = "toc4">RequestAck</a><br/>
+<a href= "#lbl54" class = "toc4">InitRequest</a><br/>
+<a href= "#lbl56" class = "toc4">Discover</a><br/>
+<a href= "#lbl58" class = "toc4">Offer</a><br/>
+<a href= "#lbl60" class = "toc4">Request</a><br/>
+<a href= "#lbl62" class = "toc4">Ack</a><br/>
+<a href= "#lbl64" class = "toc4">GetSetIp</a><br/>
+<a href= "#lbl66" class = "toc4">FillOpHTypeHlenHops</a><br/>
+<a href= "#lbl68" class = "toc4">CreateTransactionId</a><br/>
+<a href= "#lbl70" class = "toc4">FillLeaseTime</a><br/>
+<a href= "#lbl72" class = "toc4">FillTransactionID</a><br/>
+<a href= "#lbl74" class = "toc4">FillMac</a><br/>
+<a href= "#lbl76" class = "toc4">FillServerIp</a><br/>
+<a href= "#lbl78" class = "toc4">FillMagicCookie</a><br/>
+<a href= "#lbl80" class = "toc4">WriteDhcpOption</a><br/>
+<a href= "#lbl82" class = "toc4">ReadDhcpOption</a><br/>
+<a href= "#lbl84" class = "toc4">EndDhcpOptions</a><br/>
 </div>
-<a href= "#lbl84" class = "toc2">Documentation </a><br/>
-<a href= "#lbl86" class = "toc2">MIT License </a><br/>
+<a href= "#lbl86" class = "toc2">Documentation </a><br/>
+<a href= "#lbl87" class = "toc2">MIT License </a><br/>
 
 		</div>
 	</div>
@@ -268,7 +269,7 @@
 <br /><br />
 AUTHOR:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Mike Gebhard<br />
 COPYRIGHT:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Parallax Inc.<br />
-LAST MODIFIED:&nbsp;&nbsp;&nbsp;&nbsp;10/04/2013<br />
+LAST MODIFIED:&nbsp;&nbsp;&nbsp;&nbsp;10/19/2013<br />
 VERSION:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1.0<br />
 LICENSE:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MIT (see end of file)<br /><br />
 DESCRIPTION:<br />
@@ -278,6 +279,7 @@ MODIFICATIONS:<br />
  8/31/2013&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;added option to set hostname. default is propnet as before<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;but after Init you can do SetHostname(string("MYPROP")) to chose another<br />
 10/04/2013&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;added minimal spindoc comments<br />
+10/19/2013&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;moved SendReceive to socket<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Michael Sommer (MSrobots)<br />
 
 <br />
@@ -539,6 +541,8 @@ MODIFICATIONS:<br />
   sock.Close 
   <var>return</var> <var>true</var>
 
+{ 
+
 </pre>
 <hr /><h4 id = "lbl43">SendReceive(buffer, len)
 </h4>
@@ -557,29 +561,58 @@ MODIFICATIONS:<br />
   <var>else</var>  
     <var>RESULT</var> := sock.Receive(buffer, bytesToRead)         'Get the Rx buffer
   sock.Disconnect
+}
+{
 
 </pre>
-<hr /><h4 id = "lbl45">UpdRxLen(buffer)
+<hr /><h4 id = "lbl45">SendReceive(buffer, len)
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl46')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl46><var>PUB</var> SendReceive(buffer, len) | bytesToRead, ptr 
+  
+  bytesToRead := 0
+
+  'Open socket and Send Message 
+  sock.Open
+  sock.Send(buffer, len)
+
+  bytesToRead := sock.Available
+   
+  'Check for a timeout
+  <var>if</var>(bytesToRead =&lt; 0 )
+    bytesToRead~
+    <var>return</var> @null
+
+  <var>if</var>(bytesToRead &gt; 0) 
+    'Get the Rx buffer  
+    ptr := sock.Receive(buffer, bytesToRead)
+
+  sock.Disconnect
+  <var>return</var> ptr
+}
+
+</pre>
+<hr /><h4 id = "lbl47">UpdRxLen(buffer)
 </h4>
 
 <br />UpdRxLen:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;?debug?<br />
 
-<br /><a onclick ="javascript:ShowHide('lbl46')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl46><var>PUB</var> UpdRxLen(buffer)                                    '?debug?
+<br /><a onclick ="javascript:ShowHide('lbl48')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl48><var>PUB</var> UpdRxLen(buffer)                                    '?debug?
   <var>return</var> sock.DeserializeWord(buffer + 6)
 
 </pre>
 <hr /><br />
-<h2 id = "lbl47">PRIvate Spin Methods </h2>
-<hr /><h4 id = "lbl48">DiscoverOffer
+<h2 id = "lbl49">PRIvate Spin Methods </h2>
+<hr /><h4 id = "lbl50">DiscoverOffer
 </h4>
-<br /><a onclick ="javascript:ShowHide('lbl49')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl49><var>PRI</var> DiscoverOffer | ptr
+<br /><a onclick ="javascript:ShowHide('lbl51')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl51><var>PRI</var> DiscoverOffer | ptr
 
   InitRequest
   
   ptr := Discover
-  <var>if</var>(ptr == @null)
+  <var>if</var>(ptr == -1)
     errorCode := DISCOVER_ERROR
     <var>return</var> <var>false</var>
         
@@ -590,15 +623,15 @@ MODIFICATIONS:<br />
   <var>return</var> <var>true</var>
 
 </pre>
-<hr /><h4 id = "lbl50">RequestAck
+<hr /><h4 id = "lbl52">RequestAck
 </h4>
-<br /><a onclick ="javascript:ShowHide('lbl51')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl51><var>PRI</var> RequestAck  | ptr
+<br /><a onclick ="javascript:ShowHide('lbl53')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl53><var>PRI</var> RequestAck  | ptr
 
   InitRequest
   
   ptr := Request
-  <var>if</var>(ptr == @null)
+  <var>if</var>(ptr == -1)
     errorCode := REQUEST_ERROR
     <var>return</var> <var>false</var>
     
@@ -609,19 +642,19 @@ MODIFICATIONS:<br />
   <var>return</var> <var>true</var> 
 
 </pre>
-<hr /><h4 id = "lbl52">InitRequest
+<hr /><h4 id = "lbl54">InitRequest
 </h4>
-<br /><a onclick ="javascript:ShowHide('lbl53')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl53><var>PRI</var> InitRequest
+<br /><a onclick ="javascript:ShowHide('lbl55')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl55><var>PRI</var> InitRequest
   <var>bytefill</var>(buffPtr, 0, DHCP_MAGIC_COOKIE)
   sock.RemoteIp(255, 255, 255, 255)   
   sock.RemotePort(REMOTE_PORT)
 
 </pre>
-<hr /><h4 id = "lbl54">Discover
+<hr /><h4 id = "lbl56">Discover
 </h4>
-<br /><a onclick ="javascript:ShowHide('lbl55')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl55><var>PRI</var> Discover | len
+<br /><a onclick ="javascript:ShowHide('lbl57')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl57><var>PRI</var> Discover | len
   'optionPtr is a global pointer used in the
   'WriteDhcpOption and ReadDhcpOption methods
   optionPtr := DHCP_OPTIONS + buffPtr
@@ -637,13 +670,13 @@ MODIFICATIONS:<br />
   WriteDhcpOption(PARAM_REQUEST, 4, @paramReq)
   WriteDhcpOption(HOST_NAME, <var>strsize</var>(hostPtr), hostPtr)
   len := EndDhcpOptions
-  <var>return</var> SendReceive(buffPtr, len)
+  <var>return</var> sock.SendReceive(buffPtr, len)
 
 </pre>
-<hr /><h4 id = "lbl56">Offer
+<hr /><h4 id = "lbl58">Offer
 </h4>
-<br /><a onclick ="javascript:ShowHide('lbl57')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl57><var>PRI</var> Offer | ptr
+<br /><a onclick ="javascript:ShowHide('lbl59')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl59><var>PRI</var> Offer | ptr
   optionPtr := DHCP_OPTIONS + buffPtr
 
   'Move the pointer 8 bytes to the right
@@ -689,10 +722,10 @@ MODIFICATIONS:<br />
   <var>return</var> <var>byte</var>[ptr][1] &amp; $FF == OFFER_ERROR
 
 </pre>
-<hr /><h4 id = "lbl58">Request
+<hr /><h4 id = "lbl60">Request
 </h4>
-<br /><a onclick ="javascript:ShowHide('lbl59')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl59><var>PRI</var> Request | len
+<br /><a onclick ="javascript:ShowHide('lbl61')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl61><var>PRI</var> Request | len
   optionPtr := DHCP_OPTIONS + buffPtr
   
   <var>bytefill</var>(buffPtr, 0, BUFFER_2K)
@@ -707,13 +740,13 @@ MODIFICATIONS:<br />
   WriteDhcpOption(DHCP_SERVER_IP, 4, GetDhcpServer)
   WriteDhcpOption(HOST_NAME, <var>strsize</var>(hostPtr), hostPtr)
   len := EndDhcpOptions
-  <var>return</var> SendReceive(buffPtr, len)
+  <var>return</var> sock.SendReceive(buffPtr, len)
 
 </pre>
-<hr /><h4 id = "lbl60">Ack
+<hr /><h4 id = "lbl62">Ack
 </h4>
-<br /><a onclick ="javascript:ShowHide('lbl61')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl61><var>PRI</var> Ack | ptr
+<br /><a onclick ="javascript:ShowHide('lbl63')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl63><var>PRI</var> Ack | ptr
 
   buffPtr += UPD_HEADER_LEN
 
@@ -729,10 +762,10 @@ MODIFICATIONS:<br />
   <var>return</var> <var>byte</var>[ptr][1] &amp; $FF == DHCP_ACK
 
 </pre>
-<hr /><h4 id = "lbl62">GetSetIp
+<hr /><h4 id = "lbl64">GetSetIp
 </h4>
-<br /><a onclick ="javascript:ShowHide('lbl63')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl63><var>PRI</var> GetSetIp | ptr
+<br /><a onclick ="javascript:ShowHide('lbl65')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl65><var>PRI</var> GetSetIp | ptr
   ptr := buffPtr + DHCP_YIADDR
   Wiz.SetIp(<var>byte</var>[ptr][0], <var>byte</var>[ptr][1], <var>byte</var>[ptr][2], <var>byte</var>[ptr][3])
   requestIp[0] := <var>byte</var>[ptr][0]
@@ -741,64 +774,64 @@ MODIFICATIONS:<br />
   requestIp[3] := <var>byte</var>[ptr][3] 
 
 </pre>
-<hr /><h4 id = "lbl64">FillOpHTypeHlenHops(op, htype, hlen, hops)
+<hr /><h4 id = "lbl66">FillOpHTypeHlenHops(op, htype, hlen, hops)
 </h4>
-<br /><a onclick ="javascript:ShowHide('lbl65')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl65><var>PRI</var> FillOpHTypeHlenHops(op, htype, hlen, hops)
+<br /><a onclick ="javascript:ShowHide('lbl67')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl67><var>PRI</var> FillOpHTypeHlenHops(op, htype, hlen, hops)
   <var>byte</var>[buffPtr][DHCP_OP] := op
   <var>byte</var>[buffPtr][DHCP_HTYPE] := htype
   <var>byte</var>[buffPtr][DHCP_HLEN] := hlen
   <var>byte</var>[buffPtr][DHCP_HOPS] := hops  
 
 </pre>
-<hr /><h4 id = "lbl66">CreateTransactionId
+<hr /><h4 id = "lbl68">CreateTransactionId
 </h4>
-<br /><a onclick ="javascript:ShowHide('lbl67')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl67><var>PRI</var> CreateTransactionId
+<br /><a onclick ="javascript:ShowHide('lbl69')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl69><var>PRI</var> CreateTransactionId
   transId := <var>CNT</var>
   ?transId
 
 </pre>
-<hr /><h4 id = "lbl68">FillLeaseTime(ptr)
+<hr /><h4 id = "lbl70">FillLeaseTime(ptr)
 </h4>
-<br /><a onclick ="javascript:ShowHide('lbl69')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl69><var>PRI</var> FillLeaseTime(ptr)
+<br /><a onclick ="javascript:ShowHide('lbl71')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl71><var>PRI</var> FillLeaseTime(ptr)
   'leaseTime :=  ptr[0] &lt;&lt; 24 |  ptr[1] &lt;&lt; 16 | ptr[2] &lt;&lt; 8 | ptr[3]
   <var>bytemove</var>(@leaseTime, ptr, 4)
 
 </pre>
-<hr /><h4 id = "lbl70">FillTransactionID
+<hr /><h4 id = "lbl72">FillTransactionID
 </h4>
-<br /><a onclick ="javascript:ShowHide('lbl71')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl71><var>PRI</var> FillTransactionID
+<br /><a onclick ="javascript:ShowHide('lbl73')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl73><var>PRI</var> FillTransactionID
   <var>bytemove</var>(buffPtr+DHCP_XID, @transId, 4)
 
 </pre>
-<hr /><h4 id = "lbl72">FillMac
+<hr /><h4 id = "lbl74">FillMac
 </h4>
-<br /><a onclick ="javascript:ShowHide('lbl73')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl73><var>PRI</var> FillMac
+<br /><a onclick ="javascript:ShowHide('lbl75')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl75><var>PRI</var> FillMac
   <var>bytemove</var>(buffPtr+DHCP_CHADDR, wiz.GetMac, HARDWARE_ADDR_LEN)    
 
 </pre>
-<hr /><h4 id = "lbl74">FillServerIp
+<hr /><h4 id = "lbl76">FillServerIp
 </h4>
-<br /><a onclick ="javascript:ShowHide('lbl75')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl75><var>PRI</var> FillServerIp
+<br /><a onclick ="javascript:ShowHide('lbl77')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl77><var>PRI</var> FillServerIp
   <var>bytemove</var>(buffPtr+DHCP_SIADDR, GetDhcpServer, 4)
 
 </pre>
-<hr /><h4 id = "lbl76">FillMagicCookie
+<hr /><h4 id = "lbl78">FillMagicCookie
 </h4>
-<br /><a onclick ="javascript:ShowHide('lbl77')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl77><var>PRI</var> FillMagicCookie
+<br /><a onclick ="javascript:ShowHide('lbl79')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl79><var>PRI</var> FillMagicCookie
   <var>bytemove</var>(buffPtr+DHCP_MAGIC_COOKIE, @magicCookie, MAGIC_COOKIE_LEN)
 
 </pre>
-<hr /><h4 id = "lbl78">WriteDhcpOption(option, len, data)
+<hr /><h4 id = "lbl80">WriteDhcpOption(option, len, data)
 </h4>
-<br /><a onclick ="javascript:ShowHide('lbl79')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl79><var>PRI</var> WriteDhcpOption(option, len, data)
+<br /><a onclick ="javascript:ShowHide('lbl81')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl81><var>PRI</var> WriteDhcpOption(option, len, data)
   <var>byte</var>[optionPtr++] := option
   <var>byte</var>[optionPtr++] := len
   
@@ -810,10 +843,10 @@ MODIFICATIONS:<br />
   optionPtr += len
 
 </pre>
-<hr /><h4 id = "lbl80">ReadDhcpOption(option)
+<hr /><h4 id = "lbl82">ReadDhcpOption(option)
 </h4>
-<br /><a onclick ="javascript:ShowHide('lbl81')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl81><var>PRI</var> ReadDhcpOption(option) | ptr                        '
+<br /><a onclick ="javascript:ShowHide('lbl83')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl83><var>PRI</var> ReadDhcpOption(option) | ptr                        '
   'Init pointer to options
   ptr := DHCP_OPTIONS + buffPtr
 
@@ -833,21 +866,17 @@ MODIFICATIONS:<br />
   <var>return</var> -1  
 
 </pre>
-<hr /><h4 id = "lbl82">EndDhcpOptions
+<hr /><h4 id = "lbl84">EndDhcpOptions
 </h4>
-<br /><a onclick ="javascript:ShowHide('lbl83')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl83><var>PRI</var> EndDhcpOptions | len                                '?
+<br /><a onclick ="javascript:ShowHide('lbl85')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl85><var>PRI</var> EndDhcpOptions | len                                '?
   <var>byte</var>[optionPtr] := DHCP_END
   <var>return</var> DHCP_PACKET_LEN
 
 </pre>
 <hr /><br />
-<h2 id = "lbl84">Documentation </h2>
-<br /><a onclick ="javascript:ShowHide('lbl85')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl85>                                                    'Documentation
+<h2 id = "lbl86">Documentation </h2>
 
-</pre>
-<hr />
 This .spin file supports PhiPi's great Spin Code Documenter found at
 http://www.phipi.com/spin2html/
 
@@ -857,12 +886,8 @@ If you change the .spin file you can (re)create the .htm file by uploading your 
 to http://www.phipi.com/spin2html/ and then saving the the created .htm page. 
 <br />
 <br />
-<h2 id = "lbl86">MIT License </h2>
-<br /><a onclick ="javascript:ShowHide('lbl87')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl87>                                                    'MIT License 
-
-</pre>
-<hr /><pre>
+<h2 id = "lbl87">MIT License </h2>
+<pre>
  ______________________________________________________________________________________
 |                            TERMS OF USE: MIT License                                 |                                                            
 |______________________________________________________________________________________|

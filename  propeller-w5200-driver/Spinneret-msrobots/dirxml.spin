@@ -1,9 +1,9 @@
-'':::::::[ directory as DataTable ]:::::::::::::::::::::::::::::::::::::::::::::::::::::::
+'':::::::[ Directory as DataTable ]:::::::::::::::::::::::::::::::::::::::::::::::::::::::
 {{
 ''
 ''AUTHOR:           Michael Sommer (@MSrobots)
 ''COPYRIGHT:        See LICENCE (MIT)    
-''LAST MODIFIED:    10/04/2013
+''LAST MODIFIED:    10/24/2013
 ''VERSION:          1.0
 ''LICENSE:          MIT (see end of file)
 ''
@@ -19,30 +19,45 @@
 ''
 ''MODIFICATIONS:
 ''10/04/2013        added spindoc comments
+''10/19/2013        added comments
+''10/24/2013        added comments
 ''                  Michael Sommer (MSrobots)
 }}
 CON
 ''
 ''=======[ Global CONstants ... ]=========================================================
-  { PSX CMDS }  
-  REQ_PARA_STRING  = 1
-  REQ_PARA_NUMBER  = 2
-  REQ_FILENAME     = 3
-  REQ_HEADER_STRING= 4
-  REQ_HEADER_NUMBER= 5
-  
-  SEND_FILE_EXT    = 11
-  SEND_SIZE_HEADER = 12
-  SEND_DATA        = 13
-  SEND_STRING      = 14
-  SEND_FLUSH       = 15
-  
-  CHANGE_DIRECTORY = 21
-  LIST_ENTRIES     = 22
-  LIST_ENTRY_ADDR  = 23
 
-  PSE_CALL         = 91
-  PSE_TRANSFER     = 92
+  { PSX/PSE CMDS }    
+    
+  REQ_PARA_STRING   = 1  ' get Hubaddress of GET parameter (as string)
+  REQ_PARA_NUMBER   = 2  ' get Value of GET parameter (as long)
+  REQ_FILENAME      = 3  ' get Hubaddress of Request  
+  REQ_HEADER_STRING = 4  ' get Hubaddress of HEADER parameter (as string)
+  REQ_HEADER_NUMBER = 5  ' get Value of HEADER parameter (as long)
+  REQ_POST_STRING   = 6  ' get Hubaddress of POST parameter (as string)
+  REQ_POST_NUMBER   = 7  ' get Value of POST parameter (as long)
+  
+  SEND_FILE_EXT     = 11 ' set FileExtension and content-type for response
+  SEND_SIZE_HEADER  = 12 ' send size and HEADER of response to socket (buffered)
+  SEND_DATA         = 13 ' send number of bytes to socket (buffered)
+  SEND_STRING       = 14 ' send string to socket (buffered)
+  SEND_FLUSH        = 15 ' flush buffer to wiznet
+  SEND_FILE_CONTENT = 16 ' send content of file to socket (buffered)       
+  
+  CHANGE_DIRECTORY  = 21 ' change to Directory on SD
+  LIST_ENTRIES      = 22 ' list Entries (first/next)
+  LIST_ENTRY_ADDR   = 23 ' get Hubaddress of Directory cache Entry (FAT Dir Entry)       
+  CREATE_DIRECTORY  = 24 ' create new Directory       
+  DELETE_ENTRY      = 25 ' delete File or Directory             
+  FILE_WRITE_BLOCK  = 26 ' open file, read block, close file       
+  FILE_READ_BLOCK   = 27 ' open file, write block, close file       
+
+  QUERY_DNS         = 41 ' resolves name to ip with DNS
+  QUERY_NETBIOS     = 42 ' send NetBios Query
+  CHECK_NETBIOS     = 43 ' poll next answer
+  
+  PSE_CALL          = 91 ' call submodul in new COG and return
+  PSE_TRANSFER      = 92 ' call submodul in same COG (DasyChain)
 
 ''
 ''=======[ PUBlic Spin Methods]===========================================================
@@ -231,19 +246,15 @@ sendspincmdwait         rdlong  cmdin,          cmdptr
                         rdlong  par2,           par2ptr ' get answer param2
 sendspincmd_ret         ret
 
-''-------[ data constants ]---------------------------------------------------------------
-zero                    long    0
-minusone                long    -1
-space                   long    32
-incDest1                long    1 << 9
-fileext                 long
-                        byte    "xml",0
-c1980                   long    1980
-                        
-
 ''-------[ Send String bufptr ]-----------------------------------------------------------
 {{
-''sendstringbuf:        sends String from Hub Buffer bufptr to the socket/browser
+''
+''sendstringbuf:        sends String from Hub Buffer bufptr to the socket/browser (buffered)
+''
+''PARMS:              - none   
+''  
+''RETURNS:            - none
+''
 }}
 sendstringbuf           mov     par1,           bufptr         ' send string from Output hub-buff 
                         mov     cmdout,         #SEND_STRING
@@ -251,7 +262,16 @@ sendstringbuf           mov     par1,           bufptr         ' send string fro
 sendstringbuf_ret       ret
 ''-------[ Copy Cog to Hub ]--------------------------------------------------------------
 {{
+''
 ''cog2hub:              copy count longs from Cog to Hub
+''
+''PARMS:
+''  cog2hub           - use "movd cog2hub, #COGlabel" to set source address in cog
+''  count             - number of longs to copy
+''  outptr            - hubaddress destination
+''  
+''RETURNS:            - none - outptr get incremented accordingly (by 4 each long)
+''
 }}
 cog2hub                 wrlong  0-0,            outptr
                         add     cog2hub,        incDest1
@@ -261,7 +281,15 @@ cog2hub_ret             ret
 
 ''-------[ Copy Hub to Hub ]--------------------------------------------------------------
 {{
-''strhub2hub:           copy strsize bytes from Hub to Hub
+''
+''strhub2hub:           copy string size bytes from Hub to Hub. zero will not be copied
+''
+''PARMS:
+''  par1              - hubaddress source
+''  outptr            - hubaddress destination
+''
+''RETURNS:            - none - par1 and outptr get incremented each byte written
+''
 }}
 strhub2hub              rdbyte  tmp,            par1
                         cmp     tmp,            zero wz
@@ -352,8 +380,15 @@ dateout_ret             ret
                             
 ''-------[ decimal out ]------------------------------------------------------------------
 {{
-''decoutback:           outputs par1 as decimal. starting at offset outptr with last 
-''                      digit, decrementing outptr
+''
+''decoutback:           outputs par1 as decimal. starting at OFFSET outptr with last 
+''                      digit, decrementing outptr. so we will output right justified.
+''PARMS:
+''  par1              - value to output decimal
+''  outptr            - hubaddress after last (rightmost) digit. decremented before write of each digit
+''  
+''RETURNS:            - none - par1 unchanged, outptr at pos of first (leftmost) digit
+''
 }}
 decoutback              add     outptr,                 bufptr
                         mov     LNDivideDividend,       par1
@@ -369,10 +404,19 @@ decoutback_ret          ret
 
 ''-------[ Unsigned Divide ]--------------------------------------------------------------
 {{
+''
 ''LNDivide:             Just put the thing you want to divide in the dividend
 ''                      and the thing you want to divide by in the divisor.
 ''                      Then the result will appear in the quotient and
 ''                      the remainder will appear in the dividend.
+''PARMS:
+''  LNDivideDividend  - value to divide
+''  LNDivideDivsor    - value to divide by
+''  
+''RETURNS:
+''  LNDivideQuotient  - value of the result of division
+''  LNDivideDividend  - value of the remainder
+''
 }}
 LNDivide                mov     LNDivideQuotient,       #0                           ' Setup to divide.
                         mov     LNDivideBuffer,         #0                           '
@@ -392,7 +436,15 @@ LNDivideLoopPost        cmpsub  LNDivideDividend,       LNDivideBuffer wc       
                         djnz    LNDivideCounter,        #LNDivideLoopPost            '
                         
 LNDivide_ret            ret                                                          ' Return. Remainder in dividend on exit.
-''-------[ Data Constants ]---------------------------------------------------------------
+''-------[ Data ]-------------------------------------------------------------------------
+zero                    long    0
+minusone                long    -1
+space                   long    32
+incDest1                long    1 << 9
+fileext                 long
+                        byte    "xml",0
+c1980                   long    1980
+                        
 xmlschema               long
                         byte    "<?xml version=",34,"1.0",34,"?>",13,10,"<xs:schema id=",34
                         byte    "ds"                        
@@ -453,7 +505,7 @@ cmdin                   res     1
 
 ''
 ''=======[ Documentation ]================================================================
-CON                                                     'Documentation
+CON                                                     
 {{{
 This .spin file supports PhiPi's great Spin Code Documenter found at
 http://www.phipi.com/spin2html/
@@ -466,7 +518,7 @@ to http://www.phipi.com/spin2html/ and then saving the the created .htm page.
 
 ''
 ''=======[ MIT License ]==================================================================
-CON                                                     'MIT License
+CON                                                     
 {{{
  ______________________________________________________________________________________
 |                            TERMS OF USE: MIT License                                 |                                                            

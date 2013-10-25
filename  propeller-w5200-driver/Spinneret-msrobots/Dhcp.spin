@@ -3,7 +3,7 @@
 ''
 ''AUTHOR:           Mike Gebhard
 ''COPYRIGHT:        Parallax Inc.
-''LAST MODIFIED:    10/04/2013
+''LAST MODIFIED:    10/19/2013
 ''VERSION:          1.0
 ''LICENSE:          MIT (see end of file)
 ''
@@ -15,6 +15,7 @@
 '' 8/31/2013        added option to set hostname. default is propnet as before
 ''                  but after Init you can do SetHostname(string("MYPROP")) to chose another
 ''10/04/2013        added minimal spindoc comments
+''10/19/2013        moved SendReceive to socket
 ''                  Michael Sommer (MSrobots)
 }}
 CON
@@ -205,7 +206,8 @@ PUB RenewDhcp
  
   sock.Close 
   return true
-  
+
+{ 
 PUB SendReceive(buffer, len) | bytesToRead              'Send request and waits for answer
 {{
 ''SendReceive:      Send request and waits for answer
@@ -220,7 +222,30 @@ PUB SendReceive(buffer, len) | bytesToRead              'Send request and waits 
   else  
     RESULT := sock.Receive(buffer, bytesToRead)         'Get the Rx buffer
   sock.Disconnect
+}
+{
+PUB SendReceive(buffer, len) | bytesToRead, ptr 
   
+  bytesToRead := 0
+
+  'Open socket and Send Message 
+  sock.Open
+  sock.Send(buffer, len)
+
+  bytesToRead := sock.Available
+   
+  'Check for a timeout
+  if(bytesToRead =< 0 )
+    bytesToRead~
+    return @null
+
+  if(bytesToRead > 0) 
+    'Get the Rx buffer  
+    ptr := sock.Receive(buffer, bytesToRead)
+
+  sock.Disconnect
+  return ptr
+}
 PUB UpdRxLen(buffer)                                    '?debug?
 {{
 ''UpdRxLen:         ?debug?
@@ -234,7 +259,7 @@ PRI DiscoverOffer | ptr
   InitRequest
   
   ptr := Discover
-  if(ptr == @null)
+  if(ptr == -1)
     errorCode := DISCOVER_ERROR
     return false
         
@@ -250,7 +275,7 @@ PRI RequestAck  | ptr
   InitRequest
   
   ptr := Request
-  if(ptr == @null)
+  if(ptr == -1)
     errorCode := REQUEST_ERROR
     return false
     
@@ -283,7 +308,7 @@ PRI Discover | len
   WriteDhcpOption(PARAM_REQUEST, 4, @paramReq)
   WriteDhcpOption(HOST_NAME, strsize(hostPtr), hostPtr)
   len := EndDhcpOptions
-  return SendReceive(buffPtr, len)
+  return sock.SendReceive(buffPtr, len)
 
 
 PRI Offer | ptr
@@ -346,7 +371,7 @@ PRI Request | len
   WriteDhcpOption(DHCP_SERVER_IP, 4, GetDhcpServer)
   WriteDhcpOption(HOST_NAME, strsize(hostPtr), hostPtr)
   len := EndDhcpOptions
-  return SendReceive(buffPtr, len)
+  return sock.SendReceive(buffPtr, len)
 
 
 PRI Ack | ptr
@@ -437,7 +462,7 @@ PRI EndDhcpOptions | len                                '?
 
 ''
 ''=======[ Documentation ]================================================================
-CON                                                     'Documentation
+CON                                                     
 {{
 This .spin file supports PhiPi's great Spin Code Documenter found at
 http://www.phipi.com/spin2html/
@@ -450,7 +475,7 @@ to http://www.phipi.com/spin2html/ and then saving the the created .htm page.
 
 ''
 ''=======[ MIT License ]==================================================================
-CON                                                     'MIT License 
+CON                                                                  
 {{{
  ______________________________________________________________________________________
 |                            TERMS OF USE: MIT License                                 |                                                            
