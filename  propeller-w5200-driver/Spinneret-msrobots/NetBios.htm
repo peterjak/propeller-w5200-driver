@@ -219,24 +219,26 @@
 <a href= "#lbl8" class = "toc2">PUBlic Spin Methods</a><br/>
 <a href= "#lbl9" class = "toc4">Init</a><br/>
 <a href= "#lbl11" class = "toc4">CheckSocket</a><br/>
-<a href= "#lbl13" class = "toc4">DisconnectSocket</a><br/>
-<a href= "#lbl15" class = "toc4">ReInitSocket</a><br/>
-<a href= "#lbl17" class = "toc4">SendQuery</a><br/>
-<a href= "#lbl19" class = "toc4">GetLastReadSize</a><br/>
-<a href= "#lbl21" class = "toc4">GetLastIP</a><br/>
-<a href= "#lbl23" class = "toc4">DecodeLastNameInplace</a><br/>
-<a href= "#lbl25" class = "toc4">GetLastName</a><br/>
-<a onclick ="javascript:ShowHide('toc27')" href="javascript:;" class = "toc2">PRIvate Spin Methods ... </a><br />
-<div id= "toc27" class = "tocgrp">
-<a href= "#lbl28" class = "toc4">SendRegister</a><br/>
-<a href= "#lbl30" class = "toc4">SendResponse</a><br/>
-<a href= "#lbl32" class = "toc4">WaitForCountBytes</a><br/>
-<a href= "#lbl34" class = "toc4">FirstLevelEncode</a><br/>
-<a href= "#lbl36" class = "toc4">FirstLevelDecode</a><br/>
-<a href= "#lbl38" class = "toc4">CreateTransactionId</a><br/>
+<a href= "#lbl13" class = "toc4">CheckBuffer</a><br/>
+<a href= "#lbl15" class = "toc4">GetLastSendPtr</a><br/>
+<a href= "#lbl17" class = "toc4">DisconnectSocket</a><br/>
+<a href= "#lbl19" class = "toc4">ReInitSocket</a><br/>
+<a href= "#lbl21" class = "toc4">SendQuery</a><br/>
+<a href= "#lbl23" class = "toc4">GetLastReadSize</a><br/>
+<a href= "#lbl25" class = "toc4">GetLastIP</a><br/>
+<a href= "#lbl27" class = "toc4">DecodeLastNameInplace</a><br/>
+<a href= "#lbl29" class = "toc4">GetLastName</a><br/>
+<a onclick ="javascript:ShowHide('toc31')" href="javascript:;" class = "toc2">PRIvate Spin Methods ... </a><br />
+<div id= "toc31" class = "tocgrp">
+<a href= "#lbl32" class = "toc4">SendRegister</a><br/>
+<a href= "#lbl34" class = "toc4">SendResponse</a><br/>
+<a href= "#lbl36" class = "toc4">WaitForCountBytes</a><br/>
+<a href= "#lbl38" class = "toc4">FirstLevelEncode</a><br/>
+<a href= "#lbl40" class = "toc4">FirstLevelDecode</a><br/>
+<a href= "#lbl42" class = "toc4">CreateTransactionId</a><br/>
 </div>
-<a href= "#lbl40" class = "toc2">Documentation </a><br/>
-<a href= "#lbl41" class = "toc2">MIT License </a><br/>
+<a href= "#lbl44" class = "toc2">Documentation </a><br/>
+<a href= "#lbl45" class = "toc2">MIT License </a><br/>
 
 		</div>
 	</div>
@@ -248,7 +250,7 @@
 <br /><br />
 AUTHORS:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Mike Gebhard / Michael Sommer<br />
 COPYRIGHT:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;See LICENCE (MIT)&nbsp;&nbsp;&nbsp;&nbsp;<br />
-LAST MODIFIED:&nbsp;&nbsp;&nbsp;&nbsp;10/24/2013<br />
+LAST MODIFIED:&nbsp;&nbsp;&nbsp;&nbsp;10/28/2013<br />
 VERSION:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1.0<br />
 LICENSE:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MIT (see end of file)<br /><br />
 DESCRIPTION:<br />
@@ -258,7 +260,9 @@ DESCRIPTION:<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* sending Registration<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* sending NB Name Query Response&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* sending NBSTAT Name Query Response<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* sending NB Name Query Negative Response (protecting names)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* sending NB Name Query Negative Response (protecting names)<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* sending Name Query Requests<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* and checking responses&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br />
 RESOURCES:<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;http://tools.ietf.org/html/rfc1001<br />
@@ -272,6 +276,8 @@ MODIFICATIONS:<br />
 10/04/2013&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;added spindoc comments<br />
 10/21/2013&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;added NB Name Query Negative Response (protecting names)&nbsp;&nbsp;<br />
 10/24/2013&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;added RCODE enum&nbsp;&nbsp;<br />
+10/28/2013&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nbtstat can now resolve group names and display entrys for each member.<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nbquery can now resolve group names and display entrys for each member.<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Michael Sommer (MSrobots)<br />
 <br />
  Form a DOS prompt run nbtstat -a PROPNET.<br />
@@ -397,7 +403,7 @@ CFT_ERR&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0x7&nbsp;&nbsp;&nbsp;Name in conflict error
 }                       $00, $00, $00, $00,             { infinite TTL for broadcast 
 }                       $00, $06, $00, $00              { RDlen(6) NB_FLAGS %0_00_00000_00000000}
   ipReg            <var>byte</var> $C0, $A8, $01, $68              { NB address (IP) }
-  enbNameReg       <var>byte</var> 0
+  enbNameReg       <var>byte</var> 0,0,0,0
                                                          '%1_0000_101000_1_0000 wrong $85 $10
   nbPosQueryResp   <var>byte</var> $68, $C8, $85, $00,             { trn flags: %1_0000_101000_0_0000
 }                       $00, $00, $00, $01,             { Questions Answers[1] 
@@ -407,7 +413,7 @@ CFT_ERR&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0x7&nbsp;&nbsp;&nbsp;Name in conflict error
 }                       $00, $04, $90, $E0,             { TTL = 10 minutes
 }                       $00, $06, $00, $00              { NB_FLAGS %0_00_00000_00000000 }
   ipResp           <var>byte</var> $C0, $A8, $01, $68              { NB address (IP) }                       
-  enbPosQueryResp  <var>byte</var> 0
+  enbPosQueryResp  <var>byte</var> 0,0,0,0
 
                                                        '              R      ATRR   
                                                         '             S      ACDA   B
@@ -444,7 +450,10 @@ CFT_ERR&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0x7&nbsp;&nbsp;&nbsp;Name in conflict error
 }                       $20, $0[32], $00,               { Question Name
 }                       $00, $20, $00, $01              { Qtype NB Qclass IN }
   enbNameQueryReq  <var>byte</var> 0
-  
+
+  _ownip           <var>long</var>  $00
+  _lastnbtstatip   <var>long</var>  $00
+  _lastsendptr     <var>long</var>  $00     
   _buffPtr         <var>long</var>  $00
   _sockId          <var>long</var>  $00
   _lastReadSize    <var>long</var>  $00    ' last bytes read in sendreceive
@@ -486,6 +495,7 @@ Returns:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0 success &g
   <var>bytemove</var>(@nbMac, wiz.GetMac, 6)
   <var>bytemove</var>(@ipReg, wiz.GetIp, 4)
   <var>bytemove</var>(@ipResp, wiz.GetIp, 4)
+  <var>bytemove</var>(@_ownip, @ipResp, 4)   
   
   ReInitSocket
   
@@ -503,14 +513,13 @@ Returns:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0 success &g
     sendRegister(tr1, @encName, 0)                      'no group
     sendRegister(tr2, @encServer, 0)                    'no group
     sendRegister(tr3, @encGroup, $80)                   'group
-'   should be inside repeat!
-    sock.Available
-    <var>repeat</var>
-      <var>if</var> CheckSocket == CHECKSOCKET_OTHER               
-        <var>RESULT</var> := (wiz.DeserializeWord(_buffPtr+constant(FLAGS+8)) &amp; $000F)
-          <var>if</var> (<var>RESULT</var>)
-            <var>return</var> <var>RESULT</var>
-    <var>until</var> _lastReadSize == 0
+    sock.Available                                      'wait for responses (if any) 
+    <var>repeat</var>                                              
+      <var>if</var> CheckSocket == CHECKSOCKET_OTHER               'check incoming responses
+        <var>RESULT</var> := (wiz.DeserializeWord(_buffPtr+constant(FLAGS+8)) &amp; $000F) ' RCODE error (any) 
+          <var>if</var> (<var>RESULT</var>)                                   'yes
+            <var>return</var> <var>RESULT</var>                               'exit with RCODE
+    <var>until</var> _lastReadSize == 0                            'no more response
     
   nbNameReg[2] := $28                                   'RD bit 0 - NAME OVERWRITE DEMAND
   sendRegister(tr1, @encName, 0)                        'no group
@@ -524,9 +533,10 @@ Returns:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0 success &g
 <br />CheckSocket:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Checks NetBios Name Service and if there processes one request<br />
 Returns:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;see CheckSocket Enum values in CON section<br />
                     buffer contains last received request/response
+                    _lastReadSize contains 0 or size of received request/response
 <br />
 <br /><a onclick ="javascript:ShowHide('lbl12')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl12><var>PUB</var> CheckSocket  | avail, needed, ptr, name, flag_s, protect, register   'checks NetBios Name Service and if there processes one request
+<pre class=source id=lbl12><var>PUB</var> CheckSocket  | avail, needed                        'checks NetBios Name Service and if there processes one request
   _lastReadSize := 0
   <var>if</var> sock.DataReady &gt; 0                                 'Any Data ?
     <var>if</var> ((avail := waitForCountBytes(8)) =&gt; 8)           'Header Data in the buffer?
@@ -535,169 +545,203 @@ Returns:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;see CheckSoc
       <var>if</var> ((avail := waitForCountBytes(needed)) =&gt; needed)'Data there?
         sock.Receive(_buffPtr+8, needed)
         _lastReadSize := needed + 8                     'remember last block size
-        <var>RESULT</var> := CHECKSOCKET_OTHER                     'return typ 3 other as default
-        flag_s := <var>byte</var>[_buffPtr+constant(FLAGS+8)]
-        <var>ifnot</var> ((flag_s &amp; $80) == $80)                   'just requests no responses            
-          ptr := 0                                      'nothing
-          protect := <var>false</var>                              'no
-          register := <var>false</var>
-          <var>if</var> ((flag_s&gt;&gt;3) == 5)                          'what op? is it register? 
-             register := <var>true</var>                           'yes
-          name := _buffPtr+constant(QUERY+1+8)          'adress of query name
-          <var>byte</var>[@ipResp-2] := 0                          'no group
-          <var>if</var> <var>strcomp</var>(name,@encName)                     'query for host workstation?
-            ptr := @encName
-            protect := register
-          <var>elseif</var> <var>strcomp</var>(name,@encServer)               'query for host server?
-            ptr := @encServer
-            protect := register
-          <var>elseif</var> <var>strcomp</var>(name,@wildcard)                'query for wildcard?
-            ptr := @wildcard
-          <var>elseif</var> <var>strcomp</var>(name,@encGroup)                'query for group?
-            <var>byte</var>[@ipResp-2] := $80                      'group
-            ptr := @encGroup
-                   
-          <var>if</var> ptr                                        'query for me?  
-            <var>case</var> wiz.DeserializeWord(_buffPtr + constant(NB_1+8)) 'what typ?
-              NB:  
-                <var>if</var> protect
-                    nbPosQueryResp[3] := RCODE_ACT_ERR  ' RCODE  ACT_ERR     0x6   Active error.  Name is owned by another node.  
-                    sendResponse(ptr, @nbPosQueryResp, constant(@enbPosQueryResp - @nbPosQueryResp))            
-                    <var>RESULT</var> := CHECKSOCKET_NEG_NB_SEND   'return typ 4 response (nbneg host)
-                <var>else</var>
-                  <var>ifnot</var> register
-                    nbPosQueryResp[3] := 0              ' no RCODE
-                    sendResponse(ptr, @nbPosQueryResp, constant(@enbPosQueryResp - @nbPosQueryResp))            
-                    <var>RESULT</var> := CHECKSOCKET_NB_SEND       'return typ 1 response (nbpos host/group)
-              NB_STAT:
-                <var>ifnot</var> register
-                  sendResponse(ptr, @nbStatQueryResp, constant(@enbStatQueryResp - @nbStatQueryResp))            
-                  <var>RESULT</var> := CHECKSOCKET_NBSTAT_SEND     'return typ 2 response (nbstat host/group)
+        <var>RESULT</var> := CheckBuffer(<var>false</var>)                    'data in buffer not query
 
 </pre>
-<hr /><h4 id = "lbl13">DisconnectSocket
+<hr /><h4 id = "lbl13">CheckBuffer(queryData)
+</h4>
+
+<br />CheckBuffer:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Checks given Buffer and if there processes one request<br />
+Params:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;queryData : true if data is in nbNameQueryReq else data is in buffer<br />
+Returns:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;see CheckSocket Enum values in CON section<br />
+                    buffer contains last received request/response
+                    _lastsendptr contains 0 or address response if any
+<br />
+<br /><a onclick ="javascript:ShowHide('lbl14')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl14><var>PUB</var> CheckBuffer(queryData) | buffptr, ptr, name, flag_s, protect, register 'checks given Buffer and if there processes one request      
+  _lastsendptr := 0
+  <var>if</var> queryData == <var>true</var>
+    buffptr := @nbNameQueryReq - 8
+  <var>else</var>
+    buffptr := _buffPtr
+    
+  <var>RESULT</var> := CHECKSOCKET_OTHER                     'return typ 3 other as default
+  flag_s := <var>byte</var>[buffPtr+constant(FLAGS+8)]
+  <var>ifnot</var> ((flag_s &amp; $80) == $80)                   'just requests no responses            
+    ptr := 0                                      'nothing
+    protect := <var>false</var>                              'no
+    register := <var>false</var>
+    <var>if</var> ((flag_s&gt;&gt;3) == 5)                         'what op? is it register? 
+       register := <var>true</var>                           'yes
+    name := buffPtr+constant(QUERY+1+8)           'adress of query name
+    <var>byte</var>[@ipResp-2] := 0                          'no group
+    <var>if</var> <var>strcomp</var>(name,@encName)                     'query for host workstation?
+      ptr := @encName
+      protect := register
+    <var>elseif</var> <var>strcomp</var>(name,@encServer)               'query for host server?
+      ptr := @encServer
+      protect := register
+    <var>elseif</var> <var>strcomp</var>(name,@wildcard)                'query for wildcard?
+      ptr := @wildcard
+    <var>elseif</var> <var>strcomp</var>(name,@encGroup)                'query for group?
+      <var>byte</var>[@ipResp-2] := $80                      'group
+      ptr := @encGroup
+             
+    <var>if</var> ptr                                        'query for me?  
+      <var>case</var> wiz.DeserializeWord(buffPtr + constant(NB_1+8)) 'what typ?
+        NB:  
+          <var>if</var> protect
+              nbPosQueryResp[3] := RCODE_ACT_ERR  ' RCODE  ACT_ERR     0x6   Active error.  Name is owned by another node.  
+              sendResponse(queryData, ptr, @nbPosQueryResp, constant(@enbPosQueryResp - @nbPosQueryResp))            
+              <var>RESULT</var> := CHECKSOCKET_NEG_NB_SEND   'return typ 4 response (nbneg host)
+          <var>else</var>
+            <var>ifnot</var> register
+              nbPosQueryResp[3] := 0              ' no RCODE
+                sendResponse(queryData, ptr, @nbPosQueryResp, constant(@enbPosQueryResp - @nbPosQueryResp))            
+              <var>RESULT</var> := CHECKSOCKET_NB_SEND       'return typ 1 response (nbpos host/group)
+        NB_STAT:
+          <var>ifnot</var>  ((queryData == <var>true</var>) <var>and</var> (_ownip &lt;&gt; _lastnbtstatip))
+              sendResponse(queryData,ptr, @nbStatQueryResp, constant(@enbStatQueryResp - @nbStatQueryResp))            
+            <var>RESULT</var> := CHECKSOCKET_NBSTAT_SEND     'return typ 2 response (nbstat host/group)
+
+</pre>
+<hr /><h4 id = "lbl15">GetLastSendPtr
+</h4>
+<br /><a onclick ="javascript:ShowHide('lbl16')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl16><var>PUB</var> GetLastSendPtr
+  <var>return</var> _lastsendptr
+
+</pre>
+<hr /><h4 id = "lbl17">DisconnectSocket
 </h4>
 
 <br />DisconnectSocket: Processes all outstanding requests and disconnect Multi-Socket<br />
 
-<br /><a onclick ="javascript:ShowHide('lbl14')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl14><var>PUB</var> DisconnectSocket | tmp                              'processes all outstanding requests and disconnect Multi-Socket
+<br /><a onclick ="javascript:ShowHide('lbl18')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl18><var>PUB</var> DisconnectSocket | tmp                              'processes all outstanding requests and disconnect Multi-Socket
   <var>repeat</var>
     CheckSocket
   <var>until</var> (_lastReadSize == 0)
   sock.Disconnect
 
 </pre>
-<hr /><h4 id = "lbl15">ReInitSocket
+<hr /><h4 id = "lbl19">ReInitSocket
 </h4>
 
 <br />ReInitSocket:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ReInit Mult-Socket for NetBios<br />
 
-<br /><a onclick ="javascript:ShowHide('lbl16')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl16><var>PUB</var> ReInitSocket | tmp                                  'ReInit Mult-Socket for NetBios
+<br /><a onclick ="javascript:ShowHide('lbl20')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl20><var>PUB</var> ReInitSocket | tmp                                  'ReInit Mult-Socket for NetBios
   sock.Init(_sockId, UDP, 137) 
   sock.RemoteIp($FF, $FF, $FF, $FF)
   sock.RemotePort(137)
   sock.Open
 
 </pre>
-<hr /><h4 id = "lbl17">SendQuery(queryname, pad, suffix, nbstatIP)
+<hr /><h4 id = "lbl21">SendQuery(queryname, pad, suffix, nbstatIPaddress)
 </h4>
 
 <br />SendQuery:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Still Debug - send Query<br />
 
-<br /><a onclick ="javascript:ShowHide('lbl18')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl18><var>PUB</var> SendQuery(queryname, pad, suffix, nbstatIP)           'Still Debug - send Query
-  <var>if</var> nbstatIP
+<br /><a onclick ="javascript:ShowHide('lbl22')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl22><var>PUB</var> SendQuery(queryname, pad, suffix, nbstatIPaddress)           'Still Debug - send Query
+  <var>RESULT</var> := <var>word</var>[@nbNameQueryReq] := CreateTransactionId($FFFF) 
+  FirstLevelEncode(@nbNameQueryReq+13, queryname, pad, suffix, <var>true</var>)
+  <var>if</var> nbstatIPaddress
+    _lastnbtstatip := <var>long</var>[nbstatIPaddress]
     <var>byte</var>[@nbNameQueryReq+3]  := $00                     'no Broadcast
     <var>byte</var>[@enbNameQueryReq-3] := NB_STAT                 'nb status query
-    sock.RemoteIp(<var>byte</var>[nbstatIP][0], <var>byte</var>[nbstatIP][1], <var>byte</var>[nbstatIP][2], <var>byte</var>[nbstatIP][3])
+    <var>ifnot</var> (_ownip == _lastnbtstatip)  
+      sock.RemoteIp(<var>byte</var>[nbstatIPaddress][0], <var>byte</var>[nbstatIPaddress][1], <var>byte</var>[nbstatIPaddress][2], <var>byte</var>[nbstatIPaddress][3])
+      sock.Send(@nbNameQueryReq, constant(@enbNameQueryReq - @nbNameQueryReq))
+      sock.RemoteIp($FF, $FF, $FF, $FF) '?  
   <var>else</var>
     <var>byte</var>[@nbNameQueryReq+3]  := $10                     'Broadcast
     <var>byte</var>[@enbNameQueryReq-3] := NB                      'nb name query 
     sock.RemoteIp($FF, $FF, $FF, $FF)  
-  <var>RESULT</var> := <var>word</var>[@nbNameQueryReq] := CreateTransactionId($FFFF) 
-  FirstLevelEncode(@nbNameQueryReq+13, queryname, pad, suffix, <var>true</var>)
-  sock.Send(@nbNameQueryReq, constant(@enbNameQueryReq - @nbNameQueryReq))
+    sock.Send(@nbNameQueryReq, constant(@enbNameQueryReq - @nbNameQueryReq))
+  
   sock.Available  '?
 
 </pre>
-<hr /><h4 id = "lbl19">GetLastReadSize
+<hr /><h4 id = "lbl23">GetLastReadSize
 </h4>
 
 <br />GetLastReadSize:&nbsp;&nbsp;Get lastReadSize .. size last recived frame<br />
 
-<br /><a onclick ="javascript:ShowHide('lbl20')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl20><var>PUB</var> GetLastReadSize | tmp                               'get lastReadSize .. size last recived frame
+<br /><a onclick ="javascript:ShowHide('lbl24')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl24><var>PUB</var> GetLastReadSize | tmp                               'get lastReadSize .. size last recived frame
   <var>RESULT</var> :=  _lastReadSize 
 
 </pre>
-<hr /><h4 id = "lbl21">GetLastIP
+<hr /><h4 id = "lbl25">GetLastIP
 </h4>
 
 <br />GetLastIP:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Still Debug - Get Ip ?not needed?<br />
 
-<br /><a onclick ="javascript:ShowHide('lbl22')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl22><var>PUB</var> GetLastIP | tmp                                     'Still Debug - Get Ip ?not needed?
+<br /><a onclick ="javascript:ShowHide('lbl26')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl26><var>PUB</var> GetLastIP | tmp                                     'Still Debug - Get Ip ?not needed?
   <var>RESULT</var> :=  _buffPtr + constant(@ipResp - @nbPosQueryResp+8) 'adr ip
 
 </pre>
-<hr /><h4 id = "lbl23">DecodeLastNameInplace
+<hr /><h4 id = "lbl27">DecodeLastNameInplace
 </h4>
 
 <br />DecodeLastNameInplace: Still Debug - decode Name in buffer for readability<br />
 
-<br /><a onclick ="javascript:ShowHide('lbl24')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl24><var>PUB</var> DecodeLastNameInplace | tmp                         'Still Debug - decode Name in buffer for readability
+<br /><a onclick ="javascript:ShowHide('lbl28')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl28><var>PUB</var> DecodeLastNameInplace | tmp                         'Still Debug - decode Name in buffer for readability
   FirstLevelDecode(_buffPtr+21, _buffPtr+21)
 
 </pre>
-<hr /><h4 id = "lbl25">GetLastName
+<hr /><h4 id = "lbl29">GetLastName
 </h4>
 
 <br />GetLastName:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Still Debug - give address of (decoded?) Name<br />
 
-<br /><a onclick ="javascript:ShowHide('lbl26')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl26><var>PUB</var> GetLastName | tmp                                   'Still Debug - give address of (decoded?) Name
+<br /><a onclick ="javascript:ShowHide('lbl30')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl30><var>PUB</var> GetLastName | tmp                                   'Still Debug - give address of (decoded?) Name
   <var>RESULT</var> := _buffPtr+21
 
 </pre>
 <hr /><br />
-<h2 id = "lbl27">PRIvate Spin Methods </h2>
-<hr /><h4 id = "lbl28">SendRegister(trn, encn, grp)
+<h2 id = "lbl31">PRIvate Spin Methods </h2>
+<hr /><h4 id = "lbl32">SendRegister(trn, encn, grp)
 </h4>
 
 <br />SendRegister:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Send register request<br />
 
-<br /><a onclick ="javascript:ShowHide('lbl29')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl29><var>PRI</var> SendRegister(trn, encn, grp)                        'send register request
+<br /><a onclick ="javascript:ShowHide('lbl33')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl33><var>PRI</var> SendRegister(trn, encn, grp)                        'send register request
   <var>byte</var>[@ipReg-2] := grp                           
   <var>word</var>[@nbNameReg] := trn  
   <var>bytemove</var>(@nbNameReg+13, encn, 32)
   sock.Send(@nbNameReg, constant(@enbNameReg - @nbNameReg))
 
 </pre>
-<hr /><h4 id = "lbl30">SendResponse(name, response, size)
+<hr /><h4 id = "lbl34">SendResponse(queryData, name, response, size)
 </h4>
 
 <br />SendResponse:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Answer query<br />
 
-<br /><a onclick ="javascript:ShowHide('lbl31')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl31><var>PRI</var> SendResponse(name, response, size)                  'answer query
-  sock.RemoteIp(<var>byte</var>[_buffPtr], <var>byte</var>[_buffPtr+1], <var>byte</var>[_buffPtr+2], <var>byte</var>[_buffPtr+3])
-  <var>bytemove</var>(response, _buffPtr+8, 2)                     'set trn
+<br /><a onclick ="javascript:ShowHide('lbl35')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl35><var>PRI</var> SendResponse(queryData, name, response, size)       'answer query
+  _lastsendptr := response
   <var>bytemove</var>(response+13, name, 32)                       'set name
-  sock.Send(response, size)
+  <var>ifnot</var> queryData
+    sock.RemoteIp(<var>byte</var>[_buffPtr], <var>byte</var>[_buffPtr+1], <var>byte</var>[_buffPtr+2], <var>byte</var>[_buffPtr+3])
+    <var>bytemove</var>(response, _buffPtr+8, 2)                   'set trn
+    sock.Send(response, size)
   sock.RemoteIp($FF, $FF, $FF, $FF)  
 
 </pre>
-<hr /><h4 id = "lbl32">WaitForCountBytes(count)
+<hr /><h4 id = "lbl36">WaitForCountBytes(count)
 </h4>
 
 <br />WaitForCountBytes: Wait for count bytes on socket<br />
 
-<br /><a onclick ="javascript:ShowHide('lbl33')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl33><var>PRI</var> WaitForCountBytes(count)                            'wait for count bytes on socket
+<br /><a onclick ="javascript:ShowHide('lbl37')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl37><var>PRI</var> WaitForCountBytes(count)                            'wait for count bytes on socket
   <var>RESULT</var> := sock.DataReady
   <var>if</var> <var>RESULT</var> &lt; count                                     'If to less data
     <var>RESULT</var> := sock.Available                            'wait for more
@@ -707,18 +751,18 @@ Returns:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;see CheckSoc
         <var>RESULT</var> := 0
 
 </pre>
-<hr /><h4 id = "lbl34">FirstLevelEncode(dest, source, pad, suffix, touppercase)
+<hr /><h4 id = "lbl38">FirstLevelEncode(dest, source, pad, suffix, touppercase)
 </h4>
 
 <br />FirstLevelEncode: Encode Name<br />
 
-<br /><a onclick ="javascript:ShowHide('lbl35')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl35><var>PRI</var> FirstLevelEncode(dest, source, pad, suffix, touppercase) | char, size 'Encode the name
+<br /><a onclick ="javascript:ShowHide('lbl39')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl39><var>PRI</var> FirstLevelEncode(dest, source, pad, suffix, touppercase) | char, size 'Encode the name
   size := <var>strsize</var>(source) &lt;# 15  
   <var>repeat</var> size                                           'Encode the name
     char := <var>byte</var>[source++] &amp; $FF
-    <var>if</var> char =&gt; "a"
-      <var>if</var> touppercase
+    <var>if</var> touppercase
+      <var>if</var> char =&gt; "a"
         char := char &amp; (!$20)
     <var>byte</var>[dest++] := (char &gt;&gt; 4) + $41
     <var>byte</var>[dest++] := (char &amp; $0F) + $41    
@@ -729,13 +773,13 @@ Returns:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;see CheckSoc
   <var>byte</var>[dest++] := (suffix &amp; $0F) + $41
 
 </pre>
-<hr /><h4 id = "lbl36">FirstLevelDecode(dest, source)
+<hr /><h4 id = "lbl40">FirstLevelDecode(dest, source)
 </h4>
 
 <br />FirstLevelDecode: Decode Name<br />
 
-<br /><a onclick ="javascript:ShowHide('lbl37')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl37><var>PRI</var> FirstLevelDecode(dest, source)                      'Decode Name
+<br /><a onclick ="javascript:ShowHide('lbl41')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl41><var>PRI</var> FirstLevelDecode(dest, source)                      'Decode Name
   <var>repeat</var> 15
     <var>byte</var>[dest++] := ((<var>byte</var>[source++] - $41) &lt;&lt; 4) + (<var>byte</var>[source++] - $41)
   <var>byte</var>[dest++] := "#"  
@@ -748,20 +792,20 @@ Returns:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;see CheckSoc
   <var>byte</var>[dest++] := 0 'terminate string
 
 </pre>
-<hr /><h4 id = "lbl38">CreateTransactionId(mask)
+<hr /><h4 id = "lbl42">CreateTransactionId(mask)
 </h4>
 
 <br />CreateTransactionId: Create Random TransactionId<br />
 
-<br /><a onclick ="javascript:ShowHide('lbl39')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl39><var>PRI</var> CreateTransactionId(mask)                           'Create Random TransactionId
+<br /><a onclick ="javascript:ShowHide('lbl43')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl43><var>PRI</var> CreateTransactionId(mask)                           'Create Random TransactionId
   <var>RESULT</var> := <var>CNT</var>
   ?<var>RESULT</var>
   <var>RESULT</var> &amp;= mask
 
 </pre>
 <hr /><br />
-<h2 id = "lbl40">Documentation </h2>
+<h2 id = "lbl44">Documentation </h2>
 <pre>
 This .spin file supports PhiPi's great Spin Code Documenter found at
 http://www.phipi.com/spin2html/
@@ -772,7 +816,7 @@ If you change the .spin file you can (re)create the .htm file by uploading your 
 to http://www.phipi.com/spin2html/ and then saving the the created .htm page. 
 </pre>
 <br />
-<h2 id = "lbl41">MIT License </h2>
+<h2 id = "lbl45">MIT License </h2>
 <pre>
  ______________________________________________________________________________________
 |                            TERMS OF USE: MIT License                                 |                                                            

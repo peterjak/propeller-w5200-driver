@@ -240,7 +240,7 @@
 <br /><br />
 AUTHOR:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Michael Sommer (@MSrobots)<br />
 COPYRIGHT:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;See LICENCE (MIT)&nbsp;&nbsp;&nbsp;&nbsp;<br />
-LAST MODIFIED:&nbsp;&nbsp;&nbsp;&nbsp;10/19/2013<br />
+LAST MODIFIED:&nbsp;&nbsp;&nbsp;&nbsp;10/28/2013<br />
 VERSION:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1.0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br />
 LICENSE:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MIT (see end of file)<br /><br />
 DESCRIPTION:<br />
@@ -252,6 +252,7 @@ DESCRIPTION:<br />
 MODIFICATIONS:<br />
 10/21/2013&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;created&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br />
 10/24/2013&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;added comments<br />
+10/28/2013&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nbtstat can now resolve group names and display entrys for each member.<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Michael Sommer (MSrobots)<br />
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br />
@@ -371,7 +372,7 @@ saveip                  <var>mov</var>     0-0,            tmp            ' now 
                         <var>call</var>    #sendspincmd                   ' now we have the hub address of the ip in par1
                         <var>jmp</var>     #nextip
 ipready
-              
+                        
 readip                  <var>mov</var>     resptr,         0-0            ' now the ip in resptr
                         <var>add</var>     readip,         #1
                         <var>wrlong</var>  resptr,         par3ptr        ' and now the ip in hub param3
@@ -381,7 +382,7 @@ readip                  <var>mov</var>     resptr,         0-0            ' now 
                         <var>mov</var>     count,          #htm_end-htm              
                         <var>call</var>    #cog2hub                       ' to Output Hub Buffer
 
-                        <var>mov</var>     par1,           par3ptr         ' and now the ip in hub param3 
+                        <var>mov</var>     par1,           par3ptr        ' par1 now the address of ip in hub param3 
                         <var>mov</var>     tmp,            #"."           ' output ip at address par1 to outputbuffer
                         <var>mov</var>     outptr,         #(@ip_end-@htm) ' starting from the end. 
                         <var>add</var>     outptr,         bufptr         ' outptr now hub adress of pos in outputbuffer
@@ -420,13 +421,20 @@ nbstatquery             <var>mov</var>     par1,           postptr        ' send
                         <var>mov</var>     cmdout,         #QUERY_NETBIOS
                         <var>call</var>    #sendspincmd                   ' now we have the hub address of the response in par1
 
-                        <var>mov</var>     resptr,         par1           
+                        <var>mov</var>     htmptr,         #(@IP_end-@htm) '  
+                        <var>add</var>     htmptr,         bufptr         
+                        
+                        <var>mov</var>     resptr,         par1
+                        <var>rdbyte</var>  par1,           resptr
+                        <var>cmp</var>     par1,           #0 <var>wz</var>          ' zero ip - no response
+              <var>if_z</var>      <var>add</var>     htmptr,         #(@TDrow-@IP_end) ' start first row
+              <var>if_z</var>      <var>add</var>     htmptr,         #(@TDrow_end-@CNT_end) ' move to next row
+              <var>if_z</var>      <var>jmp</var>     #skipip
+              
                         <var>add</var>     resptr,         #56+8          ' resptr  now address of number entrys
 
                         <var>rdbyte</var>  numentrys,      resptr         ' read number entrys
                         <var>add</var>     resptr,         #1             ' now adr first enrty
-                        <var>mov</var>     htmptr,         #(@IP_end-@htm) '  
-                        <var>add</var>     htmptr,         bufptr         
                         
                         <var>mov</var>     par1,           numentrys      'output num entrys if first row
                         <var>mov</var>     outptr,         htmptr         ' outptr now hub adress of pos in outputbuffer
@@ -458,7 +466,7 @@ nextentry
                         <var>add</var>     htmptr,         #(@TDrow_end-@CNT_end) ' move to next row 
                         <var>djnz</var>    numentrys,      #nextentry
                         
-                        <var>sub</var>     htmptr,         #(@TDrow-@CNT_zero) ' end last row
+skipip                  <var>sub</var>     htmptr,         #(@TDrow-@CNT_zero) ' end last row
                         <var>wrbyte</var>  zero,           htmptr         ' terminate htm table with zero 
                                                                ' 
                         <var>mov</var>     par1,           rowptr         ' now send outputbuffer         

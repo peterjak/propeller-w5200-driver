@@ -3,7 +3,7 @@
 ''
 ''AUTHORS:          Mike Gebhard / Michael Sommer
 ''COPYRIGHT:        Parallax Inc.
-''LAST MODIFIED:    10/19/2013
+''LAST MODIFIED:    11/03/2013
 ''VERSION:          1.0
 ''LICENSE:          MIT (see end of file)
 ''
@@ -25,7 +25,7 @@
 ''                  - (not complete yet) - (compile to binary rename propfind.pse and put on sd-root)
 ''                  added dirhtm.spin - pasm demo - (compile to binary rename dirhtm.psx and put on sd-root)
 ''                  added dirxml.spin - pasm demo - (compile to binary rename dirxml.psx and put on sd-root)
-'' 9/26/2013        commented out alot of unused methods
+'' 9/26/2013        commented out a lot of unused methods
 ''                  commented sourcecode and added some spindoc comments
 ''                  added netbios
 ''                  did some optimisation for size ... running out of space ...
@@ -37,7 +37,10 @@
 ''                  added dnsquery.spin - pasm demo - (compile to binary rename dnsquery.psx and put on sd-root)
 ''10/24/2013        added nbquery.spin  - pasm demo - (compile to binary rename nbquery.psx and put on sd-root)
 ''                  added nbtstat.spin  - pasm demo - (compile to binary rename nbtstat.psx and put on sd-root)
-''               
+''10/28/2013        nbtstat can now resolve group names and display entrys for each member.
+''                  nbquery can now resolve group names and display entrys for each member.
+''11/03/2013        reinserted check for closewait
+''              
 ''                  Michael Sommer (MSrobots)
 }}
 CON                                                     
@@ -52,23 +55,23 @@ CON
 ''-------[ Hardware Configuration ]-------------------------------------------------------
   _clkmode          = xtal1 + pll16x     
   _xinfreq          = 5_000_000
-  
+
   'wiz.SetMac($00, $08, $DC, $16, $F1, $32)             'MAC Mike G
+  
   MAC_1             = $00                                
   MAC_2             = $08
   MAC_3             = $DC
   MAC_4             = $16
   MAC_5             = $F1
   MAC_6             = $32
-  
-{
+{  
   MAC_1             = $00                               'MAC1 MSrobots          
   MAC_2             = $08
   MAC_3             = $DC
   MAC_4             = $16
   MAC_5             = $F0
   MAC_6             = $4F
-
+  
   MAC_1             = $00                               'MAC2 MSrobots          
   MAC_2             = $08
   MAC_3             = $DC
@@ -168,7 +171,7 @@ DAT
                                    ' please use UPPERCASE for Names                                                  
   hostname      byte  "PROPNET",0  '<- you need to change this if you have more then one spinneret
   workgroup     byte  "WORKGROUP", 0
-  'workgroup     byte  "MSROBOTS", 0
+'  workgroup     byte  "MSROBOTS", 0
   
   version       byte  "1.2", $0
   
@@ -202,11 +205,17 @@ DAT
 
   _newline      byte  CR, LF
   _newlineend   byte  $0
+  _conclose     byte  "Connection: Close"
+  _concloseend  byte  $0
   _contlen      byte  "Content-Length: "
   _contlenend   byte  $0          
   _conttyp      byte  "Content-Type: "
   _conttypend   byte  $0          
-
+  _etag         byte  "ETag: "
+  _etag34       byte  34
+  _etagend      byte  $0          
+  _IfNoneMatch  byte  "If-None-Match",0
+  
   _optallow     byte  "Allow:"
   _optallowend
   _optpublic    byte  "Public:"
@@ -217,7 +226,9 @@ DAT
                 'byte  "DAV: 1",CR, LF           ' ,2,3
                 'byte  "MS-Author-Via: DAV", CR, LF
 '                byte  "Content-Length: 0", CR, LF
-  _optionsend   
+  _optionsend
+
+
   
   _h100         byte  "HTTP/1.1 100 Continue"
   _h100end      byte  $0      
@@ -226,16 +237,25 @@ DAT
   _h201         byte  "HTTP/1.1 201 Created"
   _h201end      byte  $0   
   _h207         byte  "HTTP/1.1 207 Multi-Status"
-  _h207end      byte  $0      
-  _h403         byte  "HTTP/1.1 403 Forbidden"
-  _h403end      byte  $0  
+  _h207end      byte  $0       
+  _h304         byte  "HTTP/1.1 304 Not Modified"
+  _h304end      byte  $0   
+'  _h403         byte  "HTTP/1.1 403 Forbidden"
+'  _h403end      byte  $0
 '  _h404         byte  "HTTP/1.1 404 Not Found", CR, LF
 '  _h404end      byte  $0 
+  _h405         byte  "HTTP/1.1 405 Method Not Allowed"
+  _h405end      byte  $0
   _h409         byte  "HTTP/1.1 409 Conflict"
   _h409end      byte  $0
   
 
 ' now all long aligned
+
+  _pse          long
+                byte   "PSE",0
+  _psx          long
+                byte   "PSX",0
 
   _css          long
                 byte   "CSS",0, "text/css", $0
@@ -261,11 +281,6 @@ DAT
                 byte   "XML",0, "text/xml", $0
   _zip          long
                 byte   "ZIP",0, "application/zip", $0
-
-  _pse          long
-                byte   "PSE",0
-  _psx          long
-                byte   "PSX",0
 
   outBufPtr     long  0 ' used for delayed writing
   buff          long
@@ -358,7 +373,7 @@ PUB RunServer : value                                   'Run Server
   value := netbios.Init(@Buff, MULTIUSE_SOCK, @hostname, @workgroup)
   if value > 0                                          'if you end up here the name could not be registered
     PrintStrDec(string("NetBios Error ID: "), value)    ' most common is name conflict of hostname - rename hostname at top of first dat section
-    nbDebug(3,true)
+    'nbDebug(3,true)
     return                                              'ERROR - DONE! ?
   else
     PrintStrStr(@hostname, string(" registered", CR))   'now we can be found by NetBios name!
@@ -409,15 +424,26 @@ PUB RunServer : value                                   'Run Server
 
 '' 
 ''=======[ PRIvate Spin Methods ]=========================================================
-PRI Server : handled | bytesToRead, sockId, rtcDelay, JustHeader, filename, ticks 'Main Program Loop (Spin cog 0)
+PRI Server : handled | i, bytesToRead, sockId, rtcDelay, JustHeader, filename, ticks 'Main Program Loop (Spin cog 0)
 {{
 ''Server:           Main Program Loop (Spin cog 0)
 }}
-  bytesToRead := sockId := rtcDelay := 0                'Init local vars
-  repeat    '                                           'Repeat forever or until an exception kills us
+  sockId := rtcDelay := 0                               'Init some local vars
+  repeat    '                                           'Repeat forever or until an exception kills us\
+    bytesToRead := 0
+    repeat i from 0 to HTTPSOCKETS                      'Check our http sockets
+      if(sock[i].IsCloseWait)                           'if status closewait disconnect and close
+        sock[i].Disconnect
+        sock[i].Close
+      if(sock[i].IsClosed)                              'if closed reopen listener
+        sock[i].Open                                    
+        sock[i].Listen
+          
+    PrintAllStatuses                                  ' add Status
+
     repeat                                              'Cycle through the sockets one at a time looking for a connections
-      handled := netbios.CheckSocket                    '  run netbios loop
-      nbDebug(handled,false)                            '  just for debug ... Request data still in Buffer                                
+      netbios.CheckSocket                               '  run netbios loop
+'      nbDebug(netbios.CheckSocket,false)                '  just for debug ... Request data still in Buffer                                
       if(++rtcDelay//RTC_CHECK_DELAY == 0)              '  check for timeout of DHCP renewal
         rtc.readTime
         if(rtc.clockHour == dhcpRenew)                  '  if needed 
@@ -436,7 +462,11 @@ PRI Server : handled | bytesToRead, sockId, rtcDelay, JustHeader, filename, tick
       sockId := ++sockId // constant(HTTPSOCKETS+1)     '  check next socket 
     until sock[sockId].Connected                        'until any (sockID) socket is connected
         
-    PrintStrDecStr(string(CR, CR, "sockID: "), sockId, @divider)'now handle this request on the socket sockID
+    PrintAllStatuses                                  ' add Status
+
+    PrintStrDec(string(CR, CR, "sockID: "), sockId)     'now handle this request on the socket sockID
+    PrintStrIP(string(" IP "), sock[sockId].GetRemoteIP)
+    PrintStr(@divider)
     ticks := cnt
     repeat until bytesToRead := sock[sockId].Available  'Repeat until we have data in the buffer
     if(bytesToRead =< 0)                                'Check for a timeout error
@@ -447,7 +477,7 @@ PRI Server : handled | bytesToRead, sockId, rtcDelay, JustHeader, filename, tick
       PrintStr(@buff)                                   'Display the request header      
       req.TokenizeHeader(@buff, bytesToRead)            'Tokenize and index the header
       filename := req.GetFileName                       'get request pathfilename
-      PrintStr(filename)                                'Display request pathfilename
+      'PrintStr(filename)                                'Display request pathfilename
       handled := false                                  'preset not found
       JustHeader := false                               'preset not just header (HEAD verb)
       outBufPtr := @Buff                                'used for delayed writing (global)
@@ -457,9 +487,9 @@ PRI Server : handled | bytesToRead, sockId, rtcDelay, JustHeader, filename, tick
         if strcomp(@buff, string("PROPFIND"))           'if PROPFIND verb 
           handled := PseHandler(sockId, string("/PROPFIND.PSE"), false) ' run PASM extension for PROPFIND
         elseif strcomp(@buff, string("MKCOL"))          'if MKOL verb create directory and report result - done with this request!       
-          handled := SendFlushOKorERR(sockId, not (sd.newDirectory(filename) == true),@_h201, constant(@_h201end-@_h201), @_h409, constant(@_h409end-@_h409))
+          handled := SendFlushOKorERR(sockId, not (sd.newDirectory(filename) == true),@_h201, @_h409, 0)
         elseif strcomp(@buff, string("DELETE"))         'if DELETE verb delete file/directory and report result - done with this request!   
-          handled := SendFlushOKorERR(sockId, not (sd.deleteEntry(filename) == true),@_h200, constant(@_h200end-@_h200), @_h409, constant(@_h409end-@_h409))
+          handled := SendFlushOKorERR(sockId, not (sd.deleteEntry(filename) == true),@_h200, @_h409, 0)
         elseif OptionsHandler(sockId, filename)         'if OPTIONS verb handle it and report result - done with this request!   
         elseif PutHandler(sockId, filename)             'if PUT verb handle it and report result - done with this request!
         else
@@ -472,41 +502,61 @@ PRI Server : handled | bytesToRead, sockId, rtcDelay, JustHeader, filename, tick
         elseif FileHandler(sockId, filename, JustHeader, false)'if file on sd send it - done with this request!
         elseif RenderDynamic(sockId, JustHeader)        'if RenderDynamic send it  - done with this request! 
         else
-          sock[sockId].Send(@_404, constant(@_404end - @_404)) ' if all fail send 404        - done with this request! 
+          sock[sockId].Send(@_404, constant(@_404end - @_404)) ' if all fail send 404        - done with this request!
+          PrintStr(string("404"))
     sock[sockId].Disconnect                             'reset just USED socket - and leave all other sockets alone - all done!  
-    'sock[sockId].Close                                 'Close the socket, reset the interupt register and reopen listener
-    'sock[sockId].SetSocketIR($FF)                       '?needed?
-    sock[sockId].Open
-    sock[sockId].Listen
+'    sock[sockId].Close                                  
+    sock[sockId].SetSocketIR($FF)                       '?needed?    reset the interupt register
+'    sock[sockId].Open
+'    sock[sockId].Listen
     ticks :=  cnt-ticks
     PrintStrDec(string(CR, "Ticks: "), ticks)
-    PrintStrDec(string(" ms: "), ticks / (clkfreq / 1_000))
+    PrintStrDec(string(" ms: "), ticks / (clkfreq / 1_000)) ' - done with this request!
+    PrintAllStatuses                                  ' add Status
                                                         'wash rinse repeat with next socket
 ''-------[ Response Handler ... ]---------------------------------------------------------
-PRI BuildStatusHeader(sockID, status, contentLength) | src 'write HEADER into outBuf
+PRI BuildStatusHeader(sockID, status, contentLength, etag, ext) | outstart 'write HEADER into outBuf
 {{
 ''BuildStatusHeader: write HEADER into outBuf
 }}
+'  outstart := outbuf
   SendStrCRLF(sockID, status)                           'write Status
-  SendBytes(sockID, @_conttyp, constant(@_conttypend-@_conttyp)) 'write text Content-Typ: 
-  SendStrCRLF(sockID, GetContentType(req.GetFileNameExtension)) 'write ContentType
   if(contentLength > -1)                                'if >-1 Add content-length : value CR, LF
     SendBytes(sockID, @_contLen, constant(@_contlenend-@_contLen))'write text Content-Len
     SendStrCRLF(sockID, Dec(contentLength))
+  if(etag <>  0)                                        'if <>0 Add Etag : "value" CR, LF
+    SendBytes(sockID, @_etag, constant(@_etagend-@_etag))'write text Etag : and opening "
+    SendStr(sockID, Dec(etag))                          'write long etag decimal
+    SendBytesCRLF(sockID, @_etag34,1)                   'End line with " and CRLF
+  if (ext <> 0)
+    SendBytes(sockID, @_conttyp, constant(@_conttypend-@_conttyp)) 'write text Content-Typ: 
+    SendStrCRLF(sockID, GetContentType(ext)) 'write ContentType
+  SendStrCRLF(sockID, @_conclose)                       'write connection: Close
   SendCRLF(sockID)                                      'End the header with a new line
+  
       
-PRI FileHandler(sockID, fn, JustHeader, NoHeader) | fs, bytes 'Handle static File Requests
+
+PRI FileHandler(sockID, fn, JustHeader, NoHeader) | fs, bytes, etag, etagbrowser 'Handle static File Requests
 {{
 ''FileHandler:      Handle static File Requests
 }}
   if FileOpen(fn, IO_READ)                              'Render a static file from the SD Card
-    mtuBuff := sock[sockID].GetMtu                      'get mtu of socket
+    mtuBuff := sock[sockID].GetMtu                      'get mtu of socket ? every time ?
     fs := sd.getFileSize                                'and get size
     ifnot NoHeader
-      BuildStatusHeader(sockID, @_h200, fs)             'amd create header
-    SendFlushOutBuf(sockID)                           '  flush out
+      bytemove(@etag,sd.GetADDRdirectoryEntryCache+22,4)'long fat modified datetime
+      etagbrowser := StrToBase(req.Header(@_IfNoneMatch) , 10)
+      if (etag==etagbrowser)                            'same etag so send 304 not modified...
+        SendFlushOKorERR(sockID,false, @_h304, 0, req.GetFileNameExtension) 
+        JustHeader := true                              ' done!
+        PrintStrDec(@_etag, etag)                       ' print out ETag
+      else
+        BuildStatusHeader(sockID, @_h200, fs, etag, req.GetFileNameExtension)     'else create header
+        SendFlushOutBuf(sockID)                         'flush out
     ifnot JustHeader                                    'if request was HEAD
-      repeat                                            'the offset is just used on the first chunk
+      repeat
+        netbios.CheckSocket                             '  run netbios loop
+'        nbDebug(netbios.CheckSocket,false)              '  just for debug ... Request data still in Buffer     
         if(fs < mtuBuff)                                'if it fits into the buffer
           bytes := fs                                   '  we are done!
         else                                            
@@ -514,6 +564,7 @@ PRI FileHandler(sockID, fn, JustHeader, NoHeader) | fs, bytes 'Handle static Fil
         sd.readFromFile(@buff, bytes)                   'read (remaining) bytes into buffer
         fs -= sock[sockID].SendAsync(@buff, bytes, false)      'send buffer and subtract size send
       until fs =< 0        
+
     sd.closeFile
     outBufPtr := @Buff                                  'reset bufptr   
     RESULT := true                                      'we are done! 
@@ -564,7 +615,7 @@ PRI PutHandler(sockID, fn) | bytesToRead, size , status, noerr 'Handle PUT Reque
           sd.writeData(@buff, bytesToRead)              'now write file         
       until size<1                                      'expecting size bytes
       sd.closeFile                                      'now close file
-    RESULT := SendFlushOKorERR(sockID,false,status, strsize(status),0,0) ' send 409 Conflict 201 Created or 200 OK                           
+    RESULT := SendFlushOKorERR(sockID,false,status, 0,0) ' send 409 Conflict 201 Created or 200 OK                           
   
 PRI PsxHandler(sockID, fn, JustHeader) | ext            'Handle PSX Requests
 {{
@@ -574,7 +625,7 @@ PRI PsxHandler(sockID, fn, JustHeader) | ext            'Handle PSX Requests
   if ext==_psx                                          'if psx extension
     RESULT := PseHandler(sockID, fn, JustHeader)        ' execute
   elseif ext==_pse                                      'if pse extension
-    RESULT := SendFlushOKorERR(sockID,true,0, 0, @_h403, constant(@_h403end-@_h403)) ' send 403 Forbidden (no direct call allowed for pse)
+    RESULT := SendFlushOKorERR(sockID,true,0, @_h405, 0) ' send 405 Method not allowed (no direct call allowed for pse)
  
 PRI PseHandler(sockID, fn, JustHeader) | daisy, fs, psmptr, bufptr, cog, cmd, param1, param2 , param3, param4, param5, param6 'Handle PSE Requests
 {{
@@ -640,9 +691,9 @@ PRI PseHandler(sockID, fn, JustHeader) | daisy, fs, psmptr, bufptr, cog, cmd, pa
                 cmd := -1                               'idle - back to PASM
               SEND_SIZE_HEADER:                         'PASM sends size or -1
                 if (param2==1)                          
-                  BuildStatusHeader(sockID, @_h207, param1) 'send header 207 Multi-Status    
+                  BuildStatusHeader(sockID, @_h207, param1,0,req.GetFileNameExtension) 'send header 207 Multi-Status    no etag 
                 else
-                  BuildStatusHeader(sockID, @_h200, param1) 'send header 200 OK    
+                  BuildStatusHeader(sockID, @_h200, param1,0,req.GetFileNameExtension) 'send header 200 OK       no etag
                 if JustHeader                           'if request is HEAD
                   daisy := 0
                   cmd := 0                              '     exit 
@@ -693,19 +744,29 @@ PRI PseHandler(sockID, fn, JustHeader) | daisy, fs, psmptr, bufptr, cog, cmd, pa
               QUERY_NETBIOS: 
                 SendFlushOutBuf(sockID)                 'flush out if not done yet
                 repeat until (NetBios.CheckSocket == 0)
-                param2 := NetBios.SendQuery(param1, netbios#SPACE,0, param2)   ' returns transid ?
-                if NetBios.CheckSocket>0                ' now answer in buff?
-                   param1 := @Buff
+                if byte[param1]=="*"
+                  param2 := NetBios.SendQuery(param1, netbios#ZERO,0, param2)   ' returns transid ?                
                 else
-                   param1 := @Null            
+                  param2 := NetBios.SendQuery(param1, netbios#SPACE,0, param2)   ' returns transid ?                
+                ifnot (NetBios#CHECKSOCKET_OTHER == NetBios.CheckBuffer(true)) ' local test of query - its me?
+                  param1 := NetBios.GetLastSendPtr
+                  if param1 == 0
+                     param1 := @Null                    'nope not myself
+                  else
+                     param1 -= 8                        'jupp its me - return own respose
+                else                  
+                  if NetBios.CheckSocket>0              'now answer in buff?
+                     param1 := @Buff                    'answer from net
+                  else
+                     param1 := @Null                    'nobody there
                 cmd := -1                               'idle - back to PASM
               CHECK_NETBIOS:
-                if NetBios.CheckSocket>0                ' now answer in buff?
-                   param1 := @Buff
+                SendFlushOutBuf(sockID)                 'flush out if not done yet
+                if NetBios.CheckSocket>0                'now answer in buff?
+                   param1 := @Buff                      'answer from net
                 else
-                   param1 := @Null            
-                cmd := -1                               'idle - back to PASM
-              
+                   param1 := @Null                      'nobody there   
+                cmd := -1                               'idle - back to PASM              
               PSE_CALL:                                 'call pse
                 SendFlushOutBuf(sockID)                 'flush out if not done yet
                 fs := strsize(bufptr)                   'size request
@@ -741,14 +802,14 @@ PRI RenderDynamic(id, JustHeader)                       'Handle RenderDynamic Re
   
   if(strEndsWith(req.GetFileName, string("pinstate.xml")))
     BuildPinStateXml( req.Get(string("led")), req.Get(string("value")) )
-    BuildStatusHeader(id, @_h200, -1)
+    BuildStatusHeader(id, @_h200, -1, 0, req.GetFileNameExtension)
     SendBytes(id, @xmlPinState, strsize(@xmlPinState))
     SendFlushOutBuf(id)
     return true
 
   if(strEndsWith(req.GetFileName, string("p_encode.xml")))
     BuildPinEndcodeStateXml( req.Get(string("value")) )
-    BuildStatusHeader(id, @_h200, -1)
+    BuildStatusHeader(id, @_h200, -1, 0, req.GetFileNameExtension)
     SendBytes(id, @xmlPinState, strsize(@xmlPinState))
     SendFlushOutBuf(id)
     return true
@@ -756,7 +817,7 @@ PRI RenderDynamic(id, JustHeader)                       'Handle RenderDynamic Re
   if(strEndsWith(req.GetFileName, string("time.xml")))
     FillTime(@xTime)
     FillDay(@xday)
-    BuildStatusHeader(id, @_h200, -1)
+    BuildStatusHeader(id, @_h200, -1, 0, req.GetFileNameExtension)
     SendBytes(id, @xmlTime, strsize(@xmlTime))
     SendFlushOutBuf(id)
     return true
@@ -765,7 +826,7 @@ PRI RenderDynamic(id, JustHeader)                       'Handle RenderDynamic Re
     SyncSntpTime
     FillTime(@xTime)
     FillDay(@xday) 
-    BuildStatusHeader(id, @_h200, -1)
+    BuildStatusHeader(id, @_h200, -1, 0, req.GetFileNameExtension)
     SendBytes(id, @xmlTime, strsize(@xmlTime))
     SendFlushOutBuf(id)
     return true  
@@ -1115,40 +1176,7 @@ PRI GetContentType(ext)                                 'returns addr of content
 }}
   ext := long[ext] & (!$202020)                         'convert to upper case  
   RESULT := lookupz(lookdown(ext: _css, _gif, _ico, _jpg, _js, _pdf, _png,_txt,_spi,_xml,_zip): @_html, @_css, @_gif, @_ico, @_jpg, @_js, @_pdf, @_png,@_txt,@_spi,@_xml,@_zip) + 4
-{
-PRI GetContentType1(ext)                                'returns addr of content type string depending on ext
-{{
-''GetContentType:   Returns addr of content type string depending on ext  
-}}
-  RESULT := @_html                                      'preset with text/html
-  ext := long[ext] & (!$202020)                         'convert to upper case
-  
-  case ext
-    _css:
-      RESULT := @_css
-    _gif:
-      RESULT := @_gif  
-    _ico:
-      RESULT := @_ico  
-    _jpg:
-      RESULT := @_jpg  
-    _js:
-      RESULT := @_js  
-    _pdf:
-      RESULT := @_pdf  
-    _png:
-      RESULT := @_png  
-    _txt:
-      RESULT := @_txt  
-    _spi:
-      RESULT := @_spi  
-    _xml:
-      RESULT := @_xml  
-    _zip:
-      RESULT := @_zip
-      
-  RESULT += 4
-}
+
 PRI Dec(value) | i, x, j                                'encode value into string (base 10)
 {{
 ''Dec:              Converts value to zero terminated string representation. (base 10) 
@@ -1234,44 +1262,45 @@ PRI SendFlushOutBuf(sockID) | ptr, size                 'flush outBuf to socket 
 }}
   ifnot outBufPtr == @Buff                              'flush needed?
     size := outBufPtr - @Buff
-    sock[sockID].Send(@Buff,size)                             'rest of buff
+    sock[sockID].Send(@Buff,size)                       'rest of buff
   outBufPtr := @Buff                                    'reset outBufPtr
 
-PRI SendFlushOKorERR(sockID, iserr, okaddr, oksize, erraddr, errsize) 'send one of two responses depending on iserr and flush out to socket
+PRI SendFlushOKorERR(sockID, iserr, okaddr, erraddr, ext) 'send one of two responses depending on iserr and flush out to socket
 {{
 ''SendFlushOKorERR: Send one of two responses depending on iserr and flush out to socket
 }}
   ifnot iserr
-    SendBytes(sockID, okaddr, oksize)                   'send ok-message           
+    BuildStatusHeader(sockID, okaddr, 0, 0, ext) 
   else
-    SendBytes(sockID, erraddr, errsize)                 'send err-message
-  SendCRLF(sockID)                                      'send _newline
+    BuildStatusHeader(sockID, erraddr, 0, 0, ext)   
   SendFlushOutBuf(sockID)                               'and flush out
   return true
     
 ''-------[ Print (debug) Handling ... ]---------------------------------------------------
-PRI PrintStatus(sockID)                                 'Debug output one HttpSockets
+
+PRI PrintStatus(sockID)                                 'Debug output one Socket
 {{
-''PrintStatus:      Debug output one HttpSockets
+''PrintStatus:      Debug output one Socket
 }}
   PrintStrDecStr(string("Status ("),sockID, string(")......."))
   ser.hex(0,wiz.GetSocketStatus(sockID), 2)
   PrintChar(13)
 
-PRI PrintAllStatuses | i                                'Debug output all HttpSockets
+PRI PrintAllStatuses | i                                'Debug output all Sockets
 {{
-''PrintAllStatuses: Debug output all HttpSockets
+''PrintAllStatuses: Debug output all Sockets
 }}
   PrintStr(string(CR, "Socket Status", CR))
-  repeat i from 0 to HTTPSOCKETS
+  repeat i from 0 to MULTIUSE_SOCK
     PrintDec(i)
     PrintStr(string("  "))
   PrintChar(CR)
-  repeat i from 0 to HTTPSOCKETS
+  repeat i from 0 to MULTIUSE_SOCK
     ser.hex(0,wiz.GetSocketStatus(i), 2)
     PrintChar($20)
   PrintChar(CR)
-      
+
+{      
 PRI nbDebug(nbs, showdata)                              'Debug output NetBios CheckSocket
 {{
 ''nbDebug:          Debug output NetBios CheckSocket
@@ -1312,7 +1341,8 @@ PRI DisplayUdpHeader(buffer)                            'Debug output UDP packag
   repeat 30
     PrintIpCR( buffer)
     buffer += 4
-    
+}   
+
 PRI PrintIp(addressToGet) | i                           'Print IP address
 {{
 ''PrintIp:          Print IP address
@@ -1381,29 +1411,6 @@ PRI PrintStr(addressToGet)                              'wrapper for Serial
 ''PrintStr:         Print String
 }}
   ser.str(0,addressToGet)                                 
-
-{            
-  'PST.dec(netbios.SendQuery(string("MSROBOTS"),0,false))   ' trans id
-'  netbios.SendQuery(string("MSROBOTS"),0,true)
-'  netbios.SendQuery(string("PAVILION"),netbios#SPACE,0,true)
-'  netbios.SendQuery(string("*"),0,true)
-'  nbDebug(3,true) 
-
-  repeat
-    t1 := netbios.CheckSocket
-    t2 := netbios.GetLastReadSize
-    if t2
-      'if t1 == 3
-        
-        PST.dec(t2)
-        pst.char(CR)
-     '   PST.str(netbios.GetLastName)
-      '  pst.char(CR)
-        PrintIpCR(netbios.GetLastIP)
-        pst.char(CR)
-      nbDebug(t1,true)
-  until t2 == 0
-}
 
 ''
 ''=======[ Documentation ]================================================================

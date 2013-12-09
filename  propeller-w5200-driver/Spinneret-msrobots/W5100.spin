@@ -1,9 +1,9 @@
 '':::::::[ W5100 ]::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 {{ 
 ''
-''AUTHOR:           Mike Gebhard
+''AUTHOR:           Mike Gebhard / Michael Sommer
 ''COPYRIGHT:        Parallax Inc.
-''LAST MODIFIED:    10/19/2013
+''LAST MODIFIED:    10/28/2013
 ''VERSION:          1.0
 ''LICENSE:          MIT (see end of file)
 ''
@@ -15,7 +15,8 @@
 ''MODIFICATIONS:
 '' 8/12/2012        original file ?
 ''10/04/2013        added minimal spindoc comments
-''10/19/2013        added async test code
+''10/19/2013        added async code
+''10/28/2013        long aligned all DAT entrys now things like ip := long[wiz.GetRouter] work
 ''                  Michael Sommer (MSrobots)
 }}
 CON
@@ -141,12 +142,9 @@ CON
 ''
 ''=======[ Global DATa ]==================================================================
 DAT
-  _mode           byte  %0000_0000                      'enable ping
   _gateway        byte  $00, $00, $00, $00              '192, 168, 1,   1  
   _subnetmask     byte  $00, $00, $00, $00              '255, 255, 255, 0 
-  _mac            byte  $00, $00, $00, $00, $00, $00    '$00, $08, $DC, $16, $F8, $01
   _ip             byte  $00, $00, $00, $00              '192, 168,   1,   199
-  _endcm          byte  $00
 
   _dns1           byte  $00, $00, $00, $00
   _dns2           byte  $00, $00, $00, $00
@@ -154,7 +152,11 @@ DAT
   _dhcpServer     byte  $00, $00, $00, $00
   _router         byte  $00, $00, $00, $00
 
-  workSpace       byte  $0[BUFFER_16]
+  _mac            byte  $00, $00, $00, $00, $00, $00    '$00, $08, $DC, $16, $F8, $01
+  _mode           byte  %0000_0000                      'enable ping
+                  byte  $00                             'filler 
+
+  workSpace       byte  $0[BUFFER_16]                   'still long aligned 
   
   sockRxMem       byte  $02[SOCKETS]
   sockTxMem       byte  $02[SOCKETS]

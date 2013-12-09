@@ -3,7 +3,7 @@
 ''
 ''AUTHOR:           Michael Sommer (@MSrobots)
 ''COPYRIGHT:        See LICENCE (MIT)    
-''LAST MODIFIED:    10/19/2013
+''LAST MODIFIED:    10/28/2013
 ''VERSION:          1.0       
 ''LICENSE:          MIT (see end of file)
 ''
@@ -17,6 +17,7 @@
 ''MODIFICATIONS:
 ''10/21/2013        created        
 ''10/24/2013        added comments
+''10/28/2013        nbtstat can now resolve group names and display entrys for each member.
 ''                  Michael Sommer (MSrobots)
 }}
 CON
@@ -113,8 +114,8 @@ main                    add     postptr,        bufptr         ' now postptr hub
                         mov     par2,           #0             ' no IP, Name Query
                         mov     cmdout,         #QUERY_NETBIOS
                         call    #sendspincmd                   ' now we have the hub address of the response (ip ist first long) in par1
-                        
 
+        
 nextip                  rdlong  tmp,            par1
                         cmp     tmp,            #0 wz
               if_z      jmp     #ipready
@@ -128,7 +129,7 @@ saveip                  mov     0-0,            tmp            ' now the ip in i
                         call    #sendspincmd                   ' now we have the hub address of the ip in par1
                         jmp     #nextip
 ipready
-              
+                        
 readip                  mov     resptr,         0-0            ' now the ip in resptr
                         add     readip,         #1
                         wrlong  resptr,         par3ptr        ' and now the ip in hub param3
@@ -138,7 +139,7 @@ readip                  mov     resptr,         0-0            ' now the ip in r
                         mov     count,          #htm_end-htm              
                         call    #cog2hub                       ' to Output Hub Buffer
 
-                        mov     par1,           par3ptr         ' and now the ip in hub param3 
+                        mov     par1,           par3ptr        ' par1 now the address of ip in hub param3 
                         mov     tmp,            #"."           ' output ip at address par1 to outputbuffer
                         mov     outptr,         #(@ip_end-@htm) ' starting from the end. 
                         add     outptr,         bufptr         ' outptr now hub adress of pos in outputbuffer
@@ -178,14 +179,20 @@ nbstatquery             mov     par1,           postptr        ' send string pos
                         mov     cmdout,         #QUERY_NETBIOS
                         call    #sendspincmd                   ' now we have the hub address of the response in par1
 
+                        mov     htmptr,         #(@IP_end-@htm) '  
+                        add     htmptr,         bufptr         
                         
-                        mov     resptr,         par1           
+                        mov     resptr,         par1
+                        rdbyte  par1,           resptr
+                        cmp     par1,           #0 wz          ' zero ip - no response
+              if_z      add     htmptr,         #(@TDrow-@IP_end) ' start first row
+              if_z      add     htmptr,         #(@TDrow_end-@CNT_end) ' move to next row
+              if_z      jmp     #skipip
+              
                         add     resptr,         #56+8          ' resptr  now address of number entrys
 
                         rdbyte  numentrys,      resptr         ' read number entrys
                         add     resptr,         #1             ' now adr first enrty
-                        mov     htmptr,         #(@IP_end-@htm) '  
-                        add     htmptr,         bufptr         
                         
                         mov     par1,           numentrys      'output num entrys if first row
                         mov     outptr,         htmptr         ' outptr now hub adress of pos in outputbuffer
@@ -218,7 +225,7 @@ nextentry
                         add     htmptr,         #(@TDrow_end-@CNT_end) ' move to next row 
                         djnz    numentrys,      #nextentry
                         
-                        sub     htmptr,         #(@TDrow-@CNT_zero) ' end last row
+skipip                  sub     htmptr,         #(@TDrow-@CNT_zero) ' end last row
                         wrbyte  zero,           htmptr         ' terminate htm table with zero 
                                                                ' 
                         mov     par1,           rowptr         ' now send outputbuffer         

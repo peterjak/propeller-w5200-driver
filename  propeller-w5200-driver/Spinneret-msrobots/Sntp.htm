@@ -246,7 +246,8 @@ v2.01&nbsp;&nbsp;&nbsp;02-02-2013&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp
 <br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;08-31-2013&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- corrected day of week - MSrobots<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;09-26-2013&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- REMOVED unused methods - MSrobots<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;10/04/2013&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- added minimal spindoc comments - MSrobots&nbsp;&nbsp;<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;10-04-2013&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- added minimal spindoc comments - MSrobots<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;10-28-2013&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- optimize CreateUDPtimeheader (saved 8 longs!)<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9&nbsp;&nbsp;0&nbsp;&nbsp;1<br />
@@ -291,19 +292,21 @@ v2.01&nbsp;&nbsp;&nbsp;02-02-2013&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp
   '---------------------------------------------------------------------
   '                       UDP Packet - 44 Bytes
   '---------------------------------------------------------------------
+    <var>bytefill</var>(BufferAddress,0,44)             'clear buffer
+
     <var>byte</var>[BufferAddress][0] := %11_100_011    'leap,version, and mode
-    <var>byte</var>[BufferAddress][1] := 0              'stratum
-    <var>byte</var>[BufferAddress][2] := 0              'Poll   
+'    byte[BufferAddress][1] := 0              'stratum
+'    byte[BufferAddress][2] := 0              'Poll   
     <var>byte</var>[BufferAddress][3] := %10010100      'precision
     
-    <var>byte</var>[BufferAddress][4] := 0              'rootdelay
-    <var>byte</var>[BufferAddress][5] := 0              'rootdelay   
-    <var>byte</var>[BufferAddress][6] := 0              'rootdispersion
-    <var>byte</var>[BufferAddress][7] := 0              'rootdispersion
+'    byte[BufferAddress][4] := 0              'rootdelay
+'    byte[BufferAddress][5] := 0              'rootdelay   
+'    byte[BufferAddress][6] := 0              'rootdispersion
+'    byte[BufferAddress][7] := 0              'rootdispersion
 
     <var>bytemove</var>(BufferAddress+8,string("LOCL"),4) 'ref-id ; four-character ASCII string
 
-    <var>bytefill</var>(BufferAddress+12,0,32)           '(ref, originate, receive, transmit) time
+'    bytefill(BufferAddress+12,0,32)           '(ref, originate, receive, transmit) time
 
 </pre>
 <hr /><h4 id = "lbl5"> GetTransmitTimestamp(Offset,BufferAddress,Long1,Long2)

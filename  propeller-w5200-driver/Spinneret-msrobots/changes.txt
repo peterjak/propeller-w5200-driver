@@ -18,3 +18,6 @@
 		added dnsquery.spin - pasm demo - (compile to binary rename dnsquery.psx and put on sd-root)
 10/24/2013      added nbquery.spin  - pasm demo - (compile to binary rename nbquery.psx and put on sd-root)
 		added nbtstat.spin  - pasm demo - (compile to binary rename nbtstat.psx and put on sd-root)
+10/28/2013      nbtstat can now resolve group names and display entrys for each member.
+                nbquery can now resolve group names and display entrys for each member.
+11/03/2013      reinserted check for closewait

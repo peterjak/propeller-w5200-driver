@@ -23,7 +23,8 @@
 ''
 ''        08-31-2013              - corrected day of week - MSrobots
 ''        09-26-2013              - REMOVED unused methods - MSrobots
-''        10/04/2013              - added minimal spindoc comments - MSrobots  
+''        10-04-2013              - added minimal spindoc comments - MSrobots
+''        10-28-2013              - optimize CreateUDPtimeheader (saved 8 longs!)
 ''        
 ''                           1                   2                   3
 ''       0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9  0  1
@@ -68,19 +69,21 @@ PUB CreateUDPtimeheader(BufferAddress)
   '---------------------------------------------------------------------
   '                       UDP Packet - 44 Bytes
   '---------------------------------------------------------------------
+    bytefill(BufferAddress,0,44)             'clear buffer
+
     byte[BufferAddress][0] := %11_100_011    'leap,version, and mode
-    byte[BufferAddress][1] := 0              'stratum
-    byte[BufferAddress][2] := 0              'Poll   
+'    byte[BufferAddress][1] := 0              'stratum
+'    byte[BufferAddress][2] := 0              'Poll   
     byte[BufferAddress][3] := %10010100      'precision
     
-    byte[BufferAddress][4] := 0              'rootdelay
-    byte[BufferAddress][5] := 0              'rootdelay   
-    byte[BufferAddress][6] := 0              'rootdispersion
-    byte[BufferAddress][7] := 0              'rootdispersion
+'    byte[BufferAddress][4] := 0              'rootdelay
+'    byte[BufferAddress][5] := 0              'rootdelay   
+'    byte[BufferAddress][6] := 0              'rootdispersion
+'    byte[BufferAddress][7] := 0              'rootdispersion
 
     bytemove(BufferAddress+8,string("LOCL"),4) 'ref-id ; four-character ASCII string
 
-    bytefill(BufferAddress+12,0,32)           '(ref, originate, receive, transmit) time
+'    bytefill(BufferAddress+12,0,32)           '(ref, originate, receive, transmit) time
     
 PUB  GetTransmitTimestamp(Offset,BufferAddress,Long1,Long2)|Temp1
      Temp1 := byte[BufferAddress][48]<<24+byte[BufferAddress][49]<<16

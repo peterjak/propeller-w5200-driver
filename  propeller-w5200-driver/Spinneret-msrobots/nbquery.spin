@@ -3,7 +3,7 @@
 ''
 ''AUTHOR:           Michael Sommer (@MSrobots)
 ''COPYRIGHT:        See LICENCE (MIT)    
-''LAST MODIFIED:    10/19/2013
+''LAST MODIFIED:    10/28/2013
 ''VERSION:          1.0       
 ''LICENSE:          MIT (see end of file)
 ''
@@ -17,6 +17,7 @@
 ''MODIFICATIONS:
 ''10/21/2013        created        
 ''10/24/2013        added comments
+''10/28/2013        nbquery can now resolve group names and display entrys for each member.
 ''                  Michael Sommer (MSrobots)
 }}
 CON

@@ -355,9 +355,9 @@
 			<h1 id = "lbl1" class = "title">W5100 </h1>
  
 <br /><br />
-AUTHOR:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Mike Gebhard<br />
+AUTHOR:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Mike Gebhard / Michael Sommer<br />
 COPYRIGHT:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Parallax Inc.<br />
-LAST MODIFIED:&nbsp;&nbsp;&nbsp;&nbsp;10/19/2013<br />
+LAST MODIFIED:&nbsp;&nbsp;&nbsp;&nbsp;10/28/2013<br />
 VERSION:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1.0<br />
 LICENSE:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MIT (see end of file)<br /><br />
 DESCRIPTION:<br />
@@ -365,7 +365,8 @@ DESCRIPTION:<br />
 MODIFICATIONS:<br />
  8/12/2012&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;original file ?<br />
 10/04/2013&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;added minimal spindoc comments<br />
-10/19/2013&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;added async test code<br />
+10/19/2013&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;added async code<br />
+10/28/2013&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;long aligned all DAT entrys now things like ip := long[wiz.GetRouter] work<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Michael Sommer (MSrobots)<br />
 
 <br />
@@ -489,12 +490,9 @@ MODIFICATIONS:<br />
 <h2 id = "lbl4">Global DATa </h2>
 <br /><a onclick ="javascript:ShowHide('lbl5')" href="javascript:;">SOURCE CODE...</a>
 <pre class=source id=lbl5>
-  _mode           <var>byte</var>  %0000_0000                      'enable ping
   _gateway        <var>byte</var>  $00, $00, $00, $00              '192, 168, 1,   1  
   _subnetmask     <var>byte</var>  $00, $00, $00, $00              '255, 255, 255, 0 
-  _mac            <var>byte</var>  $00, $00, $00, $00, $00, $00    '$00, $08, $DC, $16, $F8, $01
   _ip             <var>byte</var>  $00, $00, $00, $00              '192, 168,   1,   199
-  _endcm          <var>byte</var>  $00
 
   _dns1           <var>byte</var>  $00, $00, $00, $00
   _dns2           <var>byte</var>  $00, $00, $00, $00
@@ -502,7 +500,11 @@ MODIFICATIONS:<br />
   _dhcpServer     <var>byte</var>  $00, $00, $00, $00
   _router         <var>byte</var>  $00, $00, $00, $00
 
-  workSpace       <var>byte</var>  $0[BUFFER_16]
+  _mac            <var>byte</var>  $00, $00, $00, $00, $00, $00    '$00, $08, $DC, $16, $F8, $01
+  _mode           <var>byte</var>  %0000_0000                      'enable ping
+                  <var>byte</var>  $00                             'filler 
+
+  workSpace       <var>byte</var>  $0[BUFFER_16]                   'still long aligned 
   
   sockRxMem       <var>byte</var>  $02[SOCKETS]
   sockTxMem       <var>byte</var>  $02[SOCKETS]

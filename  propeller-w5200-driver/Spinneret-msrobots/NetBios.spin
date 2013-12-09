@@ -3,7 +3,7 @@
 ''
 ''AUTHORS:          Mike Gebhard / Michael Sommer
 ''COPYRIGHT:        See LICENCE (MIT)    
-''LAST MODIFIED:    10/24/2013
+''LAST MODIFIED:    10/28/2013
 ''VERSION:          1.0
 ''LICENSE:          MIT (see end of file)
 ''
@@ -15,7 +15,9 @@
 ''                * sending Registration
 ''                * sending NB Name Query Response                                          
 ''                * sending NBSTAT Name Query Response
-''                * sending NB Name Query Negative Response (protecting names)                                         
+''                * sending NB Name Query Negative Response (protecting names)
+''                * sending Name Query Requests
+''                * and checking responses                                     
 ''                
 ''RESOURCES:
 ''                  http://tools.ietf.org/html/rfc1001
@@ -29,6 +31,8 @@
 ''10/04/2013        added spindoc comments
 ''10/21/2013        added NB Name Query Negative Response (protecting names)  
 ''10/24/2013        added RCODE enum  
+''10/28/2013        nbtstat can now resolve group names and display entrys for each member.
+''                  nbquery can now resolve group names and display entrys for each member.
 ''                  Michael Sommer (MSrobots)
 ''
 '' Form a DOS prompt run nbtstat -a PROPNET.
@@ -152,7 +156,7 @@ DAT
 }                       $00, $00, $00, $00,             { infinite TTL for broadcast 
 }                       $00, $06, $00, $00              { RDlen(6) NB_FLAGS %0_00_00000_00000000}
   ipReg            byte $C0, $A8, $01, $68              { NB address (IP) }
-  enbNameReg       byte 0
+  enbNameReg       byte 0,0,0,0
                                                          '%1_0000_101000_1_0000 wrong $85 $10
   nbPosQueryResp   byte $68, $C8, $85, $00,             { trn flags: %1_0000_101000_0_0000
 }                       $00, $00, $00, $01,             { Questions Answers[1] 
@@ -162,7 +166,7 @@ DAT
 }                       $00, $04, $90, $E0,             { TTL = 10 minutes
 }                       $00, $06, $00, $00              { NB_FLAGS %0_00_00000_00000000 }
   ipResp           byte $C0, $A8, $01, $68              { NB address (IP) }                       
-  enbPosQueryResp  byte 0
+  enbPosQueryResp  byte 0,0,0,0
 
                                                        '              R      ATRR   
                                                         '             S      ACDA   B
@@ -199,7 +203,10 @@ DAT
 }                       $20, $0[32], $00,               { Question Name
 }                       $00, $20, $00, $01              { Qtype NB Qclass IN }
   enbNameQueryReq  byte 0
-  
+
+  _ownip           long  $00
+  _lastnbtstatip   long  $00
+  _lastsendptr     long  $00     
   _buffPtr         long  $00
   _sockId          long  $00
   _lastReadSize    long  $00    ' last bytes read in sendreceive
@@ -235,6 +242,7 @@ PUB Init(buffer, socket, hostname , workgroup) | tr1, tr2, tr3 'Init NetBios and
   bytemove(@nbMac, wiz.GetMac, 6)
   bytemove(@ipReg, wiz.GetIp, 4)
   bytemove(@ipResp, wiz.GetIp, 4)
+  bytemove(@_ownip, @ipResp, 4)   
   
   ReInitSocket
   
@@ -252,25 +260,25 @@ PUB Init(buffer, socket, hostname , workgroup) | tr1, tr2, tr3 'Init NetBios and
     sendRegister(tr1, @encName, 0)                      'no group
     sendRegister(tr2, @encServer, 0)                    'no group
     sendRegister(tr3, @encGroup, $80)                   'group
-'   should be inside repeat!
-    sock.Available
-    repeat
-      if CheckSocket == CHECKSOCKET_OTHER               
-        RESULT := (wiz.DeserializeWord(_buffPtr+constant(FLAGS+8)) & $000F)
-          if (RESULT)
-            return RESULT
-    until _lastReadSize == 0
+    sock.Available                                      'wait for responses (if any) 
+    repeat                                              
+      if CheckSocket == CHECKSOCKET_OTHER               'check incoming responses
+        RESULT := (wiz.DeserializeWord(_buffPtr+constant(FLAGS+8)) & $000F) ' RCODE error (any) 
+          if (RESULT)                                   'yes
+            return RESULT                               'exit with RCODE
+    until _lastReadSize == 0                            'no more response
     
   nbNameReg[2] := $28                                   'RD bit 0 - NAME OVERWRITE DEMAND
   sendRegister(tr1, @encName, 0)                        'no group
   sendRegister(tr2, @encServer, 0)                      'no group
   sendRegister(tr3, @encGroup, $80)                     'group    
 
-PUB CheckSocket  | avail, needed, ptr, name, flag_s, protect, register   'checks NetBios Name Service and if there processes one request
+PUB CheckSocket  | avail, needed                        'checks NetBios Name Service and if there processes one request
 {{
 ''CheckSocket:      Checks NetBios Name Service and if there processes one request
 ''Returns:          see CheckSocket Enum values in CON section
                     buffer contains last received request/response
+                    _lastReadSize contains 0 or size of received request/response
 }}
   _lastReadSize := 0
   if sock.DataReady > 0                                 'Any Data ?
@@ -280,45 +288,64 @@ PUB CheckSocket  | avail, needed, ptr, name, flag_s, protect, register   'checks
       if ((avail := waitForCountBytes(needed)) => needed)'Data there?
         sock.Receive(_buffPtr+8, needed)
         _lastReadSize := needed + 8                     'remember last block size
-        RESULT := CHECKSOCKET_OTHER                     'return typ 3 other as default
-        flag_s := byte[_buffPtr+constant(FLAGS+8)]
-        ifnot ((flag_s & $80) == $80)                   'just requests no responses            
-          ptr := 0                                      'nothing
-          protect := false                              'no
-          register := false
-          if ((flag_s>>3) == 5)                          'what op? is it register? 
-             register := true                           'yes
-          name := _buffPtr+constant(QUERY+1+8)          'adress of query name
-          byte[@ipResp-2] := 0                          'no group
-          if strcomp(name,@encName)                     'query for host workstation?
-            ptr := @encName
-            protect := register
-          elseif strcomp(name,@encServer)               'query for host server?
-            ptr := @encServer
-            protect := register
-          elseif strcomp(name,@wildcard)                'query for wildcard?
-            ptr := @wildcard
-          elseif strcomp(name,@encGroup)                'query for group?
-            byte[@ipResp-2] := $80                      'group
-            ptr := @encGroup
-                   
-          if ptr                                        'query for me?  
-            case wiz.DeserializeWord(_buffPtr + constant(NB_1+8)) 'what typ?
-              NB:  
-                if protect
-                    nbPosQueryResp[3] := RCODE_ACT_ERR  ' RCODE  ACT_ERR     0x6   Active error.  Name is owned by another node.  
-                    sendResponse(ptr, @nbPosQueryResp, constant(@enbPosQueryResp - @nbPosQueryResp))            
-                    RESULT := CHECKSOCKET_NEG_NB_SEND   'return typ 4 response (nbneg host)
-                else
-                  ifnot register
-                    nbPosQueryResp[3] := 0              ' no RCODE
-                    sendResponse(ptr, @nbPosQueryResp, constant(@enbPosQueryResp - @nbPosQueryResp))            
-                    RESULT := CHECKSOCKET_NB_SEND       'return typ 1 response (nbpos host/group)
-              NB_STAT:
-                ifnot register
-                  sendResponse(ptr, @nbStatQueryResp, constant(@enbStatQueryResp - @nbStatQueryResp))            
-                  RESULT := CHECKSOCKET_NBSTAT_SEND     'return typ 2 response (nbstat host/group)
-     
+        RESULT := CheckBuffer(false)                    'data in buffer not query
+        
+PUB CheckBuffer(queryData) | buffptr, ptr, name, flag_s, protect, register 'checks given Buffer and if there processes one request      
+{{
+''CheckBuffer:      Checks given Buffer and if there processes one request
+''Params:           queryData : true if data is in nbNameQueryReq else data is in buffer
+''Returns:          see CheckSocket Enum values in CON section
+                    buffer contains last received request/response
+                    _lastsendptr contains 0 or address response if any
+}}
+  _lastsendptr := 0
+  if queryData == true
+    buffptr := @nbNameQueryReq - 8
+  else
+    buffptr := _buffPtr
+    
+  RESULT := CHECKSOCKET_OTHER                     'return typ 3 other as default
+  flag_s := byte[buffPtr+constant(FLAGS+8)]
+  ifnot ((flag_s & $80) == $80)                   'just requests no responses            
+    ptr := 0                                      'nothing
+    protect := false                              'no
+    register := false
+    if ((flag_s>>3) == 5)                         'what op? is it register? 
+       register := true                           'yes
+    name := buffPtr+constant(QUERY+1+8)           'adress of query name
+    byte[@ipResp-2] := 0                          'no group
+    if strcomp(name,@encName)                     'query for host workstation?
+      ptr := @encName
+      protect := register
+    elseif strcomp(name,@encServer)               'query for host server?
+      ptr := @encServer
+      protect := register
+    elseif strcomp(name,@wildcard)                'query for wildcard?
+      ptr := @wildcard
+    elseif strcomp(name,@encGroup)                'query for group?
+      byte[@ipResp-2] := $80                      'group
+      ptr := @encGroup
+             
+    if ptr                                        'query for me?  
+      case wiz.DeserializeWord(buffPtr + constant(NB_1+8)) 'what typ?
+        NB:  
+          if protect
+              nbPosQueryResp[3] := RCODE_ACT_ERR  ' RCODE  ACT_ERR     0x6   Active error.  Name is owned by another node.  
+              sendResponse(queryData, ptr, @nbPosQueryResp, constant(@enbPosQueryResp - @nbPosQueryResp))            
+              RESULT := CHECKSOCKET_NEG_NB_SEND   'return typ 4 response (nbneg host)
+          else
+            ifnot register
+              nbPosQueryResp[3] := 0              ' no RCODE
+                sendResponse(queryData, ptr, @nbPosQueryResp, constant(@enbPosQueryResp - @nbPosQueryResp))            
+              RESULT := CHECKSOCKET_NB_SEND       'return typ 1 response (nbpos host/group)
+        NB_STAT:
+          ifnot  ((queryData == true) and (_ownip <> _lastnbtstatip))
+              sendResponse(queryData,ptr, @nbStatQueryResp, constant(@enbStatQueryResp - @nbStatQueryResp))            
+            RESULT := CHECKSOCKET_NBSTAT_SEND     'return typ 2 response (nbstat host/group)
+            
+PUB GetLastSendPtr
+  return _lastsendptr
+   
 PUB DisconnectSocket | tmp                              'processes all outstanding requests and disconnect Multi-Socket
 {{
 ''DisconnectSocket: Processes all outstanding requests and disconnect Multi-Socket
@@ -337,21 +364,26 @@ PUB ReInitSocket | tmp                                  'ReInit Mult-Socket for 
   sock.RemotePort(137)
   sock.Open
 
-PUB SendQuery(queryname, pad, suffix, nbstatIP)           'Still Debug - send Query
+PUB SendQuery(queryname, pad, suffix, nbstatIPaddress)           'Still Debug - send Query
 {{
 ''SendQuery:        Still Debug - send Query
 }}
-  if nbstatIP
+  RESULT := word[@nbNameQueryReq] := CreateTransactionId($FFFF) 
+  FirstLevelEncode(@nbNameQueryReq+13, queryname, pad, suffix, true)
+  if nbstatIPaddress
+    _lastnbtstatip := long[nbstatIPaddress]
     byte[@nbNameQueryReq+3]  := $00                     'no Broadcast
     byte[@enbNameQueryReq-3] := NB_STAT                 'nb status query
-    sock.RemoteIp(byte[nbstatIP][0], byte[nbstatIP][1], byte[nbstatIP][2], byte[nbstatIP][3])
+    ifnot (_ownip == _lastnbtstatip)  
+      sock.RemoteIp(byte[nbstatIPaddress][0], byte[nbstatIPaddress][1], byte[nbstatIPaddress][2], byte[nbstatIPaddress][3])
+      sock.Send(@nbNameQueryReq, constant(@enbNameQueryReq - @nbNameQueryReq))
+      sock.RemoteIp($FF, $FF, $FF, $FF) '?  
   else
     byte[@nbNameQueryReq+3]  := $10                     'Broadcast
     byte[@enbNameQueryReq-3] := NB                      'nb name query 
     sock.RemoteIp($FF, $FF, $FF, $FF)  
-  RESULT := word[@nbNameQueryReq] := CreateTransactionId($FFFF) 
-  FirstLevelEncode(@nbNameQueryReq+13, queryname, pad, suffix, true)
-  sock.Send(@nbNameQueryReq, constant(@enbNameQueryReq - @nbNameQueryReq))
+    sock.Send(@nbNameQueryReq, constant(@enbNameQueryReq - @nbNameQueryReq))
+  
   sock.Available  '?
 
 PUB GetLastReadSize | tmp                               'get lastReadSize .. size last recived frame
@@ -389,16 +421,18 @@ PRI SendRegister(trn, encn, grp)                        'send register request
   bytemove(@nbNameReg+13, encn, 32)
   sock.Send(@nbNameReg, constant(@enbNameReg - @nbNameReg))
    
-PRI SendResponse(name, response, size)                  'answer query
+PRI SendResponse(queryData, name, response, size)       'answer query
 {{
 ''SendResponse:     Answer query
 }}
-  sock.RemoteIp(byte[_buffPtr], byte[_buffPtr+1], byte[_buffPtr+2], byte[_buffPtr+3])
-  bytemove(response, _buffPtr+8, 2)                     'set trn
+  _lastsendptr := response
   bytemove(response+13, name, 32)                       'set name
-  sock.Send(response, size)
+  ifnot queryData
+    sock.RemoteIp(byte[_buffPtr], byte[_buffPtr+1], byte[_buffPtr+2], byte[_buffPtr+3])
+    bytemove(response, _buffPtr+8, 2)                   'set trn
+    sock.Send(response, size)
   sock.RemoteIp($FF, $FF, $FF, $FF)  
-                                       
+                                     
 PRI WaitForCountBytes(count)                            'wait for count bytes on socket
 {{
 ''WaitForCountBytes: Wait for count bytes on socket
@@ -418,8 +452,8 @@ PRI FirstLevelEncode(dest, source, pad, suffix, touppercase) | char, size 'Encod
   size := strsize(source) <# 15  
   repeat size                                           'Encode the name
     char := byte[source++] & $FF
-    if char => "a"
-      if touppercase
+    if touppercase
+      if char => "a"
         char := char & (!$20)
     byte[dest++] := (char >> 4) + $41
     byte[dest++] := (char & $0F) + $41    
