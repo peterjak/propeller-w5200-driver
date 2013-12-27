@@ -74,7 +74,7 @@ PUB Main | bytesToRead, offset, tail
     'Connection?
     repeat until sock.Connected
     
-    'Data in the buufer?
+    'Data in the buffer?
     repeat until NULL < bytesToRead := sock.Available
 
     'Check for a timeout

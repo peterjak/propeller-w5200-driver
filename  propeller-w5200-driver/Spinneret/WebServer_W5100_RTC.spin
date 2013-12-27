@@ -44,7 +44,7 @@ CON
   {{ USA Daylight Time Zone Abbreviations  }}
   #-9, HDT,AtDT,PDT,MDT,CDT,EDT,AlDT
 
-  Zone = EDT '<- Insert your timezone
+  Zone = EST '<- Insert your timezone
 
   RTC_CHECK_DELAY = 4_000_000  '1_000_000 = ~4 minutes
     
@@ -55,10 +55,20 @@ VAR
 DAT
 '64, 147, 116, 229 '<- This SNTP server is on the west coast
 
-  sntpIp        byte  129, 6, 15, 30  '<- NIST, Gaithersburg, Maryland
+  sntpIp        byte  64, 147, 116, 229' 129, 6, 15, 30  '<- NIST, Gaithersburg, Maryland
   version       byte  "1.2", $0
   hasSd         byte  $00
-  approot       byte  "\", $0  
+  approot       byte  "\", $0
+  indexPage     byte  "index.htm", $0 
+   hello         byte  "HTTP/1.1 200 OK", CR, LF,                                {
+}                     "Content-Type: text/html", CR, LF, CR, LF,                {
+}                     "<html>",                                                 {
+}                     "<head>",                                                 {
+}                     "<title>Hello World</title><head>",                       {
+}                     "<body>",                                                 {
+}                     "Hello World!<br />No SD Card Found",                     {                                                                                                       
+}                     "</body>",                                                {
+}                     "</html>", CR, LF, $0  
   _404          byte  "HTTP/1.1 404 OK", CR, LF,                                {
 }                     "Content-Type: text/html", CR, LF, CR, LF,                {
 }                     "<html>",                                                 {
@@ -253,7 +263,7 @@ PUB Init | i, t1
   pause(1000) 
   reboot
   
-PRI MultiSocketService | bytesToRead, sockId, fn, i, pathElements
+PRI MultiSocketService | bytesToRead, sockId, fn, i, path 
   bytesToRead := sockId := i := 0
   repeat
      
@@ -275,6 +285,7 @@ PRI MultiSocketService | bytesToRead, sockId, fn, i, pathElements
         'pst.char(CR)
         if(rtc.clockHour == dhcpRenew)
           RenewDhcpLease
+          SyncSntpTime(SNTP_SOCK)
         i~
             
     'Repeat until we have data in the buffer
@@ -298,14 +309,19 @@ PRI MultiSocketService | bytesToRead, sockId, fn, i, pathElements
 
     'Tokenize and index the header
     req.TokenizeHeader(@buff, bytesToRead)
-    fn := req.GetFileName
-    pathElements := req.PathElements
-    
-    if(FileExists(fn, pathElements))
-      RenderFile(sockId, fn)
+    path := req.GetPath
+    'WriteDebugLine(string("Path"), path, false) 
+
+
+    if(FileExists(path))
+      RenderFile(sockId, path)
     else
       ifnot(RenderDynamic(sockId))
-        sock[sockId].Send(@_404, strsize(@_404))
+        if(hasSd)
+          sock[sockId].Send(@_404, strsize(@_404))
+        else
+          if(strcomp(req.GetFileName, string("index.htm" )))
+            sock[sockId].send(@hello, strsize(@hello)) 
 
     'Close the socket and reset the
     'interupt register
@@ -332,39 +348,13 @@ PRI RenewDhcpLease | requestIp
   pst.dec(dhcpRenew)
   pst.str(string(":00:00",CR))
   
-{{   Old root directory structure
-PRI BuildAndSendHeader(id, contentLength) | dest, src
-  dest := @buff
-  bytemove(dest, @_h200, strsize(@_h200))
-  dest += strsize(@_h200)
 
-  src := GetContentType(req.GetFileNameExtension)
-  bytemove(dest, src, strsize(src))
-  dest += strsize(src)
-
-  'Add content-length : value CR, LF
-  if(contentLength > 0)
-    bytemove(dest, @_contLen, strsize(@_contLen))
-    dest += strsize(@_contLen)
-    src := Dec(contentLength)
-    bytemove(dest, src, strsize(src))
-    dest += strsize(src)
-    bytemove(dest, @_newline, strsize(@_newline))
-    dest += strsize(@_newline)
-
-  'End the header with a new line
-  bytemove(dest, @_newline, strsize(@_newline))
-  dest += strsize(@_newline)
-  byte[dest] := 0
-
-  sock[id].send(@buff, strsize(@buff))  
-}}
 PRI BuildAndSendHeader(id, contentLength, ext) | dest, src
   dest := @buff
   bytemove(dest, @_h200, strsize(@_h200))
   dest += strsize(@_h200)
 
-  src := GetContentType(GetExtension(ext))
+  src := GetContentType(GetExtension)
   bytemove(dest, src, strsize(src))
   dest += strsize(src)
 
@@ -385,9 +375,11 @@ PRI BuildAndSendHeader(id, contentLength, ext) | dest, src
 
   sock[id].send(@buff, strsize(@buff))
 
-
-PRI GetExtension(fn)  
-  return fn + (strsize(fn) - 3)
+PRI GetExtension
+  if strsize(req.GetFileNameExtension) == 0
+    return string("htm")
+  else
+    return req.GetFileNameExtension
 
 
 PRI RenderDynamic(id)
@@ -519,46 +511,18 @@ PRI ValidateParameters(pin, value)
 
   return true
 
- {{ Old root directory structure
-PRI RenderFile(id, fn) | fs, bytes
-
- 'Render a static file from the SD Card
-
-  mtuBuff := sock[id].GetMtu
-
-  OpenFile(fn)
-  fs := sd.getFileSize 
-  BuildAndSendHeader(id, fs)
-
-  'pst.str(string(cr,"Render File",cr))
-  repeat until fs =< 0
-    'Writeline(string("Bytes Left"), fs)
-
-    if(fs < mtuBuff)
-      bytes := fs
-    else
-      bytes := mtuBuff
-
-    sd.readFromFile(@buff, bytes)
-    fs -= sock[id].Send(@buff, bytes)
-  
-  sd.closeFile
-  return
- }} 
+ 
 PRI RenderFile(id, fn) | fs, bytes
 {{
   Render a static file from the SD Card
 }}
   mtuBuff := sock[id].GetMtu
 
-  OpenFile(fn)
+  OpenFile(fn, IO_READ)
   fs := sd.getFileSize 
   BuildAndSendHeader(id, fs, fn)
 
-  'pst.str(string(cr,"Render File",cr))
   repeat until fs =< 0
-    'Writeline(string("Bytes Left"), fs)
-
     if(fs < mtuBuff)
       bytes := fs
     else
@@ -566,6 +530,9 @@ PRI RenderFile(id, fn) | fs, bytes
 
     sd.readFromFile(@buff, bytes)
     fs -= sock[id].Send(@buff, bytes)
+
+    'Pause after issuing the send command
+    'pause(10)
   
   sd.closeFile
   return
@@ -598,6 +565,16 @@ PRI SyncSntpTime(sockId) | ptr
 
   return true
 
+PRI WriteDebugLine(label, value, isNum)
+    pst.str(label)
+  repeat 25 - strsize(label)
+    pst.char(".")
+  if(isNum)
+    pst.dec(value)
+  else
+    pst.str(value)
+  pst.char(CR)
+  
 PRI ResetSntpSock(sockId)
   sock[sockId].Init(sockId, WIZ#TCP, HTTP_PORT)
   sock[sockId].Open
@@ -632,67 +609,45 @@ PRI Writeline(label, value)
   pst.dec(value)
   pst.char(CR)
 
-PRI OpenFile(filename) | rc
+PRI OpenFile(path, ioType) | rc
 {{
-  Verify if the file exists
+  Open a file
 }}
-  rc := sd.listEntry(filename)
-  if(rc == IO_OK)
-    rc := sd.openFile(filename, IO_READ)
-      if(rc == SUCCESS)
-        return true
-  return false
-  
- {{     Single directory
-PRI FileExists(filename) | rc
 
-  'Verify if the file exists
+  if(FileExists(path))
+    if req.IsFileRequest
+      sd.listEntry(path)
+      rc := sd.openFile(path, ioType)
+    else
+      sd.changeDirectory(path)
+      sd.listEntry(@indexPage) 
+      rc := sd.openFile(@indexPage, ioType)
 
-  ifnot(hasSd)
-    return false
-    
-  rc := sd.listEntry(filename)
-  if(rc == IO_OK)
-    rc := sd.openFile(filename, IO_READ)
-      if(rc == SUCCESS)
-        sd.closeFile
-        return true
-  return false  
- }}
+    if(rc == SUCCESS)
+      return true
+
+  return false   
+
  
-PRI FileExists(filename, pathElements) | rc
+PRI FileExists(path) | rc
 {{
   Verify if the file exists
 }}
   ifnot(hasSd)
     return false
 
-  ChangeDirectory(pathElements)
-    
-  rc := sd.listEntry(filename)
-  if(rc == IO_OK)
-    rc := sd.openFile(filename, IO_READ)
-      if(rc == SUCCESS)
-        sd.closeFile
-        return true
-  return false
-
-PRI ChangeDirectory(pathElements) | i
-  sd.changeDirectory(@approot)
-  if(req.IsFileRequest)
-    pathElements--  
-  'Path elements include a file name
-  ' req.IsFileRequest = true if a file is explictly requested
-  if(pathElements =< 0)
-    'pst.str(string("Root request", CR, CR))
-    return
+  if req.IsFileRequest
+    rc := sd.listEntry(path)
   else
-    'pst.str(string("Sub dir request", CR, CR))
-    repeat i from 0 to pathElements-1
-      'pst.str( req.GetUrlPart(i) )
-      'pst.char(CR)
-      sd.changeDirectory(req.GetUrlPart(i))
-        
+    rc := sd.changeDirectory(path)
+    if strcomp(rc, path)
+      rc := sd.listEntry(@indexPage)
+  
+  if rc == 0
+    return true
+  else
+    return false
+       
 PRI GetContentType(ext)
 {{
   Determine the content-type 

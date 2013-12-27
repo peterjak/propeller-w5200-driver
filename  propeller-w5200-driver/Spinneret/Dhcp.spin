@@ -74,7 +74,7 @@ DAT
   errorCode       byte  $00
   magicCookie     byte  $63, $82, $53, $63
   paramReq        byte  $01, $03, $06, $2A ' Paramter Request; mask, router, domain name server, network time
-  hostName        byte  "propnet", $0
+  hostName        byte  "propnet2", $0
   leaseTime       byte  $00, $00, $00, $00
   optionPtr       long  $F0
   buffPtr         long  $00_00_00_00

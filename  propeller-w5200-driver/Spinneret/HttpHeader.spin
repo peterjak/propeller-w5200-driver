@@ -1,13 +1,10 @@
 CON
-  _clkmode = xtal1 + pll16x     
-  _xinfreq = 5_000_000
-
-  HEADER_BUFFER       = $200
+  PATH_BUFFER         = $80
   
   CR    = $0D
   LF    = $0A
   
-  TOKEN_POINTERS                = $FF
+  TOKEN_POINTERS                = $80
   HEADER_SECTIONS               = 4
   FILE_EXTENSION_LEN            = 3
   MIN_STATUS_LINE_TOKENS        = 3
@@ -17,20 +14,21 @@ CON
 VAR
 
 DAT
-  buffer          byte  $0[HEADER_BUFFER]
-  index           byte  "index.htm", $0
-  isFileReq       byte  $0
+  path            byte  $0[PATH_BUFFER]
   ext             byte  $0[3], $0
+  tokens          byte  $0
   sectionTokenCnt byte  $0[HEADER_SECTIONS]
-  tokens          byte  $0 
-  null            long  $0
   headerSections  long  $0[HEADER_SECTIONS]
   tokenPtr        long  $0[TOKEN_POINTERS]
-  ptr             long  $0
+  'ptr             long  $0
   isToken         long  $0
-  t1              long  $0
+  null            long  $0 
 
+PUB GetMethod
+  return tokenPtr[0]
 
+PUB GetPath
+  return @path
 
 PUB Get(key) | i, p
   if(sectionTokenCnt[QUERYSTRING] == 0)
@@ -43,8 +41,7 @@ PUB Get(key) | i, p
   return @null
 
 PUB QueryStringElements
-  'HTTP path/file.ext?name=value HTTP/1.1
-  return sectionTokenCnt[QUERYSTRING]
+  return headerSections[QUERYSTRING]+1
 
 PUB Header(key) | i
   repeat i from sectionTokenCnt[STATUS_LINE] to sectionTokenCnt[HEADER_LINES]
@@ -57,6 +54,9 @@ PUB Post(key) | i
     if(strcomp(key, tokenPtr[i]))
         return tokenPtr[i+1]
   return @null
+
+'PUB PostIdx(idx)
+  'return tokenPtr[idx+1]   
  
 PUB Request(key) | i
   repeat i from 0 to sectionTokenCnt[BODY]-1
@@ -71,11 +71,9 @@ PUB UrlContains(value) | i
   return false
 
 PUB PathElements
-  'return sectionTokenCnt[STATUS_LINE]-3
-  '[Status line token count] - [Querystring token count] - [3] 
   return ( (sectionTokenCnt[STATUS_LINE] - sectionTokenCnt[QUERYSTRING] - MIN_STATUS_LINE_TOKENS)  #> 0 )
 
-PUB GetUrlPart(value)
+PUB GetUrlPartByIndex(value)
   if(sectionTokenCnt[STATUS_LINE] == 3)
     return string("\")
   if((value >  sectionTokenCnt[STATUS_LINE]-3) OR (++value > sectionTokenCnt[STATUS_LINE]-3))
@@ -83,37 +81,30 @@ PUB GetUrlPart(value)
     
   return EnumerateHeader(value)
 
-PUB GetFileName | i, j
-  repeat i from 1 to sectionTokenCnt[STATUS_LINE]-2
-    t1 := tokenPtr[i]
-    repeat j from 0 to strsize(t1)-1
-      if(byte[t1][j] == ".")
-        return tokenPtr[i]
-  return @index
+PUB GetFileName | ptr
+  'www.google.com/path/to/a/filename.txt
+  'www.google.com/path/to/a/filename.js
+  'www.google.com/path/to/a/filename.j
 
-PUB IsFileRequest
-  return isFileReq
-
-PRI UrlContainsFileRequest | i, j
-  repeat i from 1 to sectionTokenCnt[STATUS_LINE]-2
-    t1 := tokenPtr[i]
-    repeat j from 0 to strsize(t1)-1
-      if(byte[t1][j] == ".")
-        return true
-  return false
+  if(byte[@ext] > 0)
+    ptr := @path + strsize(@path) - strsize(@ext) - 1
+    repeat 9
+      if(byte[--ptr] == "/")
+        ++ptr
+        quit
+      
+    return ptr 
+     
 
 PUB GetFileNameExtension
   return @ext
 
-PRI _GetFileNameExtension | i, j
-  repeat i from 1 to sectionTokenCnt[STATUS_LINE]-2
-    t1 := tokenPtr[i]
-    repeat j from 0 to strsize(t1)-1
-      if(byte[t1][j] == ".")
-        return tokenPtr[i]+j+1
-  return @index + strsize(@index)-FILE_EXTENSION_LEN 
-  'return string("xxx")  
+PUB IsFileRequest
+  return strsize(@ext)
 
+PUB GetSectionIndex(value)
+  return sectionTokenCnt[value]
+  
 PUB Decode(value)
   DecodeString(value)
   return value
@@ -126,32 +117,67 @@ PUB EnumerateHeader(idx)
 
 PUB GetSectionCount(idx)
   return sectionTokenCnt[idx]
+
+PRI CopyFullPath(buff) | start, end, char
+  path[0] := "/"
+  path[1] := 0
+  ext[0] := 0
   
-PUB TokenizeHeader(buff, len)
+  'Filter for a root request by checked the byte after the first "/"
+  start := buff
+  repeat until byte[start++] == "/"
+  if(byte[start] == " " or byte[start] == "?" or byte[start] == "1")
+    return
+
+  'Mark the start 
+  end := start--
+    
+  'find the end of the request
+  char~
+  repeat until char == " " or char == "?"
+    char := byte[end++]
+
+  end--
+
+  'move the request
+  bytemove(@path, start, end-start)
+  byte[@path][end-start] := 0
+  end :=  @byte[@path][end-start]
+  
+  'Save the file extension if we have a file request
+  'default.htm0
+  repeat 4
+    if(byte[--end] == ".")
+      bytemove(@ext, end+1, strsize(end) <# FILE_EXTENSION_LEN)
+  
+  DecodeString(@path)
+
+
+PUB TokenizeHeader(buff, len) | bodyPtr, t1, ptr
 
   tokens := 0
   isToken := false
 
   headerSections[QUERYSTRING] := null
   sectionTokenCnt[QUERYSTRING] := null 
-    
-  ' Copy the header and clear
-  bytemove(@buffer, buff, len)
-  ptr := @buffer
-  buff := @buffer
+
+  ptr := buff
   byte[buff][len] := 0
+
+  CopyFullPath(buff)
 
   'Initialize pointer arrays
   'Mark the start of the status line
   tokenPtr[tokens++] := buff
   headerSections[STATUS_LINE] := buff
-    
-  'Parse the status line 
+  
+  
+  'Process the status line
   repeat until IsEndOfLine(byte[ptr]) 
     if(IsStatusLineToken(byte[ptr]))
-      'Set a pointer to the querystring if one exists
+      'Set a pointer to the querystring if we find a "?"
       if(byte[ptr] == "?")
-        headerSections[QUERYSTRING] := ptr
+        headerSections[QUERYSTRING] := ptr+1
         sectionTokenCnt[QUERYSTRING] := tokens-1
       byte[ptr++] := 0
       isToken := true
@@ -162,13 +188,10 @@ PUB TokenizeHeader(buff, len)
       else        
         ptr++
 
-  'Terminate the status line CR LF
+  'Goto the status line end (CR LF)
   isToken := false 
   repeat until NOT IsEndOfLine(byte[ptr])
     byte[ptr++] := 0
-
-  'Save the file type
-  bytemove(@ext, _GetFileNameExtension, 3)
 
   'Mark the start of the header lines
   sectionTokenCnt[STATUS_LINE] := tokens
@@ -180,9 +203,9 @@ PUB TokenizeHeader(buff, len)
   headerSections[HEADER_LINES] := ptr
   tokenPtr[tokens++] := ptr
 
+
+  'Process the the header lines untill we reach the message body
   t1 := FindBody(ptr, strsize(tokenPtr[tokens-1]) )
-  
-  'Tokenize the the header lines
   repeat until ptr > t1-1
     if(IsHeaderToken(byte[ptr], byte[ptr+1]))   
       byte[ptr++] := 0
@@ -198,7 +221,7 @@ PUB TokenizeHeader(buff, len)
 
   sectionTokenCnt[HEADER_LINES] := tokens
   
-  'Skip the two end of line chars
+  'Skip the two end of line chars which mark the end of the header
   repeat until NOT IsEndOfLine(byte[ptr])
     byte[ptr++] := 0
 
@@ -206,23 +229,16 @@ PUB TokenizeHeader(buff, len)
   headerSections[BODY] := ptr
 
   'Decode the url
-  repeat t1 from 1 to sectionTokenCnt[STATUS_LINE]-3
+  repeat t1 from 1 to sectionTokenCnt[STATUS_LINE]-2
     DecodeString(tokenPtr[t1])
-
-  'Determine if a file is being requested
-  'Otherwise this can request can be a RESTful call
-  isFileReq := UrlContainsFileRequest
   
   'Return if body does not contain data
   if(ptr == (buff + len))
     sectionTokenCnt[BODY] := sectionTokenCnt[HEADER_LINES] 
     return
 
-  'Decode POST data
-  if(strcomp(tokenPtr[0], string("POST")))
-    DecodeString(ptr)
-
-  'Tokenize the body
+  'Process the body 
+  bodyPtr := ptr
   tokenPtr[tokens++] := ptr++
   repeat until ptr > (buff + len)-1
     if(IsPostToken(byte[ptr]))    
@@ -239,6 +255,11 @@ PUB TokenizeHeader(buff, len)
         
   sectionTokenCnt[BODY] := tokens
 
+  'Decode POST data
+  if(strcomp(tokenPtr[0], string("POST")))
+    repeat t1 from sectionTokenCnt[HEADER_LINES] to sectionTokenCnt[BODY]
+      DecodeString(tokenPtr[t1])
+      
 
 PRI FindBody(value, len)
   repeat len
@@ -258,7 +279,7 @@ PRI IsHeaderToken(value1, value2)
   return lookdown(value1: ":", CR, LF)
 
 PRI IsPostToken(value)
-  return lookdown(value & $FF: "=", "+", "&")    
+  return lookdown(value & $FF: "=", "&")    
   
 PRI IsEndOfLine(value)
   return lookdown(value: CR, LF)

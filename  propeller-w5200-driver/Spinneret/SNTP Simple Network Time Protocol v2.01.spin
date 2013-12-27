@@ -21,6 +21,9 @@ v2      01-29-2013              - Fixed an illusive bug that caused problems aro
 
 v2.01   02-02-2013              - Logic order error with previous bug fix
 
+v2.11   12-08-2013              - Create a new HumanTime method due to date errors 
+                                - starting on 12/2/2013.  Mike Gebhard                        
+
                            1                   2                   3
        0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9  0  1
       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -58,6 +61,17 @@ v2.01   02-02-2013              - Logic order error with previous bug fix
       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 }}
+
+CON
+  DAYS_IN_FOUR_YEARS     = 365*4+1
+  SECONDS_IN_ONE_DAY     = 60*60*24
+  EPOCH                  = 1900
+  DAYS_IN_A_YEAR         = 365
+  MONTHS_IN_A_YEAR       = 12
+
+DAT
+  daysInMonth  byte   31,28,31,30,31,30,31,31,30,31,30,31
+  
 PUB CreateUDPtimeheader(BufferAddress)
   '---------------------------------------------------------------------
   '                     UDP IP Address - 4 Bytes 
@@ -249,7 +263,7 @@ PUB  GetTransmitTimestamp(Offset,BufferAddress,Long1,Long2)|Temp1
      'This is the time at which the reply departed the
      'server for the client, in 64-bit timestamp format.
      HumanTime(Offset,Long1)
-     
+{     
 PUB HumanTime(Offset,TimeStampAddress)|i,Seconds,Days,Years,LYrs,DW,DD,HH,MM,SS,Month,Date,Year
     Seconds := long[TimeStampAddress] + Offset * 3600
     Days    := ((Seconds >>= 7)/675) + 1 '<- Days since Jan 1, 1900 ... divide by 86,400 and add 1
@@ -310,4 +324,67 @@ PUB HumanTime(Offset,TimeStampAddress)|i,Seconds,Days,Years,LYrs,DW,DD,HH,MM,SS,
 '    If you subtract the number of days so far this year from
 '    DD and add one, you should get today's date.  This is calculated
 '    from another angle above from Days
+}
+PUB HumanTime(Offset,TimeStampAddress) | dw, seconds, t1, i,days,lastLeap,Month,day,Year,minutes, hours, daysSinceJan1,numberOfLeapYears,date,years, daysSinceEpoch, secondsSinceEpoch, secondsToday
+  seconds := long[TimeStampAddress] + Offset * 3600 
+  days := (seconds >> 7)/675 
+  dw := (days)//7 
+  numberOfLeapYears :=  days / DAYS_IN_FOUR_YEARS
+
+  year := days
+  year -= days/DAYS_IN_FOUR_YEARS
+  years := year /= DAYS_IN_A_YEAR
+  year += 1900
+  
+  lastLeap :=  days // DAYS_IN_FOUR_YEARS
+
+  if(IsLeapYear(year) AND  lastLeap < (31+29))
+    numberOfLeapYears--  
+
+
+  daysSinceJan1 :=  lastLeap // DAYS_IN_A_YEAR
+  daysSinceEpoch := (years * DAYS_IN_A_YEAR) + numberOfLeapYears + daysSinceJan1
+
+  
+  'Calc Day and Month
+  daysSinceJan1++
+  if(IsLeapYear(year) AND daysSinceJan1 < 31+29)
+     daysSinceJan1++
      
+  repeat i from 0 to  MONTHS_IN_A_YEAR - 1
+    t1 := daysInMonth[i]
+    if(IsLeapYear(year) AND i == 1)
+      t1++
+      
+    if(t1 => daysSinceJan1)
+      day := daysSinceJan1
+      month := i+1
+      quit
+    else
+      daysSinceJan1 -= t1
+ 
+
+  'Calc hours, seconds, minutes
+  secondsSinceEpoch :=   daysSinceEpoch*SECONDS_IN_ONE_DAY
+  secondsToday :=  seconds - secondsSinceEpoch
+  minutes :=  secondsToday/60
+  seconds :=  secondsToday - minutes*60
+  hours := minutes/60
+  minutes := minutes // 60
+  'year -= 2000
+
+
+  long[TimeStampAddress][2] := Month<<24+day<<16+year
+  long[TimeStampAddress][3] := dw<<24+hours<<16+minutes<<8+seconds
+
+PRI IsLeapYear(year)
+  if year // 4 > 0
+    return false
+
+  if (year // 100 == 0)
+    if (year // 400 == 0)
+      return true
+    else
+      return false
+
+  return true      

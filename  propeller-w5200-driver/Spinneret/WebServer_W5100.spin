@@ -50,6 +50,16 @@ DAT
   version       byte  "1.1", $0
   hasSd         byte  $00
   approot       byte  "\", $0
+  indexPage     byte  "index.htm", $0 
+   hello         byte  "HTTP/1.1 200 OK", CR, LF,                                {
+}                     "Content-Type: text/html", CR, LF, CR, LF,                {
+}                     "<html>",                                                 {
+}                     "<head>",                                                 {
+}                     "<title>Hello World</title><head>",                       {
+}                     "<body>",                                                 {
+}                     "Hello World!<br />No SD Card Found",                     {                                                                                                       
+}                     "</body>",                                                {
+}                     "</html>", CR, LF, $0
   _404          byte  "HTTP/1.1 404 OK", CR, LF,                                {
 }                     "Content-Type: text/html", CR, LF, CR, LF,                {
 }                     "<html>",                                                 {
@@ -228,7 +238,7 @@ PUB Init | i, t1
   pause(1000) 
   reboot
   
-PRI MultiSocketService | bytesToRead, sockId, fn, i, pathElements
+PRI MultiSocketService | bytesToRead, sockId, fn, i, path 
   bytesToRead := sockId := 0
   i := 0
   repeat
@@ -268,34 +278,18 @@ PRI MultiSocketService | bytesToRead, sockId, fn, i, pathElements
 
     'Tokenize and index the header
     req.TokenizeHeader(@buff, bytesToRead)
-    fn := req.GetFileName
-    
-    'http://192.168.1.110/xslpin.xml?led=23&value=-1
-    {
-    pst.str(string("Status Line #..."))
-    pst.dec(req.GetSectionCount(REQ#STATUS_LINE))
-    pst.char(CR)
+    path := req.GetPath
 
-    pst.str(string("QS #............"))
-    pst.dec(req.GetSectionCount(REQ#QUERYSTRING))
-    pst.char(CR)
-    
-    PrintTokens(0, 5)
-     }  
-    'PrintRequestedFileName
-    pathElements := req.PathElements
 
-    {
-    pst.str(string("Path Elements..."))
-    pst.dec(pathElements)
-    pst.char(CR)
-    }
-     
-    if(FileExists(fn, pathElements))
-      RenderFile(sockId, fn)
+    if(FileExists(path))
+      RenderFile(sockId, path)
     else
       ifnot(RenderDynamic(sockId))
-        sock[sockId].Send(@_404, strsize(@_404))
+        if(hasSd)
+          sock[sockId].Send(@_404, strsize(@_404))
+        else
+          if(strcomp(req.GetFileName, string("index.htm" )))
+            sock[sockId].send(@hello, strsize(@hello)) 
 
     'Close the socket and reset the
     'interupt register
@@ -310,7 +304,7 @@ PRI BuildAndSendHeader(id, contentLength, ext) | dest, src
   bytemove(dest, @_h200, strsize(@_h200))
   dest += strsize(@_h200)
 
-  src := GetContentType(GetExtension(ext))
+  src := GetContentType(GetExtension)
   bytemove(dest, src, strsize(src))
   dest += strsize(src)
 
@@ -329,11 +323,13 @@ PRI BuildAndSendHeader(id, contentLength, ext) | dest, src
   dest += strsize(@_newline)
   byte[dest] := 0
 
-  sock[id].send(@buff, strsize(@buff))  
+  sock[id].send(@buff, strsize(@buff))
 
-
-PRI GetExtension(fn)  
-  return fn + (strsize(fn) - 3)
+PRI GetExtension
+  if strsize(req.GetFileNameExtension) == 0
+    return string("htm")
+  else
+    return req.GetFileNameExtension
 
 PRI RenderDynamic(id) | value
 
@@ -422,7 +418,6 @@ PRI BuildXslPinStateXml(strpin, strvalue) | pin, value, state, dir
   pin := StrToBase(strpin, 10)
   value := StrToBase(strvalue, 10)
 
-
   pst.str(string("Pin: "))
   pst.dec(pin)
   pst.char(CR)
@@ -436,33 +431,15 @@ PRI BuildXslPinStateXml(strpin, strvalue) | pin, value, state, dir
 
   'Write the pin number to the XML doc
   PadLeft(@xslPinNum, strPin, 3, "0")
-  {
-  if(strsize(strpin) > 1)
-    bytemove(@xslPinNum,strpin, 2)
-  else
-    byte[@xslPinNum] := $30
-    byte[@xslPinNum][1] := byte[strpin]
-  }
+
   'Write the pin value
   value := Dec(ReadPinState(pin))
   PadLeft(@xslPinState, value, 3, "0")
-  {
-  if(strsize(value) > 1)
-    bytemove(@xslPinState, value, 2)
-  else
-    byte[@xslPinState] := $30
-    byte[@xslPinState][1] := byte[value]
-  }
+
   'Write Pin direction
   dir := Dec(ReadDirState(pin))
   PadLeft(@xslPinDir, dir, 3, "0")
-  {
-  if(strsize(dir) > 1)
-    bytemove(@xslPinDir, value, 2)
-  else
-    byte[@xslPinDir] := $30
-    byte[@xslPinDir][1] := byte[dir]
- }
+
 PRI ReadDirState(pin)
   return dira[pin]
    
@@ -496,23 +473,10 @@ PRI BuildPinEndcodeStateXml(strvalue) | value, state, dir
   'Write the pin value
   value := Dec(ReadEncodedPinState)
   PadLeft(@pinState, value, 3, "0")
-  {
-  if(strsize(value) > 1)
-    bytemove(@pinState, value, 2)
-  else
-    byte[@pinState] := $30
-    byte[@pinState][1] := byte[value]
-  }
+
   'Write Pin direction
   dir := Dec(ReadEncodedDirState)
   PadLeft(@dir, dir, 3, "0")
-  {
-  if(strsize(dir) > 1)
-    bytemove(@pinDir, value, 2)
-  else
-    byte[@pinDir] := $30
-    byte[@pinDir][1] := byte[dir]
- }
     
 PRI ReadEncodedDirState
   return dira[27..24]
@@ -533,20 +497,18 @@ PRI ValidateParameters(pin, value)
   return true
 
   
+
 PRI RenderFile(id, fn) | fs, bytes
 {{
   Render a static file from the SD Card
 }}
   mtuBuff := sock[id].GetMtu
 
-  OpenFile(fn)
+  OpenFile(fn, IO_READ)
   fs := sd.getFileSize 
   BuildAndSendHeader(id, fs, fn)
 
-  'pst.str(string(cr,"Render File",cr))
   repeat until fs =< 0
-    'Writeline(string("Bytes Left"), fs)
-
     if(fs < mtuBuff)
       bytes := fs
     else
@@ -554,6 +516,9 @@ PRI RenderFile(id, fn) | fs, bytes
 
     sd.readFromFile(@buff, bytes)
     fs -= sock[id].Send(@buff, bytes)
+
+    'Pause after issuing the send command
+    'pause(10)
   
   sd.closeFile
   return
@@ -565,49 +530,45 @@ PRI Writeline(label, value)
   pst.dec(value)
   pst.char(CR)
 
-PRI OpenFile(filename) | rc
+PRI OpenFile(path, ioType) | rc
 {{
-  Verify if the file exists
+  Open a file
 }}
-  rc := sd.listEntry(filename)
-  if(rc == IO_OK)
-    rc := sd.openFile(filename, IO_READ)
-      if(rc == SUCCESS)
-        return true
-  return false
+  'ifnot(hasSd)
+    'return false
 
-PRI FileExists(filename, pathElements) | rc
+  if(FileExists(path))
+    if req.IsFileRequest
+      sd.listEntry(path)
+      rc := sd.openFile(path, ioType)
+    else
+      sd.changeDirectory(path)
+      sd.listEntry(@indexPage) 
+      rc := sd.openFile(@indexPage, ioType)
+
+    if(rc == SUCCESS)
+      return true
+
+  return false   
+
+ 
+PRI FileExists(path) | rc
 {{
   Verify if the file exists
 }}
   ifnot(hasSd)
     return false
 
-  ChangeDirectory(pathElements)
-    
-  rc := sd.listEntry(filename)
-  if(rc == IO_OK)
-    rc := sd.openFile(filename, IO_READ)
-      if(rc == SUCCESS)
-        sd.closeFile
-        return true
-  return false  
-
-PRI ChangeDirectory(pathElements) | i
-  sd.changeDirectory(@approot)
-  if(req.IsFileRequest)
-    pathElements--  
-  'Path elements include a file name
-  ' req.IsFileRequest = true if a file is explictly requested
-  if(pathElements =< 0)
-    'pst.str(string("Root request", CR, CR))
-    return
+  if req.IsFileRequest
+    rc := sd.listEntry(path)
   else
-    'pst.str(string("Sub dir request", CR, CR))
-    repeat i from 0 to pathElements-1
-      'pst.str( req.GetUrlPart(i) )
-      'pst.char(CR)
-      sd.changeDirectory(req.GetUrlPart(i))
+    sd.changeDirectory(path)
+    rc := sd.listEntry(@indexPage)
+  
+  if rc == 0
+    return true
+  else
+    return false  
       
 PRI GetContentType(ext)
 {{
@@ -781,11 +742,7 @@ PRI PrintIp(addr) | i
       pst.char($2E)
     else
       pst.char($0D)
-{      
-PRI PrintExtension
-  pst.str(req.GetFileNameExtension)
-  pst.char(CR)
-}
+
 PRI PrintRequestedFileName
   pst.str(req.GetFileName)
   pst.char(CR)  
