@@ -54,6 +54,7 @@ DAT
   version       byte  "1.2", $0
   hasSd         byte  $00
   approot       byte  "\", $0
+  indexPage     byte  "index.htm", $0
 
   sntpIp        byte  64, 147, 116, 229 '64, 147, 116, 229<- This SNTP server is on the west coast 
   dhcpRenew     byte  $00
@@ -295,8 +296,8 @@ PUB Init | i, t1
   reboot
 
   
-PRI MultiSocketService | bytesToRead, sockId, fn, i, pathElements, temp
-  bytesToRead := sockId := i := pathElements := 0
+PRI MultiSocketService | bytesToRead, sockId, fn, i, path, temp
+  bytesToRead := sockId := i := 0
   repeat
     bytesToRead~ 
     CloseWait
@@ -334,22 +335,18 @@ PRI MultiSocketService | bytesToRead, sockId, fn, i, pathElements, temp
 
     'Tokenize and index the header
     req.TokenizeHeader(@buff, bytesToRead)
-    fn := req.GetFileName
-    pathElements := req.PathElements
-
-    if(strcomp(req.GetMethod, string("POST")))
-      ProcessPost(sockId)  
+    path := req.GetPath
+    'WriteDebugLine(string("Path"), path, false) 
    
-    if(FileExists(fn, pathElements))
-      RenderFile(sockId, fn)
+    if(FileExists(path))
+      RenderFile(sockId, path)
     else
       ifnot(RenderDynamic(sockId))
         if(hasSd)
           sock[sockId].Send(@_404, strsize(@_404))
         else
-          if(strcomp( req.GetFileName, string("index.htm" )))
+          if(strcomp(req.GetFileName, string("index.htm" )))
             sock[sockId].send(@hello, strsize(@hello)) 
-
 
     'Close the socket and reset the
     'interupt register
@@ -555,17 +552,6 @@ PRI PadRight(dest, source, len, padChar)
   'Write to the start of the destination buffer
   bytemove(dest, source, strsize(source))
 
-  
-PRI ProcessPost(id) | i
-    {{  Process a POST }}
-  if(strcomp(req.GetFileName, string("post.htm")))
-    repeat i from  req.GetSectionIndex(REQ#HEADER_LINES) to req.GetSectionIndex(REQ#BODY)-1 step 2
-      pst.str(string("Item "))
-      pst.dec(i)
-      pst.str(string(": "))
-      pst.str(req.PostIdx(i))
-      pst.char(CR)
-
 
 PRI BuildXml | i, state
   state := Buttons.State
@@ -582,14 +568,11 @@ PRI RenderFile(id, fn) | fs, bytes
 }}
   mtuBuff := sock[id].GetMtu
 
-  OpenFile(fn)
+  OpenFile(fn, IO_READ)
   fs := sd.getFileSize 
   BuildAndSendHeader(id, fs, fn)
 
-  'pst.str(string(cr,"Render File",cr))
   repeat until fs =< 0
-   ' Writeline(string("Bytes Left"), fs)
-
     if(fs < mtuBuff)
       bytes := fs
     else
@@ -598,9 +581,6 @@ PRI RenderFile(id, fn) | fs, bytes
     sd.readFromFile(@buff, bytes)
     fs -= sock[id].Send(@buff, bytes)
 
-    'Pause after issuing the send command
-    'pause(10)
-  
   sd.closeFile
   return
     
@@ -611,50 +591,46 @@ PRI Writeline(label, value)
   pst.dec(value)
   pst.char(CR)
 
-PRI OpenFile(filename) | rc
+  
+PRI OpenFile(path, ioType) | rc
 {{
-  Verify if the file exists
+  Open a file
 }}
-  rc := sd.listEntry(filename)
-  if(rc == IO_OK)
-    rc := sd.openFile(filename, IO_READ)
-      if(rc == SUCCESS)
-        return true
+
+  if(FileExists(path))
+    if req.IsFileRequest
+      sd.listEntry(path)
+      rc := sd.openFile(path, ioType)
+    else
+      sd.changeDirectory(path)
+      sd.listEntry(@indexPage) 
+      rc := sd.openFile(@indexPage, ioType)
+
+    if(rc == SUCCESS)
+      return true
+
   return false
 
-PRI FileExists(filename, pathElements) | rc
+PRI FileExists(path) | rc
 {{
   Verify if the file exists
 }}
   ifnot(hasSd)
     return false
 
-  ChangeDirectory(pathElements)
-    
-  rc := sd.listEntry(filename)
-  if(rc == IO_OK)
-    rc := sd.openFile(filename, IO_READ)
-      if(rc == SUCCESS)
-        sd.closeFile
-        return true
-  return false  
-
-PRI ChangeDirectory(pathElements) | i
-  sd.changeDirectory(@approot)
-  if(req.IsFileRequest)
-    pathElements--  
-  'Path elements include a file name
-  ' req.IsFileRequest = true if a file is explictly requested
-  if(pathElements =< 0)
-    'pst.str(string("Root request", CR, CR))
-    return
+  if req.IsFileRequest
+    rc := sd.listEntry(path)
   else
-    'pst.str(string("Sub dir request", CR, CR))
-    repeat i from 0 to pathElements-1
-      'pst.str( req.GetUrlPart(i) )
-      'pst.char(CR)
-      sd.changeDirectory(req.GetUrlPart(i))  
+    rc := sd.changeDirectory(path)
+    if strcomp(rc, path)
+      rc := sd.listEntry(@indexPage)
+  
+  if rc == 0
+    return true
+  else
+    return false 
 
+ 
 PRI GetContentType(ext)
 {{
   Determine the content-type 
