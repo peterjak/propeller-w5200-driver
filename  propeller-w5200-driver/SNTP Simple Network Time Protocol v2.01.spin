@@ -268,7 +268,7 @@ PUB HumanTime2(Offset,TimeStampAddress)|i,Seconds,Days,Years,LYrs,DW,DD,HH,MM,SS
     Days    := ((Seconds >>= 7)/675) + 1 '<- Days since Jan 1, 1900 ... divide by 86,400 and add 1
 
     'Days    := (Seconds / 86400) +1'<- Days since Jan 1, 1900 ... divide by 86,400 and add 1
-    DW      := (Days-1) // 7     
+    DW      := (Days) // 7     
     
     Years := Days / 365         '   Number of Days THIS year and
     Days -= (Years * 365)       '   number of years since 1900.
@@ -331,7 +331,7 @@ PUB HumanTime2(Offset,TimeStampAddress)|i,Seconds,Days,Years,LYrs,DW,DD,HH,MM,SS
 PUB HumanTime(Offset,TimeStampAddress) | dw, seconds, t1, i,days,lastLeap,Month,day,Year,minutes, hours, daysSinceJan1,numberOfLeapYears,date,years, daysSinceEpoch, secondsSinceEpoch, secondsToday
   seconds := long[TimeStampAddress] + Offset * 3600 
   days := (seconds >> 7)/675 
-  dw := days//7 
+  dw := (days)//7 
   numberOfLeapYears :=  days / DAYS_IN_FOUR_YEARS
 
   year := days
@@ -374,11 +374,11 @@ PUB HumanTime(Offset,TimeStampAddress) | dw, seconds, t1, i,days,lastLeap,Month,
   seconds :=  secondsToday - minutes*60
   hours := minutes/60
   minutes := minutes // 60
-  year -= 2000
+  'year -= 2000
 
 
   long[TimeStampAddress][2] := Month<<24+day<<16+year
-  long[TimeStampAddress][3] := t1<<24+hours<<16+minutes<<8+seconds                                     
+  long[TimeStampAddress][3] := dw<<24+hours<<16+minutes<<8+seconds                                     
 
 
 

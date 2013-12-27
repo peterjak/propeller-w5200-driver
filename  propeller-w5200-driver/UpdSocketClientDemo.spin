@@ -7,9 +7,22 @@ CON
   CR            = $0D
   LF            = $0A
   NULL          = $00
-  
+
+  SNTP_PORT     = 123
+    
   #0, CLOSED, TCP, UDP, IPRAW, MACRAW, PPPOE
-       
+
+  {{ Content Types }}
+  #0, CSS, GIF, HTML, ICO, JPG, JS, PDF, PNG, TXT, XML, ZIP
+  
+  {{ USA Standard Time Zone Abbreviations }}
+  #-10, HST,AtST,_PST,MST,CST,EST,AlST
+              
+  {{ USA Daylight Time Zone Abbreviations  }}
+  #-9, HDT,AtDT,PDT,MDT,CDT,EDT,AlDT
+
+  Zone = EDT
+         
 VAR
 
 DAT
