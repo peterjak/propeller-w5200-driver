@@ -65,31 +65,34 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, totalBytes
   buffer := sock.Init(0, TCP, -1)
 
 
-  'www.agaverobotics.com
-  'sock.RemoteIp(65, 98, 8, 151)
-  'sock.RemoteIp(74,125,224,194)
-  sock.RemoteIp(192,168,1,102) 
+  
+  'sock.RemoteIp(65, 98, 8, 151)  'www.agaverobotics.com
+  sock.RemoteIp(74,125,224,194)   'Google 
+  'sock.RemoteIp(192,168,1,102)   'Localhost 
   sock.RemotePort(80)
 
   pst.str(string(CR, "Begin Client Web request", CR))
 
   'Client
-  pst.str(string("Open", CR))
+  'pst.str(string("Open", CR))
+  
   sock.Open
-
+  WriteHexDebugLine(string("Open"), sock.GetStatus, 2) 
   pause(200)
   
-  pst.str(string("Connect", CR))
+  'pst.str(string("Connect", CR))
   sock.Connect
-
   pause(500)
    
   'Connection?
+  WriteHexDebugLine(string("Connect"), sock.GetStatus, 2)
   repeat until sock.Connected
     pause(10)
 
+  WriteHexDebugLine(string("Connected"), sock.GetStatus, 2)
+  
   pst.str(string("Send HTTP Header", CR)) 
-  bytesSent := sock.Send(@localhost, strsize(@localhost))
+  bytesSent := sock.Send(@google, strsize(@google))
   pst.str(string("Bytes Sent: "))
   pst.dec(bytesSent)
   pst.char(13)
@@ -124,7 +127,26 @@ PUB Main | bytesToRead, buffer, bytesSent, receiving, totalBytes
   pst.str(string(CR, "Disconnect", CR)) 
   sock.Disconnect
   sock.Close
+  WriteHexDebugLine(string("Done"), sock.GetStatus, 2)
    
+
+PRI WriteHexDebugLine(label, value, digits)
+  pst.str(label)
+  repeat 25 - strsize(label)
+    pst.char(".")
+
+  pst.hex(value, digits)
+  pst.char(CR)
+  
+PRI WriteDebugLine(label, value, isNum)
+    pst.str(label)
+  repeat 25 - strsize(label)
+    pst.char(".")
+  if(isNum)
+    pst.dec(value)
+  else
+    pst.str(value)
+  pst.char(CR)
 
 
 PUB PrintNameValue(name, value, digits) | len

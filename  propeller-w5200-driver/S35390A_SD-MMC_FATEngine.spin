@@ -202,6 +202,12 @@ VAR long dataStructureAddress[0]
 
 PUB GetCogID
   return cardCogID - 1
+
+PUB  GetDirectoryEntryCache
+  return directoryEntryCache[12]
+
+PUB GetCurrentWorkingDirectory
+  return currentWorkingDirectory
   
 PUB IsAbort(ex)
 {{
