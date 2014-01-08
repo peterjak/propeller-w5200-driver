@@ -199,8 +199,15 @@ VAR long dataStructureAddress[0]
 
 'PUB fileTime
   'return readClock
+
 PUB GetCogID
   return cardCogID - 1
+
+PUB  GetDirectoryEntryCache
+  return directoryEntryCache[12]
+
+PUB GetCurrentWorkingDirectory
+  return currentWorkingDirectory
   
 PUB IsAbort(ex)
 {{
