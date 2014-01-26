@@ -40,6 +40,7 @@
 ''10/28/2013        nbtstat can now resolve group names and display entrys for each member.
 ''                  nbquery can now resolve group names and display entrys for each member.
 ''11/03/2013        reinserted check for closewait
+''01/25/2014        added support for PUT request without expectig 100-continue.
 ''              
 ''                  Michael Sommer (MSrobots)
 }}
@@ -58,28 +59,30 @@ CON
 
   'wiz.SetMac($00, $08, $DC, $16, $F1, $32)             'MAC Mike G
   
+ { 
   MAC_1             = $00                                
   MAC_2             = $08
   MAC_3             = $DC
   MAC_4             = $16
   MAC_5             = $F1
   MAC_6             = $32
-{  
+}
   MAC_1             = $00                               'MAC1 MSrobots          
   MAC_2             = $08
   MAC_3             = $DC
   MAC_4             = $16
   MAC_5             = $F0
   MAC_6             = $4F
-  
+
+ { 
   MAC_1             = $00                               'MAC2 MSrobots          
   MAC_2             = $08
   MAC_3             = $DC
   MAC_4             = $16
   MAC_5             = $F6
   MAC_6             = $40
-}
-
+ }
+ 
   { Serial IO PINs } 
   USB_Rx            = 31
   USB_Tx            = 30
@@ -169,9 +172,9 @@ CON
 }}
 DAT
                                    ' please use UPPERCASE for Names                                                  
-  hostname      byte  "PROPNET",0  '<- you need to change this if you have more then one spinneret
-  workgroup     byte  "WORKGROUP", 0
-'  workgroup     byte  "MSROBOTS", 0
+  hostname      byte  "PROPNET1",0  '<- you need to change this if you have more then one spinneret
+'  workgroup     byte  "WORKGROUP", 0
+  workgroup     byte  "MSROBOTS", 0
   
   version       byte  "1.2", $0
   
@@ -219,7 +222,10 @@ DAT
   _optallow     byte  "Allow:"
   _optallowend
   _optpublic    byte  "Public:"
-  _optpublicend  
+  _optpublicend
+  _optAcessC    byte  "Access-Control-Allow-Methods:"
+  _optAcessCend
+  
   _options      byte  " OPTIONS, HEAD, GET, POST, PUT, MKCOL, DELETE, PROPFIND"
                 'byte  "Allow: OPTIONS, HEAD, GET, POST, PUT, MKCOL, DELETE, PROPFIND, PROPPATCH, COPY, MOVE, LOCK, UNLOCK", CR, LF
                 'byte  "Public: OPTIONS, HEAD, GET, POST, PUT, MKCOL, DELETE, PROPFIND", CR, LF
@@ -491,7 +497,7 @@ PRI Server : handled | i, bytesToRead, sockId, rtcDelay, JustHeader, filename, t
         elseif strcomp(@buff, string("DELETE"))         'if DELETE verb delete file/directory and report result - done with this request!   
           handled := SendFlushOKorERR(sockId, not (sd.deleteEntry(filename) == true),@_h200, @_h409, 0)
         elseif OptionsHandler(sockId, filename)         'if OPTIONS verb handle it and report result - done with this request!   
-        elseif PutHandler(sockId, filename)             'if PUT verb handle it and report result - done with this request!
+        elseif PutHandler(sockId, filename, bytesToRead)'if PUT verb handle it and report result - done with this request!
         else
           handled := false                              'preset not found - not handled yet
           if (strcomp(@buff, string("HEAD")))           'if HEAD verb
@@ -521,6 +527,11 @@ PRI BuildStatusHeader(sockID, status, contentLength, etag, ext) | outstart 'writ
 }}
 '  outstart := outbuf
   SendStrCRLF(sockID, status)                           'write Status
+
+  SendStrCRLF(sockID, string("Access-Control-Allow-Origin: *"))
+  
+
+
   if(contentLength > -1)                                'if >-1 Add content-length : value CR, LF
     SendBytes(sockID, @_contLen, constant(@_contlenend-@_contLen))'write text Content-Len
     SendStrCRLF(sockID, Dec(contentLength))
@@ -562,7 +573,7 @@ PRI FileHandler(sockID, fn, JustHeader, NoHeader) | fs, bytes, etag, etagbrowser
         else                                            
           bytes := mtuBuff                              'else send mtu bytes
         sd.readFromFile(@buff, bytes)                   'read (remaining) bytes into buffer
-        fs -= sock[sockID].SendAsync(@buff, bytes, false)      'send buffer and subtract size send
+        fs -= sock[sockID].SendAsync(@buff, bytes, true)      'send buffer and subtract size send
       until fs =< 0        
 
     sd.closeFile
@@ -578,14 +589,21 @@ PRI OptionsHandler(sockID, fn) | options                'Handle OPTIONS Requests
     SendBytes(sockID, @_optallow, constant(@_optallowend-@_optallow)) 'allow:
     SendBytesCRLF(sockID, @_options, constant(@_optionsend-@_options)) 'send _options
     SendBytes(sockID, @_optpublic, constant(@_optpublicend-@_optpublic))'public:
-    SendBytesCRLF(sockID, @_options, constant(@_optionsend-@_options)) 'send _options 
+    SendBytesCRLF(sockID, @_options, constant(@_optionsend-@_options)) 'send _options
+
+    SendBytes(sockID, @_optAcessC, constant(@_optAcessCend-@_optAcessC))' Acess Control 
+    SendBytesCRLF(sockID, @_options, constant(@_optionsend-@_options)) 'send Acess Control
+    
+    SendStrCRLF(sockID, string("Access-Control-Allow-Headers: *"))
+    SendStrCRLF(sockID, string("Access-Control-Allow-Origin: *"))
+    
     SendBytes(sockID, @_contLen, constant(@_contlenend-@_contLen))
     SendStrCRLF(sockID, Dec(0))
     SendCRLF(sockID)                                    'send _newline
     SendFlushOutBuf(sockID)                             'flush out
     RESULT := true                                      'we are done!
     
-PRI PutHandler(sockID, fn) | bytesToRead, size , status, noerr 'Handle PUT Requests
+PRI PutHandler(sockID, fn, bytesInBuffer) | bytesToRead, size , status, noerr 'Handle PUT Requests
 {{
 ''PutHandler:       Handle PUT Requests
 }}
@@ -602,18 +620,26 @@ PRI PutHandler(sockID, fn) | bytesToRead, size , status, noerr 'Handle PUT Reque
     ifnot (noerr == true)                               'now open file write
       status :=  @_h409                                 '409 Conflict   
     else
-      SendBytesCRLF(sockID, @_h100, constant(@_h100end-@_h100)) 'send 100 continue
-      SendCRLF(sockID)                                  'send _newline   
-      SendFlushOutBuf(sockID)
-      repeat 
-        repeat until bytesToRead := sock[sockID].Available 'Repeat until we have data in the buffer                          
-        if(bytesToRead < 1)                             'Check for a timeout error  
-          size := -1 'timeout / end
-        else       
-          sock[sockID].Receive(@buff, bytesToRead)      'Move the Rx buffer into HUB memory  
-          size -= bytesToRead
-          sd.writeData(@buff, bytesToRead)              'now write file         
-      until size<1                                      'expecting size bytes
+      if (byte[req.Header(string("Expect"))]==0)
+        bytesToRead := @buff + bytesInBuffer - req.GetBody 
+        if (bytesToRead > size)
+          bytesToRead := size 
+        size -= bytesToRead
+        sd.writeData(req.GetBody, bytesToRead)          'now write file         
+      else
+        SendBytesCRLF(sockID, @_h100, constant(@_h100end-@_h100)) 'send 100 continue
+        SendCRLF(sockID)                                  'send _newline   
+        SendFlushOutBuf(sockID)
+      if (size>0)
+        repeat 
+          repeat until bytesToRead := sock[sockID].Available 'Repeat until we have data in the buffer                          
+          if(bytesToRead < 1)                             'Check for a timeout error  
+            size := -1 'timeout / end
+          else       
+            sock[sockID].Receive(@buff, bytesToRead)      'Move the Rx buffer into HUB memory  
+            size -= bytesToRead
+            sd.writeData(@buff, bytesToRead)              'now write file         
+        until size<1                                      'expecting size bytes
       sd.closeFile                                      'now close file
     RESULT := SendFlushOKorERR(sockID,false,status, 0,0) ' send 409 Conflict 201 Created or 200 OK                           
   
@@ -941,16 +967,6 @@ PRI ValidateParameters(pin, value)
   return true
                                                   
 ''-------[ DHCP Handling ... ]------------------------------------------------------------
-PRI RenewDhcpLease                                      'renews DHCP lease
-{{
-''RenewDhcpLease:   Renews DHCP lease
-}}
-  netbios.DisconnectSocket
-  DoDhcp(true)  
-  rtc.readTime
-  SetDhcpRenew
-  netbios.ReInitSocket
-  
 PRI SetDhcpRenew                                        'sets TimeOut for DHCP renewal - not happy with this
 {{
 ''SetDhcpRenew:     Sets TimeOut for DHCP renewal - not happy with this
@@ -962,6 +978,16 @@ PRI SetDhcpRenew                                        'sets TimeOut for DHCP r
   PrintDec(dhcpRenew)
   PrintStr(string(":00:00",CR))
 
+PRI RenewDhcpLease                                      'renews DHCP lease
+{{
+''RenewDhcpLease:   Renews DHCP lease
+}}
+  netbios.DisconnectSocket
+  DoDhcp(true)  
+  rtc.readTime
+  SetDhcpRenew
+  netbios.ReInitSocket
+  
 PRI DoDhcp(setRequestIp)                                'runs DHCP request. Prints Result
 {{
 ''DoDhcp:           Runs DHCP request. Prints Result

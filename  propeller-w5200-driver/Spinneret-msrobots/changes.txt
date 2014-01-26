@@ -21,3 +21,4 @@
 10/28/2013      nbtstat can now resolve group names and display entrys for each member.
                 nbquery can now resolve group names and display entrys for each member.
 11/03/2013      reinserted check for closewait
+01/25/2014	added support for PUT request without expectig 100-continue.

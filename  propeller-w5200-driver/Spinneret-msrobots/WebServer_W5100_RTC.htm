@@ -249,8 +249,8 @@
 </div>
 <a onclick ="javascript:ShowHide('toc57')" href="javascript:;" class = "toc3">DHCP Handling ... </a><br />
 <div id= "toc57" class = "tocgrp">
-<a href= "#lbl58" class = "toc4">RenewDhcpLease                                      'renews DHCP lease</a><br/>
-<a href= "#lbl60" class = "toc4">SetDhcpRenew                                        'sets TimeOut for DHCP renewal - not happy with this</a><br/>
+<a href= "#lbl58" class = "toc4">SetDhcpRenew                                        'sets TimeOut for DHCP renewal - not happy with this</a><br/>
+<a href= "#lbl60" class = "toc4">RenewDhcpLease                                      'renews DHCP lease</a><br/>
 <a href= "#lbl62" class = "toc4">DoDhcp</a><br/>
 <a href= "#lbl64" class = "toc4">InvokeDhcp</a><br/>
 </div>
@@ -349,6 +349,7 @@ MODIFICATIONS:<br />
 10/28/2013&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nbtstat can now resolve group names and display entrys for each member.<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nbquery can now resolve group names and display entrys for each member.<br />
 11/03/2013&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;reinserted check for closewait<br />
+01/25/2014&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;added support for PUT request without expectig 100-continue.<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Michael Sommer (MSrobots)<br />
 
@@ -365,28 +366,30 @@ MODIFICATIONS:<br />
 
   'wiz.SetMac($00, $08, $DC, $16, $F1, $32)             'MAC Mike G
   
+ { 
   MAC_1             = $00                                
   MAC_2             = $08
   MAC_3             = $DC
   MAC_4             = $16
   MAC_5             = $F1
   MAC_6             = $32
-{  
+}
   MAC_1             = $00                               'MAC1 MSrobots          
   MAC_2             = $08
   MAC_3             = $DC
   MAC_4             = $16
   MAC_5             = $F0
   MAC_6             = $4F
-  
+
+ { 
   MAC_1             = $00                               'MAC2 MSrobots          
   MAC_2             = $08
   MAC_3             = $DC
   MAC_4             = $16
   MAC_5             = $F6
   MAC_6             = $40
-}
-
+ }
+ 
   { Serial IO PINs } 
   USB_Rx            = 31
   USB_Tx            = 30
@@ -482,9 +485,9 @@ MODIFICATIONS:<br />
 <br /><a onclick ="javascript:ShowHide('lbl12')" href="javascript:;">SOURCE CODE...</a>
 <pre class=source id=lbl12>
                                    ' please use UPPERCASE for Names                                                  
-  hostname      <var>byte</var>  "PROPNET",0  '&lt;- you need to change this if you have more then one spinneret
-  workgroup     <var>byte</var>  "WORKGROUP", 0
-'  workgroup     byte  "MSROBOTS", 0
+  hostname      <var>byte</var>  "PROPNET1",0  '&lt;- you need to change this if you have more then one spinneret
+'  workgroup     byte  "WORKGROUP", 0
+  workgroup     <var>byte</var>  "MSROBOTS", 0
   
   version       <var>byte</var>  "1.2", $0
   
@@ -531,7 +534,10 @@ MODIFICATIONS:<br />
   _optallow     <var>byte</var>  "Allow:"
   _optallowend
   _optpublic    <var>byte</var>  "Public:"
-  _optpublicend  
+  _optpublicend
+  _optAcessC    <var>byte</var>  "Access-Control-Allow-Methods:"
+  _optAcessCend
+  
   _options      <var>byte</var>  " OPTIONS, HEAD, GET, POST, PUT, MKCOL, DELETE, PROPFIND"
                 'byte  "Allow: OPTIONS, HEAD, GET, POST, PUT, MKCOL, DELETE, PROPFIND, PROPPATCH, COPY, MOVE, LOCK, UNLOCK", CR, LF
                 'byte  "Public: OPTIONS, HEAD, GET, POST, PUT, MKCOL, DELETE, PROPFIND", CR, LF
@@ -810,7 +816,7 @@ MODIFICATIONS:<br />
         <var>elseif</var> <var>strcomp</var>(@buff, string("DELETE"))         'if DELETE verb delete file/directory and report result - done with this request!   
           handled := SendFlushOKorERR(sockId, <var>not</var> (sd.deleteEntry(filename) == <var>true</var>),@_h200, @_h409, 0)
         <var>elseif</var> OptionsHandler(sockId, filename)         'if OPTIONS verb handle it and report result - done with this request!   
-        <var>elseif</var> PutHandler(sockId, filename)             'if PUT verb handle it and report result - done with this request!
+        <var>elseif</var> PutHandler(sockId, filename, bytesToRead)'if PUT verb handle it and report result - done with this request!
         <var>else</var>
           handled := <var>false</var>                              'preset not found - not handled yet
           <var>if</var> (<var>strcomp</var>(@buff, string("HEAD")))           'if HEAD verb
@@ -845,6 +851,9 @@ MODIFICATIONS:<br />
 <pre class=source id=lbl23><var>PRI</var> BuildStatusHeader(sockID, status, contentLength, etag, ext) | outstart 'write HEADER into outBuf
 '  outstart := outbuf
   SendStrCRLF(sockID, status)                           'write Status
+
+  SendStrCRLF(sockID, string("Access-Control-Allow-Origin: *"))
+
   <var>if</var>(contentLength &gt; -1)                                'if &gt;-1 Add content-length : value CR, LF
     SendBytes(sockID, @_contLen, constant(@_contlenend-@_contLen))'write text Content-Len
     SendStrCRLF(sockID, Dec(contentLength))
@@ -888,7 +897,7 @@ MODIFICATIONS:<br />
         <var>else</var>                                            
           bytes := mtuBuff                              'else send mtu bytes
         sd.readFromFile(@buff, bytes)                   'read (remaining) bytes into buffer
-        fs -= sock[sockID].SendAsync(@buff, bytes, <var>false</var>)      'send buffer and subtract size send
+        fs -= sock[sockID].SendAsync(@buff, bytes, <var>true</var>)      'send buffer and subtract size send
       <var>until</var> fs =&lt; 0        
 
     sd.closeFile
@@ -908,7 +917,14 @@ MODIFICATIONS:<br />
     SendBytes(sockID, @_optallow, constant(@_optallowend-@_optallow)) 'allow:
     SendBytesCRLF(sockID, @_options, constant(@_optionsend-@_options)) 'send _options
     SendBytes(sockID, @_optpublic, constant(@_optpublicend-@_optpublic))'public:
-    SendBytesCRLF(sockID, @_options, constant(@_optionsend-@_options)) 'send _options 
+    SendBytesCRLF(sockID, @_options, constant(@_optionsend-@_options)) 'send _options
+
+    SendBytes(sockID, @_optAcessC, constant(@_optAcessCend-@_optAcessC))' Acess Control 
+    SendBytesCRLF(sockID, @_options, constant(@_optionsend-@_options)) 'send Acess Control
+    
+    SendStrCRLF(sockID, string("Access-Control-Allow-Headers: *"))
+    SendStrCRLF(sockID, string("Access-Control-Allow-Origin: *"))
+    
     SendBytes(sockID, @_contLen, constant(@_contlenend-@_contLen))
     SendStrCRLF(sockID, Dec(0))
     SendCRLF(sockID)                                    'send _newline
@@ -916,13 +932,13 @@ MODIFICATIONS:<br />
     <var>RESULT</var> := <var>true</var>                                      'we are done!
 
 </pre>
-<hr /><h4 id = "lbl28">PutHandler(sockID, fn)
+<hr /><h4 id = "lbl28">PutHandler(sockID, fn, bytesInBuffer)
 </h4>
 
 <br />PutHandler:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Handle PUT Requests<br />
 
 <br /><a onclick ="javascript:ShowHide('lbl29')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl29><var>PRI</var> PutHandler(sockID, fn) | bytesToRead, size , status, noerr 'Handle PUT Requests
+<pre class=source id=lbl29><var>PRI</var> PutHandler(sockID, fn, bytesInBuffer) | bytesToRead, size , status, noerr 'Handle PUT Requests
   <var>if</var> <var>strcomp</var>(@buff, string("PUT"))                      'is it PUT verb?
     status :=  @_h201                                   '201 created
     size := StrToBase(req.Header(string("Content-Length")) , 10)
@@ -936,18 +952,26 @@ MODIFICATIONS:<br />
     <var>ifnot</var> (noerr == <var>true</var>)                               'now open file write
       status :=  @_h409                                 '409 Conflict   
     <var>else</var>
-      SendBytesCRLF(sockID, @_h100, constant(@_h100end-@_h100)) 'send 100 continue
-      SendCRLF(sockID)                                  'send _newline   
-      SendFlushOutBuf(sockID)
-      <var>repeat</var> 
-        <var>repeat</var> <var>until</var> bytesToRead := sock[sockID].Available 'Repeat until we have data in the buffer                          
-        <var>if</var>(bytesToRead &lt; 1)                             'Check for a timeout error  
-          size := -1 'timeout / end
-        <var>else</var>       
-          sock[sockID].Receive(@buff, bytesToRead)      'Move the Rx buffer into HUB memory  
-          size -= bytesToRead
-          sd.writeData(@buff, bytesToRead)              'now write file         
-      <var>until</var> size&lt;1                                      'expecting size bytes
+      <var>if</var> (<var>byte</var>[req.Header(string("Expect"))]==0)
+        bytesToRead := @buff + bytesInBuffer - req.GetBody 
+        <var>if</var> (bytesToRead &gt; size)
+          bytesToRead := size 
+        size -= bytesToRead
+        sd.writeData(req.GetBody, bytesToRead)          'now write file         
+      <var>else</var>
+        SendBytesCRLF(sockID, @_h100, constant(@_h100end-@_h100)) 'send 100 continue
+        SendCRLF(sockID)                                  'send _newline   
+        SendFlushOutBuf(sockID)
+      <var>if</var> (size&gt;0)
+        <var>repeat</var> 
+          <var>repeat</var> <var>until</var> bytesToRead := sock[sockID].Available 'Repeat until we have data in the buffer                          
+          <var>if</var>(bytesToRead &lt; 1)                             'Check for a timeout error  
+            size := -1 'timeout / end
+          <var>else</var>       
+            sock[sockID].Receive(@buff, bytesToRead)      'Move the Rx buffer into HUB memory  
+            size -= bytesToRead
+            sd.writeData(@buff, bytesToRead)              'now write file         
+        <var>until</var> size&lt;1                                      'expecting size bytes
       sd.closeFile                                      'now close file
     <var>RESULT</var> := SendFlushOKorERR(sockID,<var>false</var>,status, 0,0) ' send 409 Conflict 201 Created or 200 OK                           
 
@@ -1325,33 +1349,33 @@ MODIFICATIONS:<br />
 
 </pre>
 <hr /><h3 id = "lbl57">DHCP Handling </h3>
-<hr /><h4 id = "lbl58">RenewDhcpLease                                      'renews DHCP lease
-</h4>
-
-<br />RenewDhcpLease:&nbsp;&nbsp;&nbsp;Renews DHCP lease<br />
-
-<br /><a onclick ="javascript:ShowHide('lbl59')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl59><var>PRI</var> RenewDhcpLease                                      'renews DHCP lease
-  netbios.DisconnectSocket
-  DoDhcp(<var>true</var>)  
-  rtc.readTime
-  SetDhcpRenew
-  netbios.ReInitSocket
-
-</pre>
-<hr /><h4 id = "lbl60">SetDhcpRenew                                        'sets TimeOut for DHCP renewal - not happy with this
+<hr /><h4 id = "lbl58">SetDhcpRenew                                        'sets TimeOut for DHCP renewal - not happy with this
 </h4>
 
 <br />SetDhcpRenew:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Sets TimeOut for DHCP renewal - not happy with this<br />
 
-<br /><a onclick ="javascript:ShowHide('lbl61')" href="javascript:;">SOURCE CODE...</a>
-<pre class=source id=lbl61><var>PRI</var> SetDhcpRenew                                        'sets TimeOut for DHCP renewal - not happy with this
+<br /><a onclick ="javascript:ShowHide('lbl59')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl59><var>PRI</var> SetDhcpRenew                                        'sets TimeOut for DHCP renewal - not happy with this
   dhcpRenew := (rtc.clockHour + 12) // 24
   PrintStr(string("DHCP Renew........"))
   <var>if</var>(dhcpRenew &lt; 10)
     PrintChar("0")
   PrintDec(dhcpRenew)
   PrintStr(string(":00:00",CR))
+
+</pre>
+<hr /><h4 id = "lbl60">RenewDhcpLease                                      'renews DHCP lease
+</h4>
+
+<br />RenewDhcpLease:&nbsp;&nbsp;&nbsp;Renews DHCP lease<br />
+
+<br /><a onclick ="javascript:ShowHide('lbl61')" href="javascript:;">SOURCE CODE...</a>
+<pre class=source id=lbl61><var>PRI</var> RenewDhcpLease                                      'renews DHCP lease
+  netbios.DisconnectSocket
+  DoDhcp(<var>true</var>)  
+  rtc.readTime
+  SetDhcpRenew
+  netbios.ReInitSocket
 
 </pre>
 <hr /><h4 id = "lbl62">DoDhcp(setRequestIp)
