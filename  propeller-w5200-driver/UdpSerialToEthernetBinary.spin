@@ -179,7 +179,8 @@ PRI SerialHandler | char, i, startTime, counter, txSerialIdx
   i := startTime := txSerialIdx := counter := 0
   
   repeat
-
+    'Note: Change PRI RxCheck in Parallax Serial Terminal.spin to PUB RxCheck; otherwise
+    'pst.RxCheck will throw an error. 
     'Detect a charater, somehting other than -1, in the serial buffer
     if (char := pst.RxCheck) <> NOTHING
       startTime := CNT
