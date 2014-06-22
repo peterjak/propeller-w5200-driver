@@ -71,7 +71,7 @@ PRI SerialHandler | char
 
     'Detect a byte in the Rx buffer
     if(pst.RxCount)
-      'If the first byte is a CR (0x13) then flush and quit
+      'If the first byte is a CR (0X0D) then flush and quit
       'Otherwise save the first char
       if(CR == char := pst.RxCheck)
         pst.RxFlush
@@ -79,7 +79,7 @@ PRI SerialHandler | char
       else
         serBuff[0] := char
 
-      'Blocks until a string ending is 0x13 is found
+      'Blocks until a string ending is 0X0D is found
       'Set the udpIO to let UdpHandler know there
       'is data ready to send   
       pst.StrIn(@serBuff+1)
