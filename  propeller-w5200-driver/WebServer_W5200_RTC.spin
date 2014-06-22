@@ -56,7 +56,7 @@ DAT
   approot       byte  "\", $0
   indexPage     byte  "index.htm", $0
 
-  sntpIp        byte  64, 147, 116, 229 '64, 147, 116, 229<- This SNTP server is on the west coast 
+  sntpIp        byte  64, 113, 32, 5' 64, 147, 116, 229 '64, 147, 116, 229<- This SNTP server is on the west coast 
   dhcpRenew     byte  $00
   
   hello         byte  "HTTP/1.1 200 OK", CR, LF,                                {
@@ -331,7 +331,7 @@ PRI MultiSocketService | bytesToRead, sockId, fn, i, path, temp
     sock[sockId].Receive(@buff, bytesToRead)
 
     'Display the request header
-    'pst.str(@buff)
+    pst.str(@buff)
 
     'Tokenize and index the header
     req.TokenizeHeader(@buff, bytesToRead)
